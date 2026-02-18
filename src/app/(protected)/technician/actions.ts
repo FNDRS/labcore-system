@@ -8,21 +8,19 @@ import {
 } from "@/utils/amplifyServerUtils";
 import { cookies } from "next/headers";
 
-/** Verify auth and throw if unauthenticated. Per server-auth-actions. */
 async function requireAuth() {
 	const user = await runWithAmplifyServerContext({
 		nextServerContext: { cookies },
 		operation: (ctx) => getCurrentUser(ctx),
 	});
 	console.log(
-		"[tecnico:requireAuth] user:",
+		"[technician:requireAuth] user:",
 		user ? { username: user.username } : null,
 	);
 	if (!user) throw new Error("Unauthorized");
 	return user;
 }
 
-/** Cached per-request: list pending work orders with patient. */
 export const fetchPendingWorkOrders = cache(async () => {
 	await requireAuth();
 
@@ -30,8 +28,8 @@ export const fetchPendingWorkOrders = cache(async () => {
 		await cookieBasedClient.models.WorkOrder.list({
 			filter: { status: { ne: "completed" } },
 		});
-	console.log("[tecnico:fetchPendingWorkOrders] raw workOrders:", workOrders);
-	console.log("[tecnico:fetchPendingWorkOrders] workOrder errors:", woErrors);
+	console.log("[technician:fetchPendingWorkOrders] raw workOrders:", workOrders);
+	console.log("[technician:fetchPendingWorkOrders] workOrder errors:", woErrors);
 
 	const enriched = await Promise.all(
 		workOrders.map(async (wo) => {
@@ -56,11 +54,10 @@ export const fetchPendingWorkOrders = cache(async () => {
 		}),
 	);
 
-	console.log("[tecnico:fetchPendingWorkOrders] enriched:", enriched);
+	console.log("[technician:fetchPendingWorkOrders] enriched:", enriched);
 	return enriched;
 });
 
-/** Cached per-request: list pending/received samples for queue. */
 export const fetchPendingSamples = cache(async () => {
 	await requireAuth();
 
@@ -72,14 +69,14 @@ export const fetchPendingSamples = cache(async () => {
 			filter: { status: { eq: "received" } },
 		}),
 	]);
-	console.log("[tecnico:fetchPendingSamples] raw pending:", pending.data);
-	console.log("[tecnico:fetchPendingSamples] raw received:", received.data);
+	console.log("[technician:fetchPendingSamples] raw pending:", pending.data);
+	console.log("[technician:fetchPendingSamples] raw received:", received.data);
 	console.log(
-		"[tecnico:fetchPendingSamples] pending errors:",
+		"[technician:fetchPendingSamples] pending errors:",
 		pending.errors,
 	);
 	console.log(
-		"[tecnico:fetchPendingSamples] received errors:",
+		"[technician:fetchPendingSamples] received errors:",
 		received.errors,
 	);
 
@@ -98,10 +95,10 @@ export const fetchPendingSamples = cache(async () => {
 		const { data: workOrder, errors: woErrors } = workOrderRes;
 		const { data: examType, errors: etErrors } = examTypeRes;
 
-		console.log("[tecnico:fetchPendingSamples] wo:", workOrder);
-		console.log("[tecnico:fetchPendingSamples] et:", examType);
-		console.log("[tecnico:fetchPendingSamples] woErrors:", woErrors);
-		console.log("[tecnico:fetchPendingSamples] etErrors:", etErrors);
+		console.log("[technician:fetchPendingSamples] wo:", workOrder);
+		console.log("[technician:fetchPendingSamples] et:", examType);
+		console.log("[technician:fetchPendingSamples] woErrors:", woErrors);
+		console.log("[technician:fetchPendingSamples] etErrors:", etErrors);
 		if (!workOrder) return null;
 		const { data: patient } = await cookieBasedClient.models.Patient.get({
 			id: workOrder.patientId,
@@ -125,12 +122,11 @@ export const fetchPendingSamples = cache(async () => {
 		(x): x is NonNullable<typeof x> => x !== null,
 	);
 
-	console.log("[tecnico:fetchPendingSamples] enriched:", filtered);
+	console.log("[technician:fetchPendingSamples] enriched:", filtered);
 	return filtered;
 });
 
-/** Server action: fetch dashboard data (for client-triggered refetch). */
-export async function getTecnicoDashboardData() {
+export async function getTechnicianDashboardData() {
 	await requireAuth();
 
 	const [workOrders, samples] = await Promise.all([
@@ -138,7 +134,7 @@ export async function getTecnicoDashboardData() {
 		fetchPendingSamples(),
 	]);
 
-	console.log("[tecnico:getTecnicoDashboardData] result:", {
+	console.log("[technician:getTechnicianDashboardData] result:", {
 		workOrders,
 		samples,
 	});

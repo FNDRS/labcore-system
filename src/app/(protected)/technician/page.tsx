@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { BarcodeScanPlaceholder } from "./barcode-scan-placeholder";
 
-/** Async section: fetches in parallel with sibling (no waterfall). */
 async function WorkOrdersSection() {
 	const workOrders = await fetchPendingWorkOrders();
 
@@ -57,7 +56,6 @@ async function WorkOrdersSection() {
 	);
 }
 
-/** Async section: fetches in parallel with sibling (no waterfall). */
 async function SamplesQueueSection() {
 	const samples = await fetchPendingSamples();
 
@@ -135,7 +133,7 @@ const SamplesSkeleton = () => (
 	</Card>
 );
 
-export default function TecnicoPage() {
+export default function TechnicianPage() {
 	return (
 		<div className="container mx-auto max-w-4xl space-y-8 py-8 px-4">
 			<div>
