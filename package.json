@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sandbox": "pnpm ampx sandbox --profile Nimbus",
-    "seed": "pnpm ampx sandbox seed --profile Nimbus"
+    "sandbox": "pnpm ampx sandbox --profile Nimbus --identifier Nimbus",
+    "seed": "pnpm ampx sandbox seed --profile Nimbus "
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.7.2",
