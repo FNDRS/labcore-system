@@ -14,7 +14,10 @@ async function requireAuth() {
 		nextServerContext: { cookies },
 		operation: (ctx) => getCurrentUser(ctx),
 	});
-	console.log("[tecnico:requireAuth] user:", user ? { username: user.username } : null);
+	console.log(
+		"[tecnico:requireAuth] user:",
+		user ? { username: user.username } : null,
+	);
 	if (!user) throw new Error("Unauthorized");
 	return user;
 }
@@ -23,9 +26,10 @@ async function requireAuth() {
 export const fetchPendingWorkOrders = cache(async () => {
 	await requireAuth();
 
-	const { data: workOrders, errors: woErrors } = await cookieBasedClient.models.WorkOrder.list({
-		filter: { status: { ne: "completed" } },
-	});
+	const { data: workOrders, errors: woErrors } =
+		await cookieBasedClient.models.WorkOrder.list({
+			filter: { status: { ne: "completed" } },
+		});
 	console.log("[tecnico:fetchPendingWorkOrders] raw workOrders:", workOrders);
 	console.log("[tecnico:fetchPendingWorkOrders] workOrder errors:", woErrors);
 
@@ -70,38 +74,56 @@ export const fetchPendingSamples = cache(async () => {
 	]);
 	console.log("[tecnico:fetchPendingSamples] raw pending:", pending.data);
 	console.log("[tecnico:fetchPendingSamples] raw received:", received.data);
-	console.log("[tecnico:fetchPendingSamples] pending errors:", pending.errors);
-	console.log("[tecnico:fetchPendingSamples] received errors:", received.errors);
+	console.log(
+		"[tecnico:fetchPendingSamples] pending errors:",
+		pending.errors,
+	);
+	console.log(
+		"[tecnico:fetchPendingSamples] received errors:",
+		received.errors,
+	);
 
-	const enrich = async (
-		s: { id: string; workOrderId: string; examTypeId: string; barcode?: string | null; status?: string | null },
-	) => {
+	const enrich = async (s: {
+		id: string;
+		workOrderId: string;
+		examTypeId: string;
+		barcode?: string | null;
+		status?: string | null;
+	}) => {
 		const [workOrderRes, examTypeRes] = await Promise.all([
 			cookieBasedClient.models.WorkOrder.get({ id: s.workOrderId }),
 			cookieBasedClient.models.ExamType.get({ id: s.examTypeId }),
 		]);
-		const wo = workOrderRes.data;
-		const et = examTypeRes.data;
-		if (!wo) return null;
+
+		const { data: workOrder, errors: woErrors } = workOrderRes;
+		const { data: examType, errors: etErrors } = examTypeRes;
+
+		console.log("[tecnico:fetchPendingSamples] wo:", workOrder);
+		console.log("[tecnico:fetchPendingSamples] et:", examType);
+		console.log("[tecnico:fetchPendingSamples] woErrors:", woErrors);
+		console.log("[tecnico:fetchPendingSamples] etErrors:", etErrors);
+		if (!workOrder) return null;
 		const { data: patient } = await cookieBasedClient.models.Patient.get({
-			id: wo.patientId,
+			id: workOrder.patientId,
 		});
 		return {
 			id: s.id,
 			barcode: s.barcode ?? "—",
 			status: s.status ?? "pending",
-			examTypeName: et?.name ?? "Unknown",
+			examTypeName: examType?.name ?? "Unknown",
 			patientName: patient
 				? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() ||
 					"Unknown"
 				: "Unknown",
-			accessionNumber: wo.accessionNumber ?? "—",
+			accessionNumber: workOrder.accessionNumber ?? "—",
 		};
 	};
 
 	const all = [...(pending.data ?? []), ...(received.data ?? [])];
 	const enriched = await Promise.all(all.map(enrich));
-	const filtered = enriched.filter((x): x is NonNullable<typeof x> => x !== null);
+	const filtered = enriched.filter(
+		(x): x is NonNullable<typeof x> => x !== null,
+	);
 
 	console.log("[tecnico:fetchPendingSamples] enriched:", filtered);
 	return filtered;
@@ -116,6 +138,9 @@ export async function getTecnicoDashboardData() {
 		fetchPendingSamples(),
 	]);
 
-	console.log("[tecnico:getTecnicoDashboardData] result:", { workOrders, samples });
+	console.log("[tecnico:getTecnicoDashboardData] result:", {
+		workOrders,
+		samples,
+	});
 	return { workOrders, samples };
 }
