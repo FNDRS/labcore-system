@@ -1,53 +1,104 @@
-import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any unauthenticated user can "create", "read", "update", 
-and "delete" any "Todo" records.
-=========================================================================*/
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.guest()]),
+	WorkOrder: a
+		.model({
+			status: a.enum(["pending", "inprogress", "completed"]),
+			accessionNumber: a.string(),
+			priority: a.enum(["routine", "urgent", "stat"]),
+			requestedAt: a.datetime(),
+			patientId: a.id().required(),
+			patient: a.belongsTo("Patient", "patientId"),
+			samples: a.hasMany("Sample", "workOrderId"),
+			notes: a.string(),
+		})
+		.authorization((allow) => [allow.guest(), allow.authenticated()]),
+
+	Patient: a
+		.model({
+			firstName: a.string(),
+			lastName: a.string(),
+			dateOfBirth: a.date(),
+			gender: a.enum(["M", "F"]),
+			phone: a.phone(),
+			email: a.email(),
+			extraData: a.json(),
+			workOrders: a.hasMany("WorkOrder", "patientId"),
+		})
+		.authorization((allow) => [allow.guest(), allow.authenticated()]),
+
+	ExamType: a
+		.model({
+			code: a.string().required(),
+			name: a.string().required(),
+			sampleType: a.enum([
+				"urine",
+				"stool",
+				"wholebloodedta",
+				"serum",
+				"other",
+			]),
+			fieldSchema: a.json().required(),
+			isActive: a.boolean().default(true),
+			version: a.integer().default(1),
+			samples: a.hasMany("Sample", "examTypeId"),
+			exams: a.hasMany("Exam", "examTypeId"),
+		})
+		.secondaryIndexes((index) => [index("code")])
+		.authorization((allow) => [allow.guest(), allow.authenticated()]),
+
+	Sample: a
+		.model({
+			workOrderId: a.id().required(),
+			workOrder: a.belongsTo("WorkOrder", "workOrderId"),
+			examTypeId: a.id().required(),
+			examType: a.belongsTo("ExamType", "examTypeId"),
+			barcode: a.string(),
+			collectedAt: a.datetime(),
+			receivedAt: a.datetime(),
+			status: a.enum([
+				"pending",
+				"received",
+				"inprogress",
+				"completed",
+				"rejected",
+			]),
+			specimenData: a.json(),
+			exam: a.hasOne("Exam", "sampleId"),
+		})
+		.secondaryIndexes((index) => [
+			index("workOrderId"),
+			index("examTypeId"),
+			index("status"),
+		])
+		.authorization((allow) => [allow.guest(), allow.authenticated()]),
+
+	Exam: a
+		.model({
+			sampleId: a.id().required(),
+			sample: a.belongsTo("Sample", "sampleId"),
+			examTypeId: a.id().required(),
+			examType: a.belongsTo("ExamType", "examTypeId"),
+			status: a.enum(["pending", "inprogress", "completed", "review"]),
+			results: a.json(),
+			startedAt: a.datetime(),
+			resultedAt: a.datetime(),
+			performedBy: a.string(),
+			notes: a.string(),
+		})
+		.secondaryIndexes((index) => [
+			index("sampleId"),
+			index("examTypeId"),
+			index("status"),
+		])
+		.authorization((allow) => [allow.guest(), allow.authenticated()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({
-  schema,
-  authorizationModes: {
-    defaultAuthorizationMode: 'identityPool',
-  },
+	schema,
+	authorizationModes: {
+		defaultAuthorizationMode: "userPool",
+	},
 });
-
-/*== STEP 2 ===============================================================
-Go to your frontend source code. From your client-side code, generate a
-Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
-WORK IN THE FRONTEND CODE FILE.)
-
-Using JavaScript or Next.js React Server Components, Middleware, Server 
-Actions or Pages Router? Review how to generate Data clients for those use
-cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
-=========================================================================*/
-
-/*
-"use client"
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-*/
-
-/*== STEP 3 ===============================================================
-Fetch records from the database and use them in your frontend component.
-(THIS SNIPPET WILL ONLY WORK IN THE FRONTEND CODE FILE.)
-=========================================================================*/
-
-/* For example, in a React component, you can use this snippet in your
-  function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
-
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>

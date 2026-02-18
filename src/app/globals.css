@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@aws-amplify/ui-react/styles.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
