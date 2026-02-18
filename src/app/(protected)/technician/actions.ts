@@ -8,6 +8,8 @@ import {
 } from "@/utils/amplifyServerUtils";
 import { cookies } from "next/headers";
 
+const MOCK_TECHNICIAN = true;
+
 async function requireAuth() {
 	const user = await runWithAmplifyServerContext({
 		nextServerContext: { cookies },
@@ -21,16 +23,24 @@ async function requireAuth() {
 	return user;
 }
 
+const MOCK_WORK_ORDERS = [
+	{ id: "wo-1", accessionNumber: "ORD-2024-001", priority: "routine" as const, status: "pending" as const, patientName: "Juan Pérez", sampleCount: 2 },
+	{ id: "wo-2", accessionNumber: "ORD-2024-002", priority: "urgent" as const, status: "inprogress" as const, patientName: "María García", sampleCount: 1 },
+	{ id: "wo-3", accessionNumber: "ORD-2024-003", priority: "routine" as const, status: "pending" as const, patientName: "Carlos López", sampleCount: 3 },
+];
+
+const MOCK_SAMPLES = [
+	{ id: "s-1", barcode: "BC-001", status: "received" as const, examTypeName: "Uroanálisis", patientName: "Juan Pérez" },
+	{ id: "s-2", barcode: "BC-002", status: "pending" as const, examTypeName: "Hemograma", patientName: "María García" },
+	{ id: "s-3", barcode: "BC-003", status: "received" as const, examTypeName: "Uroanálisis", patientName: "Carlos López" },
+];
+
 export const fetchPendingWorkOrders = cache(async () => {
+	if (MOCK_TECHNICIAN) return MOCK_WORK_ORDERS;
 	await requireAuth();
-
-	const { data: workOrders, errors: woErrors } =
-		await cookieBasedClient.models.WorkOrder.list({
-			filter: { status: { ne: "completed" } },
-		});
-	console.log("[technician:fetchPendingWorkOrders] raw workOrders:", workOrders);
-	console.log("[technician:fetchPendingWorkOrders] workOrder errors:", woErrors);
-
+	const { data: workOrders } = await cookieBasedClient.models.WorkOrder.list({
+		filter: { status: { ne: "completed" } },
+	});
 	const enriched = await Promise.all(
 		workOrders.map(async (wo) => {
 			const [{ data: patient }, { data: samples }] = await Promise.all([
@@ -46,40 +56,22 @@ export const fetchPendingWorkOrders = cache(async () => {
 				status: wo.status ?? "pending",
 				requestedAt: wo.requestedAt,
 				patientName: patient
-					? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() ||
-						"Unknown"
+					? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() || "Unknown"
 					: "Unknown",
 				sampleCount: samples?.length ?? 0,
 			};
 		}),
 	);
-
-	console.log("[technician:fetchPendingWorkOrders] enriched:", enriched);
 	return enriched;
 });
 
 export const fetchPendingSamples = cache(async () => {
+	if (MOCK_TECHNICIAN) return MOCK_SAMPLES;
 	await requireAuth();
-
 	const [pending, received] = await Promise.all([
-		cookieBasedClient.models.Sample.list({
-			filter: { status: { eq: "pending" } },
-		}),
-		cookieBasedClient.models.Sample.list({
-			filter: { status: { eq: "received" } },
-		}),
+		cookieBasedClient.models.Sample.list({ filter: { status: { eq: "pending" } } }),
+		cookieBasedClient.models.Sample.list({ filter: { status: { eq: "received" } } }),
 	]);
-	console.log("[technician:fetchPendingSamples] raw pending:", pending.data);
-	console.log("[technician:fetchPendingSamples] raw received:", received.data);
-	console.log(
-		"[technician:fetchPendingSamples] pending errors:",
-		pending.errors,
-	);
-	console.log(
-		"[technician:fetchPendingSamples] received errors:",
-		received.errors,
-	);
-
 	const enrich = async (s: {
 		id: string;
 		workOrderId: string;
@@ -87,56 +79,32 @@ export const fetchPendingSamples = cache(async () => {
 		barcode?: string | null;
 		status?: string | null;
 	}) => {
-		const [workOrderRes, examTypeRes] = await Promise.all([
-			cookieBasedClient.models.WorkOrder.get({ id: s.workOrderId }),
-			cookieBasedClient.models.ExamType.get({ id: s.examTypeId }),
-		]);
-
-		const { data: workOrder, errors: woErrors } = workOrderRes;
-		const { data: examType, errors: etErrors } = examTypeRes;
-
-		console.log("[technician:fetchPendingSamples] wo:", workOrder);
-		console.log("[technician:fetchPendingSamples] et:", examType);
-		console.log("[technician:fetchPendingSamples] woErrors:", woErrors);
-		console.log("[technician:fetchPendingSamples] etErrors:", etErrors);
+		const { data: workOrder } = await cookieBasedClient.models.WorkOrder.get({ id: s.workOrderId });
+		const { data: examType } = await cookieBasedClient.models.ExamType.get({ id: s.examTypeId });
 		if (!workOrder) return null;
-		const { data: patient } = await cookieBasedClient.models.Patient.get({
-			id: workOrder.patientId,
-		});
+		const { data: patient } = await cookieBasedClient.models.Patient.get({ id: workOrder.patientId });
 		return {
 			id: s.id,
 			barcode: s.barcode ?? "—",
 			status: s.status ?? "pending",
 			examTypeName: examType?.name ?? "Unknown",
-			patientName: patient
-				? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() ||
-					"Unknown"
-				: "Unknown",
+			patientName: patient ? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() || "Unknown" : "Unknown",
 			accessionNumber: workOrder.accessionNumber ?? "—",
 		};
 	};
-
 	const all = [...(pending.data ?? []), ...(received.data ?? [])];
 	const enriched = await Promise.all(all.map(enrich));
-	const filtered = enriched.filter(
-		(x): x is NonNullable<typeof x> => x !== null,
-	);
-
-	console.log("[technician:fetchPendingSamples] enriched:", filtered);
-	return filtered;
+	return enriched.filter((x): x is NonNullable<typeof x> => x !== null);
 });
 
 export async function getTechnicianDashboardData() {
+	if (MOCK_TECHNICIAN) {
+		return { workOrders: MOCK_WORK_ORDERS, samples: MOCK_SAMPLES };
+	}
 	await requireAuth();
-
 	const [workOrders, samples] = await Promise.all([
 		fetchPendingWorkOrders(),
 		fetchPendingSamples(),
 	]);
-
-	console.log("[technician:getTechnicianDashboardData] result:", {
-		workOrders,
-		samples,
-	});
 	return { workOrders, samples };
 }

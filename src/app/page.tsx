@@ -1,16 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "aws-amplify/auth/server";
-import { runWithAmplifyServerContext } from "@/utils/amplifyServerUtils";
-import { cookies } from "next/headers";
 
-export default async function HomePage() {
-	try {
-		await runWithAmplifyServerContext({
-			nextServerContext: { cookies },
-			operation: (ctx) => getCurrentUser(ctx),
-		});
-	} catch {
-		redirect("/login");
-	}
+/** Overpass: redirect to technician dashboard. Real auth (token + role) will be added later. */
+export default function HomePage() {
 	redirect("/technician");
 }
