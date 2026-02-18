@@ -87,12 +87,14 @@ export default function LoginPage() {
             LabCore
           </h1>
         </div>
-        <h2 className="mt-6 text-xl font-semibold text-black dark:text-white">
-          Bienvenido de nuevo
-        </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Introduce tus datos para acceder a tu cuenta
-        </p>
+        <div className="mt-6 text-center">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
+            Bienvenido de nuevo
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Introduce tus datos para acceder a tu cuenta
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">

@@ -115,14 +115,16 @@ export default function RegisterPage() {
 						LabCore
 					</h1>
 				</div>
-				<h2 className="mt-6 text-xl font-semibold text-black dark:text-white">
-					{step === "signup" ? "Crear cuenta" : "Confirmar correo"}
-				</h2>
-				<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-					{step === "signup"
-						? "Registro para técnicos"
-						: "Ingresa el código que enviamos a tu correo"}
-				</p>
+				<div className="mt-6 text-center">
+					<h2 className="text-xl font-semibold text-black dark:text-white">
+						{step === "signup" ? "Crear cuenta" : "Confirmar correo"}
+					</h2>
+					<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+						{step === "signup"
+							? "Registro para técnicos"
+							: "Ingresa el código que enviamos a tu correo"}
+					</p>
+				</div>
 
 				{step === "signup" ? (
 					<form onSubmit={handleSignUp} className="mt-6 space-y-4">

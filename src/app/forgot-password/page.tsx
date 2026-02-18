@@ -80,14 +80,16 @@ export default function ForgotPasswordPage() {
 						LabCore
 					</h1>
 				</div>
-				<h2 className="mt-6 text-xl font-semibold text-black dark:text-white">
-					{step === "request" ? "Recuperar contraseña" : "Nueva contraseña"}
-				</h2>
-				<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-					{step === "request"
-						? "Te enviaremos un código a tu correo"
-						: "Ingresa el código y tu nueva contraseña"}
-				</p>
+				<div className="mt-6 text-center">
+					<h2 className="text-xl font-semibold text-black dark:text-white">
+						{step === "request" ? "Recuperar contraseña" : "Nueva contraseña"}
+					</h2>
+					<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+						{step === "request"
+							? "Te enviaremos un código a tu correo"
+							: "Ingresa el código y tu nueva contraseña"}
+					</p>
+				</div>
 
 				{step === "request" ? (
 					<form onSubmit={handleRequestCode} className="mt-6 space-y-4">
