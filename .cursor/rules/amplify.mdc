@@ -1,0 +1,16 @@
+---
+description: Amplify development guidelines
+globs: 
+  - "amplify/**"
+  - "src/**"
+---
+
+# Amplify Development Guidelines
+
+When working on Amplify projects, use the AWS MCP Server guided workflows:
+
+- For backend features (auth, data, storage, functions, AI), call `retrieve_agent_sop` with `amplify-backend-implementation`
+- For frontend integration, call `retrieve_agent_sop` with `amplify-frontend-integration`
+- For deployment tasks, call `retrieve_agent_sop` with `amplify-deployment-guide`---
+alwaysApply: true
+---
