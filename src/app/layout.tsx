@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ConfigureAmplifyClientSide from "@/components/ConfigureAmplifyClientSide";
+import { AuthProvider } from "@/contexts/auth-context";
 
 const jakarta = Plus_Jakarta_Sans({
 	variable: "--font-jakarta",
@@ -57,7 +58,9 @@ export default function RootLayout({
 				className={`${jakarta.variable} font-sans antialiased`}
 			>
 				<ConfigureAmplifyClientSide />
-				<TooltipProvider>{children}</TooltipProvider>
+				<AuthProvider>
+					<TooltipProvider>{children}</TooltipProvider>
+				</AuthProvider>
 			</body>
 		</html>
 	);

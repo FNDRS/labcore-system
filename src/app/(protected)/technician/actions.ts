@@ -1,25 +1,20 @@
 "use server";
 
-import { getCurrentUser } from "aws-amplify/auth/server";
 import { cache } from "react";
 import {
 	cookieBasedClient,
 	runWithAmplifyServerContext,
 } from "@/utils/amplifyServerUtils";
+import { requireAuthWithGroup } from "@/lib/auth-server";
 import { cookies } from "next/headers";
 
 const MOCK_TECHNICIAN = true;
 
-async function requireAuth() {
-	const user = await runWithAmplifyServerContext({
+async function requireTechnicianAuth() {
+	const { user } = await runWithAmplifyServerContext({
 		nextServerContext: { cookies },
-		operation: (ctx) => getCurrentUser(ctx),
+		operation: (ctx) => requireAuthWithGroup(ctx, "tecnico"),
 	});
-	console.log(
-		"[technician:requireAuth] user:",
-		user ? { username: user.username } : null,
-	);
-	if (!user) throw new Error("Unauthorized");
 	return user;
 }
 
@@ -37,7 +32,7 @@ const MOCK_SAMPLES = [
 
 export const fetchPendingWorkOrders = cache(async () => {
 	if (MOCK_TECHNICIAN) return MOCK_WORK_ORDERS;
-	await requireAuth();
+	await requireTechnicianAuth();
 	const { data: workOrders } = await cookieBasedClient.models.WorkOrder.list({
 		filter: { status: { ne: "completed" } },
 	});
@@ -67,7 +62,7 @@ export const fetchPendingWorkOrders = cache(async () => {
 
 export const fetchPendingSamples = cache(async () => {
 	if (MOCK_TECHNICIAN) return MOCK_SAMPLES;
-	await requireAuth();
+	await requireTechnicianAuth();
 	const [pending, received] = await Promise.all([
 		cookieBasedClient.models.Sample.list({ filter: { status: { eq: "pending" } } }),
 		cookieBasedClient.models.Sample.list({ filter: { status: { eq: "received" } } }),
@@ -101,7 +96,7 @@ export async function getTechnicianDashboardData() {
 	if (MOCK_TECHNICIAN) {
 		return { workOrders: MOCK_WORK_ORDERS, samples: MOCK_SAMPLES };
 	}
-	await requireAuth();
+	await requireTechnicianAuth();
 	const [workOrders, samples] = await Promise.all([
 		fetchPendingWorkOrders(),
 		fetchPendingSamples(),
