@@ -1,0 +1,120 @@
+---
+description: Standardize form handling with React Hook Form, Zod, and shadcn Field components
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Form Handling Standards
+
+Use React Hook Form + Zod + shadcn Field/Form components for all forms. Avoid raw `useState` for form fields.
+
+## Setup
+
+1. **Define a Zod schema** for validation:
+
+```tsx
+import * as z from "zod"
+
+const formSchema = z.object({
+  email: z.string().email("Enter a valid email."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+})
+```
+
+2. **Create form with `useForm` and `zodResolver`**:
+
+```tsx
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
+const form = useForm<z.infer<typeof formSchema>>({
+  resolver: zodResolver(formSchema),
+  defaultValues: { email: "", password: "" },
+})
+
+return (
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    {/* fields */}
+  </form>
+)
+```
+
+## Field Patterns
+
+### Option A: FormField + FormItem (shadcn Form)
+
+Use `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` from `@/components/ui/form`:
+
+```tsx
+<FormField
+  control={form.control}
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input {...field} type="email" placeholder="name@example.com" />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+### Option B: Controller + Field (shadcn Field docs)
+
+Use `Controller` with `Field`, `FieldLabel`, `FieldError` from `@/components/ui/field`:
+
+```tsx
+<Controller
+  name="email"
+  control={form.control}
+  render={({ field, fieldState }) => (
+    <Field data-invalid={fieldState.invalid}>
+      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+      <Input
+        {...field}
+        id={field.name}
+        aria-invalid={fieldState.invalid}
+      />
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
+  )}
+/>
+```
+
+### Accessibility (Required)
+
+- Add `aria-invalid={!!error}` or `aria-invalid={fieldState.invalid}` to form controls.
+- Add `data-invalid={fieldState.invalid}` to `Field` when using Option B.
+- Use `FieldError` / `FormMessage` with `role="alert"` for error display.
+
+### Select / Switch / Checkbox
+
+For non-input controls, use `field.value` and `field.onChange` instead of spreading `field`:
+
+```tsx
+<Select value={field.value} onValueChange={field.onChange}>
+  <SelectTrigger aria-invalid={fieldState.invalid}>
+    <SelectValue placeholder="Select" />
+  </SelectTrigger>
+  {/* ... */}
+</Select>
+```
+
+### Array Fields
+
+Use `useFieldArray` for dynamic lists. Use `field.id` as the `key` when mapping:
+
+```tsx
+const { fields, append, remove } = useFieldArray({
+  control: form.control,
+  name: "emails",
+})
+```
+
+## Don't
+
+- ❌ Use `useState` per field for form data
+- ❌ Omit schema validation (always use Zod + `zodResolver`)
+- ❌ Skip `aria-invalid` on invalid form controls
