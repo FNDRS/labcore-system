@@ -30,7 +30,7 @@ export default function RegisterPage() {
 	const handleAlreadySignedIn = async () => {
 		try {
 			await getCurrentUser();
-			router.replace("/");
+			router.replace("/login");
 			return true;
 		} catch {
 			return false;
@@ -60,7 +60,7 @@ export default function RegisterPage() {
 				try {
 					await autoSignIn();
 				} catch {}
-				router.replace("/");
+				router.replace("/login");
 			}
 		} catch (err: unknown) {
 			const message = err && typeof err === "object" && "message" in err
@@ -86,7 +86,7 @@ export default function RegisterPage() {
 				try {
 					await autoSignIn();
 				} catch {}
-				router.replace("/");
+				router.replace("/login");
 			} else {
 				setError("Código inválido o expirado.");
 			}

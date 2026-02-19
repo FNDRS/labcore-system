@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
 import {
   BarChart3,
+  ChevronDown,
   ChevronsLeft,
   ClipboardList,
   LogOut,
@@ -118,9 +119,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const [mounted, setMounted] = useState(false);
 
-  const navItems = allNavItems.filter((item) =>
-    authState.groups.includes(item.group),
-  );
+  const navItems = allNavItems.filter((item) => authState.groups.includes(item.group));
 
   useEffect(() => {
     setMounted(true);
@@ -137,9 +136,9 @@ export function AppSidebar() {
           "--sidebar-width-icon": "4rem",
         } as React.CSSProperties
       }
-      className="overflow-hidden border-r-0! bg-[#161616] text-zinc-50"
+      className="overflow-hidden border-r-0! bg-sidebar-dark text-zinc-50"
     >
-      <SidebarHeader className="bg-zinc-800 rounded-md px-2 py-2 ml-2 mr-0 mt-4 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mr-2">
+      <SidebarHeader className=" rounded-md px-2 py-2 ml-2 mr-0 mt-4 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mr-2">
         <div className="flex w-full items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <button
             type="button"
@@ -150,11 +149,11 @@ export function AppSidebar() {
             <Image
               src="/images/logo-white.png"
               alt="LabCore"
-              width={36}
-              height={36}
-              className="size-full object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
+              width={24}
+              height={24}
+              className="size-full max-w-[24px] max-h-[24px] object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
               priority
-              sizes="(max-width: 48px) 32px, 36px"
+              sizes="(max-width: 24px) 18px, 24px"
             />
           </button>
           <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
@@ -164,7 +163,7 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={() => toggleSidebar()}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:hidden"
+            className="flex size-7 mt-2 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:hidden"
             aria-label="Contraer barra"
           >
             <ChevronsLeft className="size-4" />
@@ -172,7 +171,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#161616] pl-0 pr-2 pt-8">
+      <SidebarContent className="bg-sidebar-dark pl-0 pr-2 pt-8">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-4">
@@ -185,7 +184,7 @@ export function AppSidebar() {
                       asChild
                       isActive={isActive}
                       tooltip={item.label}
-                      className="group h-10 justify-start rounded-r-full rounded-l-none pl-2 pr-3 text-[13px] text-zinc-200 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-zinc-950 data-[active=true]:shadow-sm"
+                      className="group h-10 justify-start rounded-r-full rounded-l-none pr-3 text-[13px] text-zinc-200 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-zinc-950 data-[active=true]:shadow-sm pl-4 group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!justify-start"
                     >
                       <Link href={item.href}>
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center text-white group-data-[active=true]:text-zinc-950">
@@ -208,19 +207,19 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/5 bg-[#161616] pr-2 py-2 pl-0">
+      <SidebarFooter className="border-t border-white/5 bg-sidebar-dark pr-2 py-2 pl-0">
         <SidebarMenu className="flex flex-col gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               tooltip="Soporte"
-              className="h-10 justify-start rounded-r-full rounded-l-none pl-2 pr-3 text-[13px] text-white hover:bg-white/10 group-data-[collapsible=icon]:rounded-full group-data-[collapsible=icon]:px-2 hover:text-white"
+              className="group h-10 justify-start rounded-r-full rounded-l-none pl-4 pr-3 text-[13px] text-zinc-200 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!justify-start group-data-[collapsible=icon]:rounded-r-full group-data-[collapsible=icon]:pl-2"
             >
               <Link href="/support">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center text-white">
                   <Shield className="h-4 w-4" strokeWidth={1.5} />
                 </span>
-                <span className="truncate group-data-[collapsible=icon]:hidden">Soporte</span>
+                <span className="truncate text-md font-medium group-data-[collapsible=icon]:hidden">Soporte</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -229,47 +228,51 @@ export function AppSidebar() {
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 ml-2"
+                className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1.5 ml-2 pr-4 mr-2"
                 aria-label="Cuenta de usuario"
               >
-                <Avatar className="size-7 shrink-0 ring-2 ring-white/20">
+                <Avatar className="size-6 shrink-0 ring-1 ring-white/20">
                   <AvatarImage src="" alt="" />
-                  <AvatarFallback className="bg-zinc-600 text-sm font-medium text-white">
+                  <AvatarFallback className="bg-zinc-600 text-xs font-medium text-white">
                     {authState.userName?.slice(0, 2).toUpperCase() ||
                       authState.userEmail?.slice(0, 2).toUpperCase() ||
                       "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-                  <p className="truncate text-[13px] font-medium text-white">
-                    {authState.userName ?? "Usuario"}
-                  </p>
-                  <p className="truncate text-xs text-zinc-300">
-                    {authState.userEmail ?? ""}
-                  </p>
-                </div>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-medium group-data-[collapsible=icon]:hidden">
+                  {authState.userName ?? "Usuario"}
+                </span>
+                <ChevronDown className="size-3.5 shrink-0 text-zinc-400 group-data-[collapsible=icon]:hidden" />
               </button>
             </PopoverTrigger>
             <PopoverContent
               align="start"
               side="right"
-              className="w-56 border-zinc-800 bg-zinc-950 p-1.5 shadow-xl shadow-black/40"
+              className="w-56 border-zinc-800 bg-zinc-950 p-0 shadow-xl shadow-black/40"
             >
-              <Link
-                href={getSettingsHref(authState.groups)}
-                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <Pencil className="size-4 shrink-0 text-zinc-400" />
-                Editar perfil
-              </Link>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
-                onClick={() => actions.signOut()}
-              >
-                <LogOut className="size-4 shrink-0" />
-                Cerrar sesión
-              </button>
+              <div className="border-b border-white/5 px-3 py-2">
+                <p className="truncate text-sm font-medium text-white">
+                  {authState.userName ?? "Usuario"}
+                </p>
+                <p className="truncate text-xs text-zinc-400">{authState.userEmail ?? ""}</p>
+              </div>
+              <div className="py-1">
+                <Link
+                  href={getSettingsHref(authState.groups)}
+                  className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Pencil className="size-4 shrink-0 text-zinc-400" />
+                  Editar perfil
+                </Link>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                  onClick={() => actions.signOut()}
+                >
+                  <LogOut className="size-4 shrink-0" />
+                  Cerrar sesión
+                </button>
+              </div>
             </PopoverContent>
           </Popover>
         </SidebarMenu>

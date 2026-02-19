@@ -33,7 +33,10 @@ export const metadata: Metadata = {
 	creator: "LabCore",
 	applicationName: "LabCore LIS",
 	icons: {
-		icon: "/images/favicon.ico",
+		icon: [
+			{ url: "/images/favicon.ico", sizes: "any" },
+			{ url: "/images/favicon.ico", type: "image/x-icon", sizes: "32x32" },
+		],
 		apple: "/images/logo-black.png",
 	},
 	openGraph: {
