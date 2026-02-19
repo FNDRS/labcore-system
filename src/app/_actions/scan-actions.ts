@@ -8,9 +8,9 @@ export async function scanAction(formData: FormData) {
 		return { error: "Code is required" };
 	}
 
-	//fetch examen-fetch-ordenTrabajo-id
-	const examen = "idx"; //aqui irian los awaits de esto
-	const ordenTrabajo = "idy"; //aqui irian los awaits de esto
+	// TODO: resolve workOrderId and examId from code (barcode lookup)
+	const examId = "idx";
+	const workOrderId = "idy";
 
-	redirect(`/tecnico/orden-trabajo/${ordenTrabajo}/examen/${examen}`);
+	redirect(`/technician/work-order/${workOrderId}/exam/${examId}`);
 }
