@@ -10,7 +10,6 @@ import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
 import {
   BarChart3,
   ChevronsLeft,
-  ChevronsRight,
   ClipboardList,
   LogOut,
   Pencil,
@@ -118,36 +117,41 @@ export function AppSidebar() {
       style={
         {
           "--sidebar-width": "12rem",
-          "--sidebar-width-icon": "3rem",
+          "--sidebar-width-icon": "4rem",
         } as React.CSSProperties
       }
       className="overflow-hidden border-r-0! bg-[#161616] text-zinc-50"
     >
-      <SidebarHeader className="bg-[#161616] px-2 py-2.5">
-        <div className="flex items-center gap-1.5">
+      <SidebarHeader className="bg-zinc-800 rounded-md px-2 py-2 ml-2 mr-0 mt-4 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mr-2">
+        <div className="flex w-full items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <button
             type="button"
             onClick={() => toggleSidebar()}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white"
-            aria-label={isCollapsed ? "Expandir barra" : "Contraer barra"}
+            className="flex min-w-0 size-9 shrink-0 items-center justify-center overflow-hidden rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white/20 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:rounded"
+            aria-label={isCollapsed ? "Expandir barra" : "LabCore"}
           >
-            {isCollapsed ? (
-              <ChevronsRight className="size-4" />
-            ) : (
-              <ChevronsLeft className="size-4" />
-            )}
-          </button>
-          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden group-data-[collapsible=icon]:hidden">
             <Image
-              src="/images/logo-black.png"
+              src="/images/logo-white.png"
               alt="LabCore"
-              width={20}
-              height={20}
-              className="shrink-0 invert"
+              width={36}
+              height={36}
+              className="size-full object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
               priority
+              sizes="(max-width: 48px) 32px, 36px"
             />
-            <span className="truncate text-base font-bold tracking-tight">LabCore</span>
+          </button>
+          <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-sm font-semibold leading-tight text-white">LabCore</p>
+            <p className="truncate text-xs leading-tight text-zinc-400">Company</p>
           </div>
+          <button
+            type="button"
+            onClick={() => toggleSidebar()}
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:hidden"
+            aria-label="Contraer barra"
+          >
+            <ChevronsLeft className="size-4" />
+          </button>
         </div>
       </SidebarHeader>
 
@@ -183,7 +187,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/5 bg-[#161616] px-2 py-2">
+      <SidebarFooter className="border-t border-white/5 bg-[#161616] pr-2 py-2 pl-0">
         <SidebarMenu className="flex flex-col gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -204,7 +208,7 @@ export function AppSidebar() {
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
+                className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 ml-2"
                 aria-label="Cuenta de usuario"
               >
                 <Avatar className="size-7 shrink-0 ring-2 ring-white/20">
