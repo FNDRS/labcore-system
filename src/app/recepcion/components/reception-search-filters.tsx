@@ -25,7 +25,7 @@ export function ReceptionSearchFilters({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Buscar paciente, orden o prueba…"
-          className="h-11 pl-9 text-base"
+          className="h-11 rounded-full pl-9 text-base"
           aria-label="Buscar paciente, orden o prueba"
         />
       </div>
@@ -37,6 +37,7 @@ export function ReceptionSearchFilters({
             type="button"
             size="sm"
             variant={activeFilter === filter ? "default" : "outline"}
+            className="rounded-full"
             onClick={() => onFilterChange(filter)}
           >
             {filter}
