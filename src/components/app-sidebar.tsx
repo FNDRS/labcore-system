@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
-import { ClipboardList, FileEdit, FlaskConical, PanelRight, Shield } from "lucide-react";
+import { FlaskConical, PanelRight, Shield } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +34,10 @@ type NavItem = {
   group: "tecnico" | "supervisor" | "admin";
 };
 
-/** Sidebar operativo para técnico: solo flujo de trabajo (sin administración). */
+/**
+ * Sidebar técnico: minimalista (ver docs/navegacion-por-roles.md).
+ * Órdenes y Resultados son módulos administrativos/clínicos; el técnico solo ve Dashboard + Muestras.
+ */
 const tecnicoNavItems: NavItem[] = [
   {
     href: "/technician",
@@ -48,20 +51,6 @@ const tecnicoNavItems: NavItem[] = [
     label: "Muestras",
     icon: FlaskConical,
     activeWhen: (p) => p.startsWith("/technician/muestras"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/ordenes",
-    label: "Órdenes",
-    icon: ClipboardList,
-    activeWhen: (p) => p.startsWith("/technician/ordenes"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/resultados",
-    label: "Resultados",
-    icon: FileEdit,
-    activeWhen: (p) => p.startsWith("/technician/resultados"),
     group: "tecnico",
   },
 ];
