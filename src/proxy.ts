@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth";
 
 /** Rutas que el bypass de desarrollo puede acceder sin Cognito */
-const DEV_BYPASS_GROUPS = ["tecnico", "doctor"] as const;
+const DEV_BYPASS_GROUPS = ["tecnico", "doctor", "supervisor"] as const;
 
 function nextWithPathname(request: NextRequest, pathname: string) {
 	const requestHeaders = new Headers(request.headers);

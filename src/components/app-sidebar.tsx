@@ -4,7 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
-import { Bell, FileText, FlaskConical, PanelRight, Settings, Shield, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  FileCheck,
+  FileText,
+  FlaskConical,
+  History,
+  PanelRight,
+  Settings,
+  Shield,
+  Users,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -55,22 +66,20 @@ const tecnicoNavItems: NavItem[] = [
   },
 ];
 
-/** Items para supervisor y admin. */
-const supervisorAdminNavItems: NavItem[] = [
-  {
-    href: "/supervisor",
-    label: "Dashboard",
-    icon: HomeSidebarIcon,
-    activeWhen: (p) => p === "/supervisor" || p.startsWith("/supervisor/"),
-    group: "supervisor",
-  },
-  {
-    href: "/admin",
-    label: "Dashboard",
-    icon: HomeSidebarIcon,
-    activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"),
-    group: "admin",
-  },
+/** Supervisor: validación, muestras, incidencias, reportes, auditoría (ver navegacion-por-roles). */
+const supervisorNavItems: NavItem[] = [
+  { href: "/supervisor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/supervisor", group: "supervisor" },
+  { href: "/supervisor/validaciones", label: "Validaciones", icon: FileCheck, activeWhen: (p) => p.startsWith("/supervisor/validaciones"), group: "supervisor" },
+  { href: "/supervisor/muestras", label: "Muestras", icon: FlaskConical, activeWhen: (p) => p.startsWith("/supervisor/muestras"), group: "supervisor" },
+  { href: "/supervisor/incidencias", label: "Incidencias", icon: AlertTriangle, activeWhen: (p) => p.startsWith("/supervisor/incidencias"), group: "supervisor" },
+  { href: "/supervisor/reportes", label: "Reportes", icon: FileText, activeWhen: (p) => p.startsWith("/supervisor/reportes"), group: "supervisor" },
+  { href: "/supervisor/auditoria", label: "Auditoría", icon: History, activeWhen: (p) => p.startsWith("/supervisor/auditoria"), group: "supervisor" },
+  { href: "/supervisor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/supervisor/settings"), group: "supervisor" },
+];
+
+/** Admin: solo dashboard por ahora. */
+const adminNavItems: NavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"), group: "admin" },
 ];
 
 /** Vista doctor: clínica, solo resultados y pacientes (ver navegacion-por-roles). */
@@ -86,11 +95,11 @@ const doctorNavItems: NavItem[] = [
 function getNavItems(pathname: string, groups: string[]): NavItem[] {
   if (pathname.startsWith("/doctor")) return doctorNavItems;
   if (pathname.startsWith("/technician")) return tecnicoNavItems;
-  if (pathname.startsWith("/supervisor")) return supervisorAdminNavItems.filter((i) => i.group === "supervisor");
-  if (pathname.startsWith("/admin")) return supervisorAdminNavItems.filter((i) => i.group === "admin");
+  if (pathname.startsWith("/supervisor")) return supervisorNavItems;
+  if (pathname.startsWith("/admin")) return adminNavItems;
   if (groups.includes("doctor") && !groups.includes("supervisor") && !groups.includes("admin")) return doctorNavItems;
   if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return tecnicoNavItems;
-  return [...tecnicoNavItems, ...supervisorAdminNavItems].filter((item) => groups.includes(item.group));
+  return [...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter((item) => groups.includes(item.group));
 }
 
 function getRoleLabel(pathname: string, groups: string[]): string {
