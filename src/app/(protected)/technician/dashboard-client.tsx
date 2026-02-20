@@ -99,7 +99,7 @@ export function NextSampleCard({ nextSample }: { nextSample: NextSample | null }
       <p className="mt-2 text-xs text-muted-foreground">
         Tiempo en espera: {nextSample.waitMins} min
       </p>
-      <Button className="mt-4" size="lg" onClick={() => router.push("/technician/muestras")}>
+      <Button className="mt-4 rounded-full" size="lg" onClick={() => router.push("/technician/muestras")}>
         Procesar ahora
       </Button>
     </div>
@@ -120,7 +120,7 @@ export function QueueFilters({
           key={f.value}
           variant={filter === f.value ? "default" : "outline"}
           size="sm"
-          className="rounded-xl"
+          className="rounded-full"
           onClick={() => onFilter(f.value)}
         >
           {f.label}
@@ -290,11 +290,11 @@ function ScanSampleDialog({
           />
         </div>
         <DialogFooter className="gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button variant="outline" className="rounded-full" onClick={() => handleOpenChange(false)}>
             Cancelar
           </Button>
           <Button
-            className="bg-primary hover:bg-primary/90 focus-visible:ring-primary"
+            className="rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
             onClick={handleScan}
           >
             Escanear
@@ -347,7 +347,7 @@ export function DashboardQueueSection({ rows }: { rows: QueueRow[] }) {
                 )}
               </div>
               <Button
-                className="bg-primary hover:bg-primary/90 focus-visible:ring-primary"
+                className="rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
                 onClick={() => setScanOpen(true)}
               >
                 Escanear muestra

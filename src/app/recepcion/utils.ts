@@ -70,15 +70,18 @@ export function filterAndSortOrders(orders: ReceptionOrder[], search: string, ac
     return order.status === "Muestras creadas";
   });
 
+  // Orden operativo: 1) Sin muestras + urgentes, 2) Sin muestras, 3) Muestras creadas, 4) Procesando
+  function sortRank(o: ReceptionOrder): number {
+    if (o.status === "Sin muestras" && o.priority === "Urgente") return 0;
+    if (o.status === "Sin muestras") return 1;
+    if (o.status === "Muestras creadas") return 2;
+    return 3; // Procesando
+  }
+
   return filtered.toSorted((a, b) => {
-    const aNeedsAction = a.status === "Sin muestras" ? 0 : 1;
-    const bNeedsAction = b.status === "Sin muestras" ? 0 : 1;
-    if (aNeedsAction !== bNeedsAction) return aNeedsAction - bNeedsAction;
-
-    const aUrgent = a.priority === "Urgente" ? 0 : 1;
-    const bUrgent = b.priority === "Urgente" ? 0 : 1;
-    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
-
+    const ra = sortRank(a);
+    const rb = sortRank(b);
+    if (ra !== rb) return ra - rb;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 }

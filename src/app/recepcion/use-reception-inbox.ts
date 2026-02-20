@@ -28,6 +28,11 @@ export function useReceptionInbox() {
     [orders]
   );
 
+  const urgentPendingCount = useMemo(
+    () => orders.filter((order) => order.status === "Sin muestras" && order.priority === "Urgente").length,
+    [orders]
+  );
+
   const selectedOrder = useMemo(
     () => orders.find((order) => order.id === selectedOrderId) ?? null,
     [orders, selectedOrderId]
@@ -120,6 +125,7 @@ export function useReceptionInbox() {
     highlightedNewIds,
     generationModal,
     pendingCount,
+    urgentPendingCount,
     selectedOrder,
     visibleOrders,
     setSearch,

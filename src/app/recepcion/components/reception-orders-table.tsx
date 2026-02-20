@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ReceptionOrder } from "../types";
-import { formatDateTime, priorityPillClass, statusPillClass } from "../utils";
+import { formatDateTime, statusPillClass } from "../utils";
 
 type ReceptionOrdersTableProps = {
   orders: ReceptionOrder[];
@@ -25,14 +25,12 @@ export function ReceptionOrdersTable({
   onGenerateForOrder,
 }: ReceptionOrdersTableProps) {
   return (
-    <section className="rounded-xl border bg-card">
+    <section className="rounded-xl border border-zinc-200 bg-white">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Orden</TableHead>
             <TableHead>Paciente</TableHead>
-            <TableHead>Pruebas</TableHead>
-            <TableHead>Prioridad</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Acción</TableHead>
           </TableRow>
@@ -40,7 +38,7 @@ export function ReceptionOrdersTable({
         <TableBody>
           {orders.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-muted-foreground py-10 text-center">
+              <TableCell colSpan={4} className="text-muted-foreground py-10 text-center">
                 No hay órdenes para los filtros actuales.
               </TableCell>
             </TableRow>
@@ -49,7 +47,7 @@ export function ReceptionOrdersTable({
               <TableRow
                 key={order.id}
                 className={
-                  highlightedNewIds.includes(order.id) ? "bg-emerald-50/80 dark:bg-emerald-950/20" : undefined
+                  highlightedNewIds.includes(order.id) ? "bg-emerald-50/60 dark:bg-emerald-950/20" : undefined
                 }
                 onClick={() => onSelectOrder(order.id)}
               >
@@ -57,19 +55,13 @@ export function ReceptionOrdersTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span>{order.patientName}</span>
-                    {order.isNew ? (
-                      <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Nueva</Badge>
+                    {order.priority === "Urgente" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                        Urgente
+                      </span>
                     ) : null}
                   </div>
                   <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt)}</p>
-                </TableCell>
-                <TableCell>{order.tests.length}</TableCell>
-                <TableCell>
-                  <span
-                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${priorityPillClass(order.priority)}`}
-                  >
-                    {order.priority}
-                  </span>
                 </TableCell>
                 <TableCell>
                   <span
@@ -79,17 +71,23 @@ export function ReceptionOrdersTable({
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onGenerateForOrder(order);
-                    }}
-                    disabled={order.status !== "Sin muestras"}
-                  >
-                    {order.status === "Sin muestras" ? "Generar muestras" : "Generadas"}
-                  </Button>
+                  {order.status === "Sin muestras" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onGenerateForOrder(order);
+                      }}
+                    >
+                      Generar muestras
+                    </Button>
+                  ) : (
+                    <Badge variant="secondary" className="font-normal">
+                      ✔ Generadas
+                    </Badge>
+                  )}
                 </TableCell>
               </TableRow>
             ))
