@@ -26,8 +26,14 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import type { NextSample, QueueRow, SampleStatus } from "./actions";
 
-const FILTERS = ["All", "Processing", "Urgent", "Flagged", "My Queue"] as const;
-type Filter = (typeof FILTERS)[number];
+const FILTERS = [
+  { value: "All", label: "Todos" },
+  { value: "Processing", label: "En proceso" },
+  { value: "Urgent", label: "Urgentes" },
+  { value: "Flagged", label: "Marcadas" },
+  { value: "My Queue", label: "Mis muestras" },
+] as const;
+type Filter = (typeof FILTERS)[number]["value"];
 
 function StatusBadge({ status }: { status: SampleStatus }) {
   if (status === "Complete") {
@@ -245,13 +251,13 @@ export function QueueFilters({
     <div className="flex flex-wrap gap-2">
       {FILTERS.map((f) => (
         <Button
-          key={f}
-          variant={filter === f ? "default" : "outline"}
+          key={f.value}
+          variant={filter === f.value ? "default" : "outline"}
           size="sm"
           className="rounded-xl"
-          onClick={() => onFilter(f)}
+          onClick={() => onFilter(f.value)}
         >
-          {f}
+          {f.label}
         </Button>
       ))}
     </div>

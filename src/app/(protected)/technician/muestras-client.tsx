@@ -5,10 +5,13 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  MoreHorizontal,
   Package,
   Printer,
+  Search,
   ScanLine,
   Wrench,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +23,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import {
   Table,
@@ -31,8 +40,15 @@ import {
 } from "@/components/ui/table";
 import type { MuestrasSummary, SampleWorkstationRow, SampleWorkstationStatus } from "./actions";
 
-const FILTERS = ["All", "Processing", "Received", "Urgent", "Flagged", "Mine"] as const;
-type Filter = (typeof FILTERS)[number];
+const FILTERS = [
+  { value: "All", label: "Todos" },
+  { value: "Processing", label: "En proceso" },
+  { value: "Received", label: "Recibidas" },
+  { value: "Urgent", label: "Urgentes" },
+  { value: "Flagged", label: "Marcadas" },
+  { value: "Mine", label: "Mis muestras" },
+] as const;
+type Filter = (typeof FILTERS)[number]["value"];
 
 function StatusBadge({ status }: { status: SampleWorkstationStatus }) {
   const config: Record<
@@ -232,7 +248,7 @@ export function MuestrasFilters({
       const i = parseInt(e.key, 10);
       if (i >= 1 && i <= FILTERS.length) {
         e.preventDefault();
-        onFilter(FILTERS[i - 1]);
+        onFilter(FILTERS[i - 1].value);
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -243,17 +259,17 @@ export function MuestrasFilters({
     <div className="flex flex-wrap items-center gap-2">
       {FILTERS.map((f, i) => (
         <Button
-          key={f}
-          variant={filter === f ? "default" : "outline"}
+          key={f.value}
+          variant={filter === f.value ? "default" : "outline"}
           size="sm"
           className={
-            filter === f
-              ? "rounded-xl bg-orange-500 hover:bg-orange-600 focus-visible:ring-orange-500"
+            filter === f.value
+              ? "rounded-xl bg-primary hover:bg-primary/90 focus-visible:ring-primary"
               : "rounded-xl"
           }
-          onClick={() => onFilter(f)}
+          onClick={() => onFilter(f.value)}
         >
-          {f}
+          {f.label}
           <span className="text-muted-foreground ml-1.5 text-[10px]">({i + 1})</span>
         </Button>
       ))}
@@ -265,6 +281,7 @@ export function MuestrasFilters({
 export function MuestrasTable({
   rows,
   filter,
+  searchQuery,
   selectedId,
   highlightedId,
   onSelect,
@@ -276,6 +293,7 @@ export function MuestrasTable({
 }: {
   rows: SampleWorkstationRow[];
   filter: Filter;
+  searchQuery: string;
   selectedId: string | null;
   highlightedId: string | null;
   onSelect: (id: string) => void;
@@ -285,7 +303,15 @@ export function MuestrasTable({
   tableRef: React.RefObject<HTMLDivElement | null>;
   rowRefs: (id: string) => (el: HTMLTableRowElement | null) => void;
 }) {
-  const filtered = filterRows(rows, filter);
+  const filtered = filterRows(rows, filter).filter((row) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      row.sampleId.toLowerCase().includes(q) ||
+      row.patientName.toLowerCase().includes(q) ||
+      row.testType.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div ref={tableRef} className="overflow-hidden rounded-2xl border border-border bg-card">
@@ -327,7 +353,7 @@ export function MuestrasTable({
               <TableRow
                 key={row.id}
                 ref={rowRefs(row.id)}
-                className={`border-b border-border/40 transition-colors hover:bg-muted/30 ${
+                className={`border-b border-border/40 transition-colors hover:bg-muted/70 ${
                   highlightedId === row.id
                     ? "bg-orange-100/80 dark:bg-orange-950/30"
                     : selectedId === row.id
@@ -335,7 +361,7 @@ export function MuestrasTable({
                       : ""
                 }`}
               >
-                <TableCell className="px-4 py-3 font-mono text-sm font-semibold">
+                <TableCell className="px-4 py-3 font-mono text-sm font-semibold text-muted-foreground">
                   {row.sampleId}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-sm font-semibold">{row.patientName}</TableCell>
@@ -394,6 +420,34 @@ export function MuestrasTable({
                     >
                       Reportar problema
                     </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground ml-1 inline-flex size-7 items-center justify-center rounded-md transition-colors"
+                          aria-label="Más opciones"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => onSelect(row.id)}>
+                          Ver detalle
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onProcess(row.id)}>
+                          Procesar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
+                          Marcar recibida
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => onReportProblem(row.id)}
+                        >
+                          Reportar problema
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>
@@ -510,6 +564,7 @@ export function MuestrasWorkstation({
   const [scannerStatus, setScannerStatus] = useState<"listo" | "ocupado" | "error">("listo");
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -610,13 +665,35 @@ export function MuestrasWorkstation({
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto max-w-6xl space-y-4">
           <StatusSummary summary={summary} />
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-8">
             <h2 className="text-sm font-medium text-muted-foreground">Cola de muestras</h2>
+            <div className="relative w-full min-w-0 max-w-sm sm:w-72">
+              <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
+              <Input
+                type="text"
+                placeholder="Buscar por ID, paciente, prueba..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-11 rounded-full border-border/70 bg-card pl-10 pr-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground/80 focus-visible:border-slate-400/50 focus-visible:ring-0"
+                aria-label="Buscar muestras"
+              />
+              {searchQuery.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
             <MuestrasFilters filter={filter} onFilter={setFilter} />
           </div>
           <MuestrasTable
             rows={samples}
             filter={filter}
+            searchQuery={searchQuery}
             selectedId={selectedId}
             highlightedId={highlightedId}
             onSelect={openPanel}
