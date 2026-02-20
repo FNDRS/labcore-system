@@ -11,18 +11,12 @@ import { getRequiredGroupForPath, GROUP_TO_ROUTE } from "@/lib/auth";
 import { cookies } from "next/headers";
 
 const DEV_BYPASS_GROUPS = ["tecnico"] as const;
-const OPERATIONAL_PATHS = ["/technician/muestras", "/technician/work-order"] as const;
-
-function isOperationalPath(pathname: string) {
-  return OPERATIONAL_PATHS.some((path) => pathname.startsWith(path));
-}
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   await connection();
 
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") ?? "";
-  const hideSidebar = isOperationalPath(pathname);
   const bypassEnv = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS;
 
   // Logs de depuración (solo en dev)
@@ -66,19 +60,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       console.log("[protected layout] REDIRECT → /login (catch)", err);
       redirect("/login");
     }
-  }
-
-  if (hideSidebar) {
-    return (
-      <div className="fixed inset-0 flex overflow-hidden bg-zinc-50 text-zinc-900">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <AppHeader showSidebarTrigger={false} />
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4">
-            <div className="w-full space-y-6">{children}</div>
-          </main>
-        </div>
-      </div>
-    );
   }
 
   return (

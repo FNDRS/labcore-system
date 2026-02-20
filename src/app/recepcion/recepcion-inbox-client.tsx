@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { ScanBarcode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ReceptionGenerationDialog } from "./components/reception-generation-dialog";
 import { ReceptionOrderSheet } from "./components/reception-order-sheet";
 import { ReceptionOrdersTable } from "./components/reception-orders-table";
+import { ReceptionScanOverlay, type ScanStatus } from "./components/reception-scan-overlay";
 import { ReceptionSearchFilters } from "./components/reception-search-filters";
 import { useReceptionInbox } from "./use-reception-inbox";
 
@@ -27,7 +29,33 @@ export function ReceptionInboxClient() {
     downloadSpecimensPdf,
     confirmReadyForLab,
     setGenerationModalOpen,
+    findOrderByScannedCode,
   } = useReceptionInbox();
+
+  const [scanModeOpen, setScanModeOpen] = useState(false);
+  const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
+
+  const handleScannedCode = useCallback(
+    (code: string) => {
+      setScanStatus("searching");
+      const order = findOrderByScannedCode(code);
+      const delay = order ? 300 : 800;
+      window.setTimeout(() => {
+        if (order) {
+          setSelectedOrderId(order.id);
+          setScanModeOpen(false);
+          setScanStatus("idle");
+        } else {
+          setScanStatus("not_found");
+        }
+      }, delay);
+    },
+    [findOrderByScannedCode, setSelectedOrderId]
+  );
+
+  const openManualEntry = useCallback(() => {
+    setScanStatus("manual");
+  }, []);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
@@ -44,8 +72,19 @@ export function ReceptionInboxClient() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button className="rounded-full" size="lg">
-                  <ScanBarcode className="mr-2 size-4" />
+                <Button
+                  className="rounded-full"
+                  size="lg"
+                  variant={scanModeOpen ? "secondary" : "default"}
+                  onClick={() => {
+                    setScanModeOpen(true);
+                    setScanStatus("idle");
+                  }}
+                >
+                  <ScanBarcode
+                    className={`mr-2 size-4 ${scanModeOpen ? "animate-pulse" : ""}`}
+                    aria-hidden
+                  />
                   Escanear orden
                 </Button>
                 <Badge variant="secondary">{pendingCount} pendientes</Badge>
@@ -90,6 +129,19 @@ export function ReceptionInboxClient() {
           </div>
         </Card>
       </div>
+
+      <ReceptionScanOverlay
+        open={scanModeOpen}
+        status={scanStatus}
+        onClose={() => {
+          setScanModeOpen(false);
+          setScanStatus("idle");
+        }}
+        onManualEntry={openManualEntry}
+        onBackToScan={() => setScanStatus("idle")}
+        onRetry={() => setScanStatus("idle")}
+        onScannedCode={handleScannedCode}
+      />
 
       <ReceptionOrderSheet
         order={selectedOrder}

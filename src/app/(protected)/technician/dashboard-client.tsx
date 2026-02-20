@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, AlertCircle, Clock, Search, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,7 @@ export function QueueFilters({
 
 function filterRows(rows: QueueRow[], filter: Filter): QueueRow[] {
   if (filter === "All") return rows;
+  if (filter === "My Queue") return rows.filter((r) => r.assignedToMe === true);
   if (filter === "Processing") return rows.filter((r) => r.status === "Processing");
   if (filter === "Urgent") return rows.filter((r) => r.priority === "Urgent");
   if (filter === "Flagged") return rows.filter((r) => r.status === "Flagged");
@@ -149,18 +151,24 @@ function filterBySearch(rows: QueueRow[], query: string): QueueRow[] {
   );
 }
 
+const DASHBOARD_QUEUE_TOP = 10;
+
 export function QueueTable({
   rows,
   filter,
   searchQuery,
   onProcess,
+  showOnlyTop = false,
 }: {
   rows: QueueRow[];
   filter: Filter;
   searchQuery: string;
   onProcess: (id: string) => void;
+  showOnlyTop?: boolean;
 }) {
   const filtered = filterBySearch(filterRows(rows, filter), searchQuery);
+  const displayed = showOnlyTop ? filtered.slice(0, DASHBOARD_QUEUE_TOP) : filtered;
+  const hasMore = showOnlyTop && filtered.length > DASHBOARD_QUEUE_TOP;
 
   return (
     <div className="overflow-hidden">
@@ -191,14 +199,14 @@ export function QueueTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.length === 0 ? (
+          {displayed.length === 0 ? (
             <TableRow className="border-b border-border/40 hover:bg-transparent">
               <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                 No hay muestras en esta vista.
               </TableCell>
             </TableRow>
           ) : (
-            filtered.map((row) => (
+            displayed.map((row) => (
               <TableRow
                 key={row.id}
                 className="border-b border-border/40 transition-colors hover:bg-muted/70"
@@ -237,6 +245,11 @@ export function QueueTable({
           )}
         </TableBody>
       </Table>
+      {hasMore && (
+        <p className="text-muted-foreground px-6 py-2 text-center text-sm">
+          Mostrando {DASHBOARD_QUEUE_TOP} de {filtered.length}. Ver lista completa en Muestras.
+        </p>
+      )}
     </div>
   );
 }
@@ -320,9 +333,17 @@ export function DashboardQueueSection({ rows }: { rows: QueueRow[] }) {
       <ScanSampleDialog open={scanOpen} onOpenChange={setScanOpen} />
       <Card className="rounded-xl border border-zinc-200 shadow-none">
         <div className="space-y-4 px-6">
-          <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide">
-            Cola de muestras
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide">
+              Cola de muestras
+            </h2>
+            <Link
+              href="/technician/muestras"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Ver todas en Muestras
+            </Link>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex w-full items-center gap-3 sm:w-auto">
               <div className="relative w-full min-w-0 max-w-sm sm:w-56">
@@ -362,6 +383,7 @@ export function DashboardQueueSection({ rows }: { rows: QueueRow[] }) {
             filter={filter}
             searchQuery={searchQuery}
             onProcess={handleProcess}
+            showOnlyTop={true}
           />
         </div>
       </Card>

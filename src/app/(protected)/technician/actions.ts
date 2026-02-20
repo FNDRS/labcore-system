@@ -41,6 +41,7 @@ export interface QueueRow {
 	priority: SamplePriority;
 	status: SampleStatus;
 	waitMins: number;
+	assignedToMe?: boolean;
 }
 
 export interface NextSample {
@@ -58,10 +59,10 @@ export interface DashboardMetrics {
 }
 
 const MOCK_QUEUE: QueueRow[] = [
-	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", priority: "Routine", status: "Processing", waitMins: 4 },
-	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", priority: "Routine", status: "Processing", waitMins: 12 },
-	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", priority: "Urgent", status: "Flagged", waitMins: 8 },
-	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", priority: "Routine", status: "Complete", waitMins: 0 },
+	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", priority: "Routine", status: "Processing", waitMins: 4, assignedToMe: true },
+	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", priority: "Routine", status: "Processing", waitMins: 12, assignedToMe: false },
+	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", priority: "Urgent", status: "Flagged", waitMins: 8, assignedToMe: true },
+	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", priority: "Routine", status: "Complete", waitMins: 0, assignedToMe: false },
 ];
 
 const MOCK_NEXT_SAMPLE: NextSample = {
@@ -243,7 +244,7 @@ export const fetchOperativeDashboard = cache(async () => {
 	await requireTechnicianAuth();
 	const samples = await fetchPendingSamples();
 	const workOrders = await fetchPendingWorkOrders();
-	const queueRows: QueueRow[] = samples.slice(0, 10).map((s, i) => ({
+	const queueRows: QueueRow[] = samples.map((s, i) => ({
 		id: s.id,
 		sampleId: s.barcode,
 		patientName: s.patientName,
@@ -251,15 +252,16 @@ export const fetchOperativeDashboard = cache(async () => {
 		priority: "Routine" as SamplePriority,
 		status: (s.status === "received" ? "Processing" : "Processing") as SampleStatus,
 		waitMins: i * 2,
+		assignedToMe: false, // TODO: desde API cuando exista asignación
 	}));
 	const next = queueRows[0]
 		? {
-				sampleId: queueRows[0].sampleId,
-				testType: queueRows[0].testType,
-				patientName: queueRows[0].patientName,
-				priority: queueRows[0].priority,
-				waitMins: queueRows[0].waitMins,
-			}
+			sampleId: queueRows[0].sampleId,
+			testType: queueRows[0].testType,
+			patientName: queueRows[0].patientName,
+			priority: queueRows[0].priority,
+			waitMins: queueRows[0].waitMins,
+		}
 		: null;
 	const lastScanned = queueRows[0]
 		? { sampleId: queueRows[0].sampleId, status: queueRows[0].status }

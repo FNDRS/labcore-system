@@ -43,6 +43,13 @@ export function useReceptionInbox() {
     [activeFilter, orders, search]
   );
 
+  function findOrderByScannedCode(raw: string): ReceptionOrder | null {
+    const code = raw.trim();
+    if (!code) return null;
+    const id = code.startsWith("#") ? code : `#${code}`;
+    return orders.find((o) => o.id === id) ?? null;
+  }
+
   useEffect(() => {
     if (highlightedNewIds.length === 0) return;
     const timeoutId = window.setTimeout(() => setHighlightedNewIds([]), 1800);
@@ -135,5 +142,6 @@ export function useReceptionInbox() {
     downloadSpecimensPdf,
     confirmReadyForLab,
     setGenerationModalOpen,
+    findOrderByScannedCode,
   };
 }
