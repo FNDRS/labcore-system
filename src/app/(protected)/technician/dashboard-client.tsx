@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, AlertCircle, Clock, Search, Bell, ScanLine, X } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Search,
+  Bell,
+  ScanLine,
+  X,
+  CheckCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -143,13 +151,17 @@ export function DashboardHeader() {
                   </p>
                 </div>
                 {unreadCount > 0 && (
-                  <button
+                  <Button
                     type="button"
-                    className="text-orange-500 hover:text-orange-600 shrink-0 text-[10px] font-medium underline-offset-2 hover:underline"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-orange-500 hover:text-orange-600"
                     onClick={markAllAsRead}
+                    title="Marcar todas como leídas"
+                    aria-label="Marcar todas como leídas"
                   >
-                    Marcar todas como leídas
-                  </button>
+                    <CheckCheck className="size-4" />
+                  </Button>
                 )}
               </div>
             </div>
