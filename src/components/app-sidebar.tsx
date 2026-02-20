@@ -6,17 +6,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
 import {
-  BarChart3,
   ChevronDown,
   ChevronsLeft,
   ClipboardList,
+  FileEdit,
+  FlaskConical,
   LogOut,
   Pencil,
   Settings,
   Shield,
-  Stethoscope,
-  Users,
-  Wrench,
 } from "lucide-react";
 import {
   Sidebar,
@@ -47,70 +45,32 @@ type NavItem = {
   group: "tecnico" | "supervisor" | "admin";
 };
 
-const allNavItems: NavItem[] = [
-  {
-    href: "/technician",
-    label: "Dashboard",
-    icon: HomeSidebarIcon,
-    activeWhen: (pathname) => pathname === "/technician",
-    group: "tecnico",
-  },
-  {
-    href: "/technician/requests",
-    label: "Solicitudes",
-    icon: ClipboardList,
-    activeWhen: (pathname) => pathname.startsWith("/technician/requests"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/equipment",
-    label: "Equipos",
-    icon: Wrench,
-    activeWhen: (pathname) => pathname.startsWith("/technician/equipment"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/personnel",
-    label: "Personal",
-    icon: Users,
-    activeWhen: (pathname) => pathname.startsWith("/technician/personnel"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/reports",
-    label: "Reportes",
-    icon: Stethoscope,
-    activeWhen: (pathname) => pathname.startsWith("/technician/reports"),
-    group: "tecnico",
-  },
-  {
-    href: "/technician/settings",
-    label: "Configuración",
-    icon: Settings,
-    activeWhen: (pathname) => pathname.startsWith("/technician/settings"),
-    group: "tecnico",
-  },
-  {
-    href: "/supervisor",
-    label: "Dashboard",
-    icon: HomeSidebarIcon,
-    activeWhen: (pathname) => pathname === "/supervisor" || pathname.startsWith("/supervisor/"),
-    group: "supervisor",
-  },
-  {
-    href: "/admin",
-    label: "Dashboard",
-    icon: HomeSidebarIcon,
-    activeWhen: (pathname) => pathname === "/admin" || pathname.startsWith("/admin/"),
-    group: "admin",
-  },
+/** Sidebar operativo para técnico: solo flujo de trabajo (sin administración). */
+const tecnicoNavItems: NavItem[] = [
+  { href: "/technician", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/technician", group: "tecnico" },
+  { href: "/technician/muestras", label: "Muestras", icon: FlaskConical, activeWhen: (p) => p.startsWith("/technician/muestras"), group: "tecnico" },
+  { href: "/technician/ordenes", label: "Órdenes", icon: ClipboardList, activeWhen: (p) => p.startsWith("/technician/ordenes"), group: "tecnico" },
+  { href: "/technician/resultados", label: "Resultados", icon: FileEdit, activeWhen: (p) => p.startsWith("/technician/resultados"), group: "tecnico" },
 ];
 
-function getSettingsHref(groups: string[]): string {
-  if (groups.includes("tecnico")) return "/technician/settings";
+/** Items para supervisor y admin (incluye reportes, configuración, etc.). */
+const supervisorAdminNavItems: NavItem[] = [
+  { href: "/supervisor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/supervisor" || p.startsWith("/supervisor/"), group: "supervisor" },
+  { href: "/admin", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"), group: "admin" },
+];
+
+function getNavItems(groups: string[]): NavItem[] {
+  if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin")) {
+    return tecnicoNavItems;
+  }
+  return [...tecnicoNavItems, ...supervisorAdminNavItems].filter((item) => groups.includes(item.group));
+}
+
+/** Técnico no ve Configuración; supervisor/admin sí. */
+function getSettingsHref(groups: string[]): string | null {
   if (groups.includes("supervisor")) return "/supervisor";
   if (groups.includes("admin")) return "/admin";
-  return "/technician/settings";
+  return null;
 }
 
 export function AppSidebar() {
@@ -119,7 +79,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const [mounted, setMounted] = useState(false);
 
-  const navItems = allNavItems.filter((item) => authState.groups.includes(item.group));
+  const navItems = getNavItems(authState.groups);
 
   useEffect(() => {
     setMounted(true);
@@ -257,13 +217,15 @@ export function AppSidebar() {
                 <p className="truncate text-xs text-zinc-400">{authState.userEmail ?? ""}</p>
               </div>
               <div className="py-1">
-                <Link
-                  href={getSettingsHref(authState.groups)}
-                  className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <Pencil className="size-4 shrink-0 text-zinc-400" />
-                  Editar perfil
-                </Link>
+                {getSettingsHref(authState.groups) && (
+                  <Link
+                    href={getSettingsHref(authState.groups)!}
+                    className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-white/10 hover:text-white"
+                  >
+                    <Pencil className="size-4 shrink-0 text-zinc-400" />
+                    Editar perfil
+                  </Link>
+                )}
                 <button
                   type="button"
                   className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
