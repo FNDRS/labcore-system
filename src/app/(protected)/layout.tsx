@@ -10,7 +10,7 @@ import { requireAuthWithGroup } from "@/lib/auth-server";
 import { getRequiredGroupForPath, GROUP_TO_ROUTE } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-const DEV_BYPASS_GROUPS = ["tecnico"] as const;
+const DEV_BYPASS_GROUPS = ["tecnico", "doctor"] as const;
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   await connection();

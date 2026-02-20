@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
-import { FlaskConical, PanelRight, Shield } from "lucide-react";
+import { Bell, FileText, FlaskConical, PanelRight, Settings, Shield, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +31,7 @@ type NavItem = {
   }>;
   activeWhen: (pathname: string) => boolean;
   /** Group required to see this item (tecnico, supervisor, admin) */
-  group: "tecnico" | "supervisor" | "admin";
+  group: "tecnico" | "supervisor" | "admin" | "doctor";
 };
 
 /**
@@ -55,7 +55,7 @@ const tecnicoNavItems: NavItem[] = [
   },
 ];
 
-/** Items para supervisor y admin (incluye reportes, configuración, etc.). */
+/** Items para supervisor y admin. */
 const supervisorAdminNavItems: NavItem[] = [
   {
     href: "/supervisor",
@@ -73,13 +73,32 @@ const supervisorAdminNavItems: NavItem[] = [
   },
 ];
 
-function getNavItems(groups: string[]): NavItem[] {
-  if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin")) {
-    return tecnicoNavItems;
-  }
-  return [...tecnicoNavItems, ...supervisorAdminNavItems].filter((item) =>
-    groups.includes(item.group)
-  );
+/** Vista doctor: clínica, solo resultados y pacientes (ver navegacion-por-roles). */
+const doctorNavItems: NavItem[] = [
+  { href: "/doctor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/doctor", group: "doctor" },
+  { href: "/doctor/pacientes", label: "Pacientes", icon: Users, activeWhen: (p) => p.startsWith("/doctor/pacientes"), group: "doctor" },
+  { href: "/doctor/resultados", label: "Resultados", icon: FileText, activeWhen: (p) => p.startsWith("/doctor/resultados"), group: "doctor" },
+  { href: "/doctor/notificaciones", label: "Notificaciones", icon: Bell, activeWhen: (p) => p.startsWith("/doctor/notificaciones"), group: "doctor" },
+  { href: "/doctor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/doctor/settings"), group: "doctor" },
+];
+
+/** Sidebar dinámico: según la ruta actual se muestra el menú del rol correspondiente. */
+function getNavItems(pathname: string, groups: string[]): NavItem[] {
+  if (pathname.startsWith("/doctor")) return doctorNavItems;
+  if (pathname.startsWith("/technician")) return tecnicoNavItems;
+  if (pathname.startsWith("/supervisor")) return supervisorAdminNavItems.filter((i) => i.group === "supervisor");
+  if (pathname.startsWith("/admin")) return supervisorAdminNavItems.filter((i) => i.group === "admin");
+  if (groups.includes("doctor") && !groups.includes("supervisor") && !groups.includes("admin")) return doctorNavItems;
+  if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return tecnicoNavItems;
+  return [...tecnicoNavItems, ...supervisorAdminNavItems].filter((item) => groups.includes(item.group));
+}
+
+function getRoleLabel(pathname: string, groups: string[]): string {
+  if (pathname.startsWith("/doctor")) return "doctor";
+  if (pathname.startsWith("/supervisor")) return "supervisor";
+  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/technician")) return "tecnico";
+  return groups[0] ?? "Usuario";
 }
 
 export function AppSidebar() {
@@ -87,7 +106,8 @@ export function AppSidebar() {
   const { state: authState } = useAuth();
   const { state, toggleSidebar } = useSidebar();
 
-  const navItems = getNavItems(authState.groups);
+  const navItems = getNavItems(pathname ?? "", authState.groups);
+  const roleLabel = getRoleLabel(pathname ?? "", authState.groups);
 
   const isCollapsed = state === "collapsed";
 
@@ -146,7 +166,7 @@ export function AppSidebar() {
             </Avatar>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-zinc-900">{CLINIC_BRANDING.name}</p>
-              <p className="truncate text-xs text-zinc-500">{authState.groups[0] ?? "Usuario"}</p>
+              <p className="truncate text-xs text-zinc-500">{roleLabel}</p>
             </div>
           </div>
         </div>

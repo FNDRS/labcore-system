@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export function MuestrasWorkstation({
   const [panelOpen, setPanelOpen] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const rowRefsMap = useRef<Record<string, HTMLTableRowElement | null>>({});
+  const router = useRouter();
 
   const rowRefs = useCallback(
     (id: string) => (el: HTMLTableRowElement | null) => {
@@ -93,10 +95,11 @@ export function MuestrasWorkstation({
   };
 
   const onProcess = (id: string) => {
-    setSamples((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: "Processing" as const } : s))
-    );
+    const sample = samples.find((s) => s.id === id);
     setPanelOpen(false);
+    router.push(
+      `/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample?.sampleId ?? "")}`
+    );
   };
 
   const onReportProblem = (id: string) => {

@@ -107,15 +107,14 @@ export function SampleDetailSheet({
                     <span className="font-medium">{exam.name}</span>
                     <ExamStatusBadge status={exam.status} />
                   </div>
-                  {exam.status !== "Completed" && exam.status !== "Flagged" && (
+                  {/* Procesar/Continuar solo si Recibida o En proceso; Waiting Equipment no permite procesar */}
+                  {(exam.status === "Received" || exam.status === "Processing") && (
                     <Button
                       size="sm"
                       className="shrink-0 rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
                       onClick={() => onProcess(exam.id)}
                     >
-                      {exam.status === "Processing" || exam.status === "Waiting Equipment"
-                        ? "Continuar"
-                        : "Procesar"}
+                      {exam.status === "Processing" ? "Continuar" : "Procesar"}
                     </Button>
                   )}
                 </li>

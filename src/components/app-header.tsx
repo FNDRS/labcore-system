@@ -1,32 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/auth-context";
 
-function getSettingsHref(groups: string[]) {
+function getSettingsHref(pathname: string, groups: string[]) {
+  if (pathname.startsWith("/doctor")) return "/doctor/settings";
+  if (pathname.startsWith("/supervisor")) return "/supervisor/settings";
+  if (pathname.startsWith("/admin")) return "/admin/settings";
+  if (pathname.startsWith("/technician")) return "/technician/settings";
   const role = groups[0];
   if (role === "tecnico") return "/technician/settings";
   if (role === "supervisor") return "/supervisor/settings";
   if (role === "admin") return "/admin/settings";
+  if (role === "doctor") return "/doctor/settings";
   return null;
 }
 
+/** Título del header según la ruta actual (evita dos headers cuando se navega por URL, ej. bypass a /doctor). */
+function getHeaderTitle(pathname: string) {
+  if (pathname.startsWith("/doctor")) return { title: "Panel clínico", subtitle: "Resultados y decisiones médicas." };
+  if (pathname.startsWith("/supervisor")) return { title: "Supervisor", subtitle: "Validación y supervisión." };
+  if (pathname.startsWith("/admin")) return { title: "Administración", subtitle: "Configuración del sistema." };
+  if (pathname.startsWith("/technician")) return { title: "Panel Técnico", subtitle: "Resumen operativo y cola de procesamiento." };
+  return { title: "LabCore", subtitle: "" };
+}
+
 export function AppHeader() {
+  const pathname = usePathname();
   const { state: authState, actions } = useAuth();
-  const settingsHref = getSettingsHref(authState.groups);
+  const settingsHref = getSettingsHref(pathname ?? "", authState.groups);
+  const { title, subtitle } = getHeaderTitle(pathname ?? "");
 
   return (
     <header className="sticky top-0 py-2 z-20 border-b border-zinc-200 bg-white">
       <div className="flex h-12 w-full items-center gap-2 px-4">
         <div className="min-w-0 space-y-0.5">
           <h1 className="truncate text-lg font-semibold tracking-tight text-zinc-900">
-            Panel Técnico
+            {title}
           </h1>
           <p className="truncate text-xs text-zinc-500">
-            Resumen operativo y cola de procesamiento.
+            {subtitle}
           </p>
         </div>
 
