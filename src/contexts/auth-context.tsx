@@ -61,6 +61,26 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
 
 	const refreshAuth = useCallback(async () => {
 		setState((prev) => ({ ...prev, isLoading: true }));
+		const bypassEnv = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS;
+		if (typeof window !== "undefined") {
+			console.log("[auth refreshAuth]", {
+				NEXT_PUBLIC_DEV_AUTH_BYPASS: bypassEnv,
+				bypassActive: bypassEnv === "true",
+			});
+		}
+		if (bypassEnv === "true") {
+			groupsRef.current = ["tecnico"];
+			setState({
+				user: { username: "technician@dev.local" },
+				groups: ["tecnico"],
+				userEmail: "technician@dev.local",
+				userName: "Técnico (dev bypass)",
+				isLoading: false,
+				isAuthenticated: true,
+			});
+			if (typeof window !== "undefined") console.log("[auth refreshAuth] BYPASS → isAuthenticated: true");
+			return;
+		}
 		try {
 			const [user, groups, attrs] = await Promise.all([
 				getCurrentUser(),
@@ -96,8 +116,11 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
 			const groups =
 				groupsRef.current.length > 0 ? groupsRef.current : state.groups;
 			const highest = groups[0];
-			const route = highest ? GROUP_TO_ROUTE[highest] : "/";
-			if (route && route !== "/") {
+			const route = highest ? GROUP_TO_ROUTE[highest] : "/login";
+			if (typeof window !== "undefined") {
+				console.log("[auth redirectToRoleRoute]", { groups, highest, route });
+			}
+			if (route) {
 				router.replace(route);
 			}
 		} finally {
@@ -109,8 +132,10 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
 	}, [router, state.groups]);
 
 	const signOutAction = useCallback(async () => {
-		await amplifySignOut();
-		router.push("/");
+		if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS !== "true") {
+			await amplifySignOut();
+		}
+		router.push("/login");
 	}, [router]);
 
 	useEffect(() => {
@@ -195,14 +220,14 @@ function AuthGuard({ children }: { children: ReactNode }) {
 		if (state.isLoading) return;
 
 		if (!state.isAuthenticated) {
-			router.replace("/");
+			router.replace("/login");
 			return;
 		}
 
 		if (!hasAccessToPath(state.groups, pathname ?? "")) {
 			const route = state.groups[0]
 				? GROUP_TO_ROUTE[state.groups[0]]
-				: "/";
+				: "/login";
 			router.replace(route);
 		}
 	}, [

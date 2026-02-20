@@ -9,12 +9,43 @@ import {
 	type AuthGroup,
 } from "@/lib/auth";
 
+/** Rutas que el bypass de desarrollo puede acceder sin Cognito */
+const DEV_BYPASS_GROUPS = ["tecnico"] as const;
+
+function nextWithPathname(request: NextRequest, pathname: string) {
+	const requestHeaders = new Headers(request.headers);
+	requestHeaders.set("x-pathname", pathname);
+	return NextResponse.next({
+		request: { headers: requestHeaders },
+	});
+}
+
 export async function proxy(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
 	const requiredGroup = getRequiredGroupForPath(pathname);
 
+	if (process.env.NODE_ENV === "development") {
+		console.log("[proxy]", {
+			pathname,
+			requiredGroup,
+			NEXT_PUBLIC_DEV_AUTH_BYPASS: process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS,
+		});
+	}
+
+	// Rutas no protegidas: pasar con x-pathname para que el layout pueda leerla
 	if (!requiredGroup) {
-		return NextResponse.next();
+		return nextWithPathname(request, pathname);
+	}
+
+	// Bypass de desarrollo: no llamar a Amplify
+	if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true") {
+		if (DEV_BYPASS_GROUPS.includes(requiredGroup as (typeof DEV_BYPASS_GROUPS)[number])) {
+			if (process.env.NODE_ENV === "development") {
+				console.log("[proxy] BYPASS OK → next", pathname);
+			}
+			return nextWithPathname(request, pathname);
+		}
+		return NextResponse.redirect(new URL("/login", request.url));
 	}
 
 	try {
@@ -29,7 +60,7 @@ export async function proxy(request: NextRequest) {
 		});
 
 		if (!groups || groups.length === 0) {
-			return NextResponse.redirect(new URL("/", request.url));
+			return NextResponse.redirect(new URL("/login", request.url));
 		}
 
 		if (!groups.includes(requiredGroup)) {
@@ -37,20 +68,17 @@ export async function proxy(request: NextRequest) {
 			return NextResponse.redirect(new URL(fallbackRoute, request.url));
 		}
 
-		const requestHeaders = new Headers(request.headers);
-		requestHeaders.set("x-pathname", pathname);
-		return NextResponse.next({
-			request: { headers: requestHeaders },
-		});
+		return nextWithPathname(request, pathname);
 	} catch {
-		return NextResponse.redirect(new URL("/", request.url));
+		return NextResponse.redirect(new URL("/login", request.url));
 	}
 }
 
 export const config = {
 	matcher: [
-		"/technician/:path*",
-		"/supervisor/:path*",
-		"/admin/:path*",
+		/*
+		 * Todas las rutas excepto estáticos, para que x-pathname llegue siempre al layout.
+		 */
+		"/((?!_next/static|_next/image|favicon.ico|images/).*)",
 	],
 };

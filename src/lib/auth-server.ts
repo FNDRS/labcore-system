@@ -30,14 +30,31 @@ export async function getUserGroupsServer(
 	}
 }
 
+/** Mock user when DEV_AUTH_BYPASS is enabled (technician). */
+const MOCK_BYPASS_USER = {
+	userId: "dev-bypass-technician",
+	username: "technician@dev.local",
+	signInDetails: { loginId: "technician@dev.local", authFlowType: "USER_AUTH" },
+} as Awaited<ReturnType<typeof getCurrentUser>>;
+
+const MOCK_BYPASS_GROUPS: AuthGroup[] = ["tecnico"];
+
 /**
  * Server-side: require auth and optionally a specific group.
  * Throws if not authenticated or if group is required but user doesn't have it.
+ * When NEXT_PUBLIC_DEV_AUTH_BYPASS=true, returns a mock technician (no Cognito).
  */
 export async function requireAuthWithGroup(
 	ctx: AmplifyContext,
 	requiredGroup?: AuthGroup,
 ): Promise<{ user: Awaited<ReturnType<typeof getCurrentUser>>; groups: AuthGroup[] }> {
+	if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true") {
+		if (requiredGroup && !MOCK_BYPASS_GROUPS.includes(requiredGroup)) {
+			throw new Error("Forbidden");
+		}
+		return { user: MOCK_BYPASS_USER, groups: MOCK_BYPASS_GROUPS };
+	}
+
 	const user = await getCurrentUser(ctx);
 	if (!user) throw new Error("Unauthorized");
 

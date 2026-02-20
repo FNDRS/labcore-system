@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { AppSidebar } from "@/components/app-sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const sidebarTransition = {
   initial: { opacity: 0, x: -8 },
@@ -10,9 +11,11 @@ const sidebarTransition = {
 };
 
 export function AnimatedSidebar() {
+  const { state } = useSidebar();
   return (
     <motion.div
-      className="h-full"
+      className="peer h-full"
+      data-state={state}
       initial={sidebarTransition.initial}
       animate={sidebarTransition.animate}
       transition={sidebarTransition.transition}
