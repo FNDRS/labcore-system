@@ -132,12 +132,19 @@ export function ScanBar({
             <Input
               ref={inputRef}
               id="scan-input"
+              name="sample-scan"
               type="text"
               placeholder="Código o ID (#LC-9024)"
               value={scanValue}
               onChange={(e) => onScanChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onScan()}
-              className="font-mono"
+              className="font-mono shadow-none focus-visible:ring-0"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-1p-ignore="true"
+              data-lpignore="true"
               autoFocus
             />
             <Button
@@ -186,12 +193,19 @@ function ScanSampleDialog({
           </label>
           <Input
             id="scan-modal-input"
+            name="sample-scan-modal"
             type="text"
             placeholder="Ej. #LC-9024"
             value={scanValue}
             onChange={(e) => onScanChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onConfirmScan()}
-            className="font-mono"
+            className="font-mono shadow-none focus-visible:ring-0"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            data-1p-ignore="true"
+            data-lpignore="true"
             autoFocus
           />
         </div>
@@ -378,77 +392,40 @@ export function MuestrasTable({
                   {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
                 </TableCell>
                 <TableCell className="px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <button
-                      type="button"
-                      className="text-orange-500 hover:text-orange-600 text-xs font-medium underline-offset-2 hover:underline"
-                      onClick={() => onSelect(row.id)}
-                    >
-                      Ver
-                    </button>
-                    <span className="text-muted-foreground">·</span>
-                    {row.status !== "Received" &&
-                      row.status !== "Completed" &&
-                      row.status !== "Flagged" && (
-                        <>
-                          <button
-                            type="button"
-                            className="text-orange-500 hover:text-orange-600 text-xs font-medium underline-offset-2 hover:underline"
-                            onClick={() => onMarkReceived(row.id)}
-                          >
-                            Marcar recibida
-                          </button>
-                          <span className="text-muted-foreground">·</span>
-                        </>
-                      )}
-                    {row.status !== "Completed" && row.status !== "Flagged" && (
-                      <>
-                        <button
-                          type="button"
-                          className="text-orange-500 hover:text-orange-600 text-xs font-medium underline-offset-2 hover:underline"
-                          onClick={() => onProcess(row.id)}
-                        >
-                          Procesar
-                        </button>
-                        <span className="text-muted-foreground">·</span>
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-medium underline-offset-2 hover:underline"
-                      onClick={() => onReportProblem(row.id)}
-                    >
-                      Reportar problema
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-foreground ml-1 inline-flex size-7 items-center justify-center rounded-md transition-colors"
-                          aria-label="Más opciones"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => onSelect(row.id)}>
-                          Ver detalle
-                        </DropdownMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground inline-flex size-8 items-center justify-center rounded-md transition-colors"
+                        aria-label="Más opciones"
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onClick={() => onSelect(row.id)}>
+                        Ver detalle
+                      </DropdownMenuItem>
+                      {row.status !== "Completed" && row.status !== "Flagged" && (
                         <DropdownMenuItem onClick={() => onProcess(row.id)}>
                           Procesar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
-                          Marcar recibida
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => onReportProblem(row.id)}
-                        >
-                          Reportar problema
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                      )}
+                      {row.status !== "Received" &&
+                        row.status !== "Completed" &&
+                        row.status !== "Flagged" && (
+                          <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
+                            Marcar recibida
+                          </DropdownMenuItem>
+                        )}
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onReportProblem(row.id)}
+                      >
+                        Reportar problema
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))
@@ -665,30 +642,32 @@ export function MuestrasWorkstation({
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto max-w-6xl space-y-4">
           <StatusSummary summary={summary} />
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-8">
+          <div className="mt-8 space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground">Cola de muestras</h2>
-            <div className="relative w-full min-w-0 max-w-sm sm:w-72">
-              <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
-              <Input
-                type="text"
-                placeholder="Buscar por ID, paciente, prueba..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-11 rounded-full border-border/70 bg-card pl-10 pr-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground/80 focus-visible:border-slate-400/50 focus-visible:ring-0"
-                aria-label="Buscar muestras"
-              />
-              {searchQuery.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
-                  aria-label="Limpiar búsqueda"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative w-full min-w-0 max-w-sm sm:w-72">
+                <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por ID, paciente, prueba..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-11 rounded-full border-border/70 bg-card pl-10 pr-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground/80 focus-visible:border-slate-400/50 focus-visible:ring-0"
+                  aria-label="Buscar muestras"
+                />
+                {searchQuery.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+              <MuestrasFilters filter={filter} onFilter={setFilter} />
             </div>
-            <MuestrasFilters filter={filter} onFilter={setFilter} />
           </div>
           <MuestrasTable
             rows={samples}
