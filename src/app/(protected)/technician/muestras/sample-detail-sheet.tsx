@@ -2,17 +2,8 @@
 
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import type {
-  SampleWorkstationRow,
-  SampleWorkstationStatus,
-} from "../actions";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import type { SampleWorkstationRow, SampleWorkstationStatus } from "../actions";
 
 const MOCK_HISTORY = [
   { at: "08:24", event: "En proceso" },
@@ -44,9 +35,7 @@ function ExamStatusBadge({ status }: { status: SampleWorkstationStatus }) {
           ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
           : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
   return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}
-    >
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>
       {EXAM_LABELS[status]}
     </span>
   );
@@ -73,10 +62,7 @@ export function SampleDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        className="flex w-full flex-col sm:max-w-md"
-        side="right"
-      >
+      <SheetContent className="flex w-full flex-col sm:max-w-md p-4" side="right">
         <SheetHeader>
           <SheetTitle className="font-mono text-lg">
             Detalle de Muestra {sample.sampleId}
@@ -124,11 +110,10 @@ export function SampleDetailSheet({
                   {exam.status !== "Completed" && exam.status !== "Flagged" && (
                     <Button
                       size="sm"
-                      className="shrink-0 rounded-full bg-orange-500 hover:bg-orange-600 focus-visible:ring-orange-500"
+                      className="shrink-0 rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
                       onClick={() => onProcess(exam.id)}
                     >
-                      {exam.status === "Processing" ||
-                      exam.status === "Waiting Equipment"
+                      {exam.status === "Processing" || exam.status === "Waiting Equipment"
                         ? "Continuar"
                         : "Procesar"}
                     </Button>
@@ -137,8 +122,7 @@ export function SampleDetailSheet({
               ))}
             </ul>
             <p className="text-muted-foreground mt-2 text-xs">
-              Solo al elegir Procesar o Continuar se abre el formulario del
-              examen.
+              Solo al elegir Procesar o Continuar se abre el formulario del examen.
             </p>
           </div>
           <div>
@@ -148,9 +132,7 @@ export function SampleDetailSheet({
             <ul className="space-y-1.5 text-sm">
               {MOCK_HISTORY.map((h, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="text-muted-foreground shrink-0 font-mono text-xs">
-                    {h.at}
-                  </span>
+                  <span className="text-muted-foreground shrink-0 font-mono text-xs">{h.at}</span>
                   <span>{h.event}</span>
                 </li>
               ))}
@@ -158,18 +140,10 @@ export function SampleDetailSheet({
           </div>
         </div>
         <SheetFooter className="flex flex-col gap-2 sm:flex-col">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onReportIncident(sample.id)}
-          >
+          <Button variant="outline" className="w-full" onClick={() => onReportIncident(sample.id)}>
             Marcar incidencia
           </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onReprintLabel(sample.id)}
-          >
+          <Button variant="outline" className="w-full" onClick={() => onReprintLabel(sample.id)}>
             <Printer className="size-4 mr-2" />
             Reimprimir etiqueta
           </Button>
