@@ -1,31 +1,21 @@
 import { Suspense } from "react";
 import { fetchOperativeDashboard } from "./actions";
-import {
-  DashboardHeader,
-  NextSampleCard,
-  UrgentBar,
-  DashboardQueueSection,
-} from "./dashboard-client";
+import { DashboardHeader, NextSampleCard, DashboardQueueSection } from "./dashboard-client";
 
 async function DashboardContent() {
-  const { nextSample, urgentCount, queueRows } = await fetchOperativeDashboard();
+  const { nextSample, queueRows } = await fetchOperativeDashboard();
 
   return (
     <>
-      <div className="shrink-0 space-y-6 px-4 pt-6">
+      <div className="shrink-0 space-y-4">
         <DashboardHeader />
         <section>
           <NextSampleCard nextSample={nextSample} />
         </section>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 mt-6">
-        <div className="w-full max-w-full space-y-6 pt-2">
-          <section className="space-y-4">
-            <h2 className="text-sm font-medium text-muted-foreground">Cola de muestras</h2>
-            <DashboardQueueSection rows={queueRows} />
-          </section>
-        </div>
-      </div>
+      <section className="mt-6">
+        <DashboardQueueSection rows={queueRows} />
+      </section>
     </>
   );
 }

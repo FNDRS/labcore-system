@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Search,
-  Bell,
-  ScanLine,
-  X,
-  CheckCheck,
-} from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Search, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -31,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/contexts/auth-context";
+import { Card } from "@/components/ui/card";
 import type { NextSample, QueueRow, SampleStatus } from "./actions";
 
 const FILTERS = [
@@ -68,144 +58,8 @@ function StatusBadge({ status }: { status: SampleStatus }) {
   );
 }
 
-// Mock: reemplazar por datos reales / API
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: "1",
-    title: "Muestra urgente en cola",
-    message: "#LC-9023 (Eleanor Rigby) — Thyroid Panel marcada como urgente.",
-    time: "Hace 8 min",
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Resultado listo para validar",
-    message: "#LC-9025 — Urinalysis completado. Pendiente de revisión.",
-    time: "Hace 12 min",
-    read: false,
-  },
-  {
-    id: "3",
-    title: "Nueva muestra recibida",
-    message: "#LC-9026 — Lipid Panel añadida a la cola.",
-    time: "Hace 25 min",
-    read: true,
-  },
-];
-
 export function DashboardHeader() {
-  const { state: authState } = useAuth();
-  const [now, setNow] = useState(() => new Date());
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-
-  const timeStr = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
-      <h1 className="text-xl font-semibold tracking-tight">Panel Técnico</h1>
-      <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
-        <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="relative rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Notificaciones${unreadCount ? `, ${unreadCount} sin leer` : ""}`}
-            >
-              <Bell className="size-5" />
-              {unreadCount > 0 && (
-                <span
-                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white"
-                  aria-hidden
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            sideOffset={8}
-            className="w-80 max-w-[calc(100vw-1rem)] translate-x-4 p-0"
-          >
-            <div className="border-b border-border px-4 py-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-foreground">Notificaciones</h3>
-                  <p className="text-muted-foreground text-xs">
-                    {unreadCount > 0 ? `${unreadCount} sin leer` : "Al día"}
-                  </p>
-                </div>
-                {unreadCount > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-orange-500 hover:text-orange-600"
-                    onClick={markAllAsRead}
-                    title="Marcar todas como leídas"
-                    aria-label="Marcar todas como leídas"
-                  >
-                    <CheckCheck className="size-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="max-h-[320px] overflow-y-auto">
-              {notifications.length === 0 ? (
-                <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-                  No hay notificaciones nuevas.
-                </p>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {notifications.map((n) => (
-                    <li key={n.id}>
-                      <div
-                        className={`group px-4 py-3 text-left transition-colors hover:bg-muted/50 ${!n.read ? "bg-orange-50/80 dark:bg-orange-950/20" : ""}`}
-                      >
-                        <p className="text-sm font-medium text-foreground">{n.title}</p>
-                        <p className="text-muted-foreground mt-0.5 text-xs leading-snug">
-                          {n.message}
-                        </p>
-                        <div className="mt-2 flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground shrink-0 text-xs">{n.time}</span>
-                          {!n.read && (
-                            <button
-                              type="button"
-                              className="text-orange-500 hover:text-orange-600 shrink-0 text-[10px] font-medium underline-offset-2 hover:underline"
-                              onClick={() => markAsRead(n.id)}
-                            >
-                              Marcar como leída
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-        <span>{timeStr}</span>
-        <span className="font-medium text-foreground">{authState.userName ?? "Técnico"}</span>
-      </div>
-    </header>
-  );
+  return <div className="space-y-1"></div>;
 }
 
 export function NextSampleCard({ nextSample }: { nextSample: NextSample | null }) {
@@ -221,7 +75,7 @@ export function NextSampleCard({ nextSample }: { nextSample: NextSample | null }
 
   return (
     <div className="rounded-2xl border border-border bg-card px-6 py-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-sm mb-6 font-semibold uppercase tracking-wide text-primary">
         Próxima muestra a procesar
       </p>
       <div className="mt-3 grid gap-1 text-sm sm:grid-cols-2 md:grid-cols-4">
@@ -309,9 +163,9 @@ export function QueueTable({
   const filtered = filterBySearch(filterRows(rows, filter), searchQuery);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-zinc-50">
           <TableRow className="border-b border-border/60 hover:bg-transparent">
             <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Sample ID
@@ -462,41 +316,55 @@ export function DashboardQueueSection({ rows }: { rows: QueueRow[] }) {
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <ScanSampleDialog open={scanOpen} onOpenChange={setScanOpen} />
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex w-full items-center gap-3 sm:w-auto">
-          <div className="relative w-full min-w-0 max-w-sm sm:w-56">
-            <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
-            <Input
-              type="text"
-              placeholder="Buscar por ID, paciente, prueba..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 rounded-full border-border/70 bg-card pl-10 pr-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground/80 focus-visible:border-slate-400/50 focus-visible:ring-0"
-              aria-label="Buscar muestras"
-            />
-            {searchQuery.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
-                aria-label="Limpiar búsqueda"
+      <Card className="rounded-xl border border-zinc-200 shadow-none">
+        <div className="space-y-4 px-6">
+          <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide">
+            Cola de muestras
+          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex w-full items-center gap-3 sm:w-auto">
+              <div className="relative w-full min-w-0 max-w-sm sm:w-56">
+                <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por ID, paciente, prueba..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-11 rounded-full border-border/70 bg-white pl-10 pr-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground/80 focus-visible:border-slate-400/50 focus-visible:ring-0"
+                  aria-label="Buscar muestras"
+                />
+                {searchQuery.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+              <Button
+                className="bg-primary hover:bg-primary/90 focus-visible:ring-primary"
+                onClick={() => setScanOpen(true)}
               >
-                <X className="size-3.5" />
-              </button>
-            )}
+                Escanear muestra
+              </Button>
+            </div>
+            <QueueFilters filter={filter} onFilter={setFilter} />
           </div>
-          <Button
-            className="bg-primary hover:bg-primary/90 focus-visible:ring-primary"
-            onClick={() => setScanOpen(true)}
-          >
-            Escanear muestra
-          </Button>
         </div>
-        <QueueFilters filter={filter} onFilter={setFilter} />
-      </div>
-      <QueueTable rows={rows} filter={filter} searchQuery={searchQuery} onProcess={handleProcess} />
-    </div>
+        <div className="px-4 pb-0">
+          <QueueTable
+            rows={rows}
+            filter={filter}
+            searchQuery={searchQuery}
+            onProcess={handleProcess}
+          />
+        </div>
+      </Card>
+    </>
   );
 }

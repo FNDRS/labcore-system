@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatedSidebar } from "@/components/animated-sidebar";
 import { AnimatedPageContent } from "@/components/animated-page-content";
-import { OperationalHeader } from "@/components/operational-header";
+import { AppHeader } from "@/components/app-header";
 import { runWithAmplifyServerContext } from "@/utils/amplifyServerUtils";
 import { requireAuthWithGroup } from "@/lib/auth-server";
 import { getRequiredGroupForPath, GROUP_TO_ROUTE } from "@/lib/auth";
@@ -70,17 +70,19 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   if (hideSidebar) {
     return (
-      <div className="fixed inset-0 flex overflow-hidden bg-zinc-100 text-zinc-900">
+      <div className="fixed inset-0 flex overflow-hidden bg-zinc-50 text-zinc-900">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <OperationalHeader />
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+          <AppHeader showSidebarTrigger={false} />
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4">
+            <div className="w-full space-y-6">{children}</div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-zinc-950">
+    <div className="fixed inset-0 flex overflow-hidden bg-zinc-50">
       <SidebarProvider
         defaultOpen
         style={
@@ -89,12 +91,15 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             "--sidebar-width-icon": "4rem",
           } as React.CSSProperties
         }
-        className="flex h-full min-h-0 w-full flex-1 overflow-hidden bg-sidebar-dark p-4 pl-0 **:data-[slot=sidebar-inner]:bg-sidebar-dark!"
+        className="flex h-full min-h-0 w-full flex-1 overflow-hidden bg-zinc-50 p-0 **:data-[slot=sidebar-inner]:bg-white!"
       >
         <AnimatedSidebar />
-        <SidebarInset className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl rounded-l-2xl bg-zinc-100 text-zinc-900 shadow-lg shadow-zinc-900/10 md:ml-[calc(var(--sidebar-width)+0.25rem)]! md:peer-data-[state=collapsed]:ml-[calc(var(--sidebar-width-icon)+0.25rem)]! pr-0">
-          <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-l-2xl bg-zinc-100">
-            {children}
+        <SidebarInset className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50 text-zinc-900 md:ml-(--sidebar-width) md:peer-data-[state=collapsed]:ml-(--sidebar-width-icon) pr-0">
+          <AppHeader />
+          <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50">
+            <main className="min-h-0 flex-1 overflow-y-auto p-4">
+              <div className="w-full space-y-6">{children}</div>
+            </main>
           </AnimatedPageContent>
         </SidebarInset>
       </SidebarProvider>

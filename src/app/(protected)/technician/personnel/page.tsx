@@ -1,9 +1,11 @@
 export default function TechnicianPersonnelPage() {
-	return (
-		<div className="container mx-auto max-w-4xl space-y-2 py-8 px-4">
-			<h1 className="text-2xl font-semibold tracking-tight">Personal</h1>
-			<p className="text-muted-foreground">Próximamente.</p>
-		</div>
-	);
+  return (
+    <div className="max-w-4xl">
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Personal</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Próximamente.</p>
+      </div>
+    </div>
+  );
 }
 

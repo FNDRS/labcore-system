@@ -12,14 +12,15 @@ Definir un flujo realista para clínicas/laboratorios donde el trabajo del técn
 
 ```mermaid
 flowchart TD
-    A1[Recepcion/Supervisor crea orden] --> A2[Definir examenes en la orden]
-    A2 --> A3[Generar specimens y etiquetas]
-    A3 --> B1[Tecnico escanea/recibe muestra]
-    B1 --> B2[Selecciona examen pendiente]
-    B2 --> B3[Registra resultados en workbench]
+    A1[Recepcion/Supervisor crea orden] --> A2[Scan de orden de trabajo]
+    A2 --> A3[Generar specimens e imprimir stickers]
+    A3 --> A4[Recoleccion fisica y pegado de stickers]
+    A4 --> B1[Laboratorio escanea sticker de muestra]
+    B1 --> B2[Sistema muestra analisis y formulario]
+    B2 --> B3[Ingreso de resultados]
     B3 --> B4[Enviar examen a validacion]
     B4 --> D1{Todos los examenes del specimen listos?}
-    D1 -- No --> B2
+    D1 -- No --> B1
     D1 -- Si --> B5[Specimen completado]
     B5 --> C1[Supervisor valida o rechaza]
     C1 --> C2[Generar y entregar reporte]
@@ -38,14 +39,27 @@ flowchart TD
 - **DB:** `orders`, `order_tests`.
 - **Audit:** `ORDER_CREATED`, `ORDER_TESTS_ADDED`.
 
-### A2. Generar muestras y etiquetas
-- **Rol:** Recepción o Técnico de recepción.
-- **Vista:** `Asignación de Muestras / Etiquetas`.
-- **Regla clave:** agrupar exámenes compatibles en el mismo `specimen`.
-- **DB:** `specimens`, `order_tests.specimen_id`.
+### A2. Escanear orden de trabajo
+- **Rol:** Recepción.
+- **Vista:** `Scan Orden de Trabajo`.
+- **Entrada:** código de orden / work order.
+- **Acción:** el sistema levanta la orden y carga exámenes pendientes para preparar muestras.
+- **Audit:** `WORK_ORDER_SCANNED`.
+
+### A3. Generar muestras e imprimir stickers
+- **Rol:** Recepción.
+- **Vista:** `Preparación de Muestras`.
+- **Regla clave:** agrupar exámenes compatibles por tipo de tubo/contenedor.
+- **DB:** `specimens`, `order_tests.specimen_id`, `specimens.status = LABELED`.
 - **Audit:** `SPECIMENS_GENERATED`, `LABELS_PRINTED`, `ORDER_TEST_ASSIGNED_TO_SPECIMEN`.
 
-> Aquí nace la cola operativa del técnico.
+### A4. Recolección física
+- **Rol:** Recepción / toma de muestra.
+- **Acción física:** pegar sticker en tubo/contenedor y completar recolección.
+- **DB:** `specimens.status = READY_FOR_LAB`.
+- **Audit:** `SPECIMEN_READY`.
+
+> Aquí nace la cola operativa del laboratorio técnico.
 
 ---
 
@@ -61,15 +75,16 @@ flowchart TD
 - **Muestra:** pendientes, urgentes, prioridades.
 - **Audit:** `VIEW_DASHBOARD`.
 
-### B3. Escaneo/recepción de muestra
+### B3. Escaneo de sticker en laboratorio
 - **Vista:** `Muestras` (scan) o modal de escaneo.
-- **Entrada:** `specimen_code`.
+- **Entrada:** `specimen_code` (sticker del tubo/contenedor).
+- **Resultado:** el sistema indica qué análisis hacer para esa muestra y habilita el formulario.
 - **DB:** `specimens.status = RECEIVED` (si aplica), `specimen_scan_events` o `audit_events`.
 - **Audit:** `SPECIMEN_SCANNED`, `SPECIMEN_RECEIVED`.
 
-### B4. Selección de examen
+### B4. Selección de análisis y formulario
 - **Vista:** `Detalle de muestra`.
-- **Acción:** abrir examen pendiente para procesar.
+- **Acción:** abrir el/los análisis asociados y capturar valores del formulario.
 - **Audit:** `SPECIMEN_VIEWED`, `ORDER_TEST_OPENED`.
 
 ### B5. Workbench y captura de resultados
@@ -108,7 +123,7 @@ flowchart TD
 
 ## Respuestas clave de negocio
 
-- **Donde se origina todo:** en `Nueva Orden` y `Generar Muestras/Etiquetas`.
+- **Donde se origina todo:** en `Nueva Orden` y `Scan de Orden de Trabajo`.
 - **El técnico inicia el flujo principal:** no; normalmente ejecuta trabajo ya creado.
 - **Excepción permitida:** modo rapido de orden para laboratorios pequenos (walk-in), no recomendado como flujo base para clinicas.
 
@@ -117,14 +132,14 @@ flowchart TD
 ## Vistas mínimas para MVP end-to-end
 
 1. `Nueva Orden`
-2. `Generar Muestras / Imprimir etiquetas`
-3. `Dashboard Técnico`
-4. `Muestras (escaneo + detalle)`
+2. `Scan Orden de Trabajo + Generar stickers`
+3. `Recolección física (pegar etiquetas y confirmar listo)`
+4. `Muestras laboratorio (escaneo + detalle)`
 5. `Procesar Examen (resultados + enviar a validación)`
 
 Con estas 5 vistas se puede demostrar trazabilidad completa:
 
-**orden -> muestras -> escaneo -> resultados -> validación -> reporte**
+**orden -> scan orden -> stickers/recoleccion -> scan muestra -> resultados -> validación -> reporte**
 
 ---
 
