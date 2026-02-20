@@ -134,3 +134,28 @@ Con estas 5 vistas se puede demostrar trazabilidad completa:
 - Registrar eventos de auditoría en cada transición relevante.
 - Asegurar idempotencia en escaneo y actualización de resultados.
 - Definir SLA/alertas para urgentes desde el dashboard técnico.
+
+---
+
+## Observación técnica: inicialización de telemetría (App Insights)
+
+En `src/utils/logging.ts` existe esta protección para inicializar App Insights en primer log de servidor cuando no hay `request`:
+
+```ts
+// In standalone mode instrumentation does not run; ensure App Insights is inited on first server log (e.g. API routes).
+if (!options?.request && process.env.APPLICATIONINSIGHTS_CONNECTION_STRING?.trim() && !appInsightsEnsureStarted) {
+  appInsightsEnsureStarted = import("@/lib/ensure-appinsights").then(() => {})
+}
+```
+
+### Riesgo identificado
+
+- La condición `!options?.request` no representa directamente "standalone mode"; realmente distingue logs fuera de middleware.
+- La inicialización ocurre en el **primer log** de rutas de servidor (ej. API), no en un punto determinístico de arranque.
+- Si entran varias requests simultáneamente antes de inicializar, puede haber carrera de inicialización o comportamiento inconsistente de telemetría temprana.
+
+### Recomendación
+
+- Mover la inicialización a un módulo dedicado de bootstrap/import temprano en el ciclo de vida del servidor.
+- Dejar en `logging.ts` solo una verificación defensiva (fallback), no el mecanismo principal de arranque.
+- Documentar explícitamente la intención: `request` en este contexto significa "llamada desde middleware/edge", no "modo standalone".
