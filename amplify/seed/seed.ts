@@ -491,18 +491,23 @@ const WORK_ORDER_SPECS = [
     examCodes: ["URO", "HEM"],
     accessionNumber: "ORD-2025-001",
     priority: "routine" as const,
+    /** When false, only create WorkOrder (no samples) — for testing "Generar muestras" in reception. */
+    generateSamples: false,
   },
   {
     patientIndex: 1,
     examCodes: ["COP", "QS"],
     accessionNumber: "ORD-2025-002",
     priority: "urgent" as const,
+    generateSamples: false,
   },
   {
     patientIndex: 2,
     examCodes: ["URO", "COP", "HEM"],
     accessionNumber: "ORD-2025-003",
     priority: "routine" as const,
+    /** When true, creates samples so order shows "Muestras creadas" — for testing full flow. */
+    generateSamples: true,
   },
 ];
 
@@ -602,43 +607,48 @@ for (let woIndex = 0; woIndex < WORK_ORDER_SPECS.length; woIndex++) {
   if (woErrors?.length) throw new Error(`WorkOrder create failed: ${JSON.stringify(woErrors)}`);
   if (!workOrder?.id) throw new Error("WorkOrder create returned no data");
 
+  const samplesCreated = spec.generateSamples ?? true;
   console.log(
-    `   ✓ WorkOrder ${spec.accessionNumber} for ${PATIENTS[spec.patientIndex].firstName} [id=${workOrder.id}]`
+    `   ✓ WorkOrder ${spec.accessionNumber} for ${PATIENTS[spec.patientIndex].firstName} [id=${workOrder.id}]${!samplesCreated ? " (sin muestras — para recepción)" : ""}`
   );
 
-  for (let exIndex = 0; exIndex < spec.examCodes.length; exIndex++) {
-    const code = spec.examCodes[exIndex];
-    const examTypeId = examTypeIds[code];
-    if (!examTypeId) {
-      console.error("[DEBUG] ExamType not found:", code, "examTypeIds:", examTypeIds);
-      throw new Error(`ExamType ${code} not found`);
+  if (samplesCreated) {
+    for (let exIndex = 0; exIndex < spec.examCodes.length; exIndex++) {
+      const code = spec.examCodes[exIndex];
+      const examTypeId = examTypeIds[code];
+      if (!examTypeId) {
+        console.error("[DEBUG] ExamType not found:", code, "examTypeIds:", examTypeIds);
+        throw new Error(`ExamType ${code} not found`);
+      }
+
+      const barcode = generateBarcode("SMP", woIndex * 10 + exIndex);
+      console.log("[DEBUG] Creating Sample:", { workOrderId: workOrder!.id, examTypeId, barcode });
+
+      const { data: sample, errors: sampleErrors } = await client.models.Sample.create({
+        workOrderId: workOrder.id,
+        examTypeId,
+        barcode,
+        status: "labeled",
+      });
+      if (sampleErrors?.length)
+        throw new Error(`Sample create failed: ${JSON.stringify(sampleErrors)}`);
+      if (!sample?.id) throw new Error("Sample create returned no data");
+
+      const { data: exam, errors: examErrors } = await client.models.Exam.create({
+        sampleId: sample.id,
+        examTypeId,
+        status: "pending",
+      });
+      if (examErrors?.length) throw new Error(`Exam create failed: ${JSON.stringify(examErrors)}`);
+      if (!exam?.id) throw new Error("Exam create returned no data");
+
+      console.log(`      → Sample ${barcode} (${code}) [sampleId=${sample.id}, examId=${exam.id}]`);
     }
-
-    const barcode = generateBarcode("SMP", woIndex * 10 + exIndex);
-    console.log("[DEBUG] Creating Sample:", { workOrderId: workOrder!.id, examTypeId, barcode });
-
-    const { data: sample, errors: sampleErrors } = await client.models.Sample.create({
-      workOrderId: workOrder.id,
-      examTypeId,
-      barcode,
-      status: "pending",
-    });
-    if (sampleErrors?.length)
-      throw new Error(`Sample create failed: ${JSON.stringify(sampleErrors)}`);
-    if (!sample?.id) throw new Error("Sample create returned no data");
-
-    const { data: exam, errors: examErrors } = await client.models.Exam.create({
-      sampleId: sample.id,
-      examTypeId,
-      status: "pending",
-    });
-    if (examErrors?.length) throw new Error(`Exam create failed: ${JSON.stringify(examErrors)}`);
-    if (!exam?.id) throw new Error("Exam create returned no data");
-
-    console.log(`      → Sample ${barcode} (${code}) [sampleId=${sample.id}, examId=${exam.id}]`);
   }
 }
 
-console.log("\n✅ Seed complete. 3 work orders with all dependencies created.");
+console.log("\n✅ Seed complete. 3 work orders created.");
+console.log("   — 2 without samples (Sin muestras) for testing 'Generar muestras' in reception");
+console.log("   — 1 with samples (Muestras creadas) for testing full flow");
 console.log("[DEBUG] Summary - examTypeIds:", examTypeIds);
 console.log("[DEBUG] Summary - patientIds:", patientIds);

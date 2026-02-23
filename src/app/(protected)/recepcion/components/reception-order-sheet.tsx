@@ -15,7 +15,7 @@ export function ReceptionOrderSheet({ order, onOpenChange, onGenerate }: Recepti
         {order ? (
           <>
             <SheetHeader>
-              <SheetTitle>Orden {order.id}</SheetTitle>
+              <SheetTitle>Orden {order.displayId}</SheetTitle>
               <p className="text-muted-foreground text-sm">Revisión rápida para generar muestras.</p>
             </SheetHeader>
 

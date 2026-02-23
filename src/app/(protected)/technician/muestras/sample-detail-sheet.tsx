@@ -1,20 +1,19 @@
 "use client";
 
-import { Printer } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import type { SampleWorkstationRow, SampleWorkstationStatus } from "../actions";
-
-const MOCK_HISTORY = [
-  { at: "08:24", event: "En proceso" },
-  { at: "08:20", event: "Recibida" },
-  { at: "08:00", event: "Recolección" },
-];
+import type { SampleWorkstationDetail } from "../types";
 
 type SampleExam = { id: string; name: string; status: SampleWorkstationStatus };
 
 function getExamsFromSample(sample: SampleWorkstationRow): SampleExam[] {
   return [{ id: sample.id, name: sample.testType, status: sample.status }];
+}
+
+function getHistory(sample: SampleWorkstationRow | SampleWorkstationDetail): { at: string; event: string }[] {
+  return "history" in sample && Array.isArray(sample.history) ? sample.history : [];
 }
 
 const EXAM_LABELS: Record<SampleWorkstationStatus, string> = {
@@ -48,6 +47,7 @@ export function SampleDetailSheet({
   onProcess,
   onReportIncident,
   onReprintLabel,
+  detailLoading = false,
 }: {
   sample: SampleWorkstationRow | null;
   open: boolean;
@@ -55,10 +55,12 @@ export function SampleDetailSheet({
   onProcess: (id: string) => void;
   onReportIncident: (id: string) => void;
   onReprintLabel: (id: string) => void;
+  detailLoading?: boolean;
 }) {
   if (!sample) return null;
 
   const exams = getExamsFromSample(sample);
+  const history = getHistory(sample);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -128,14 +130,27 @@ export function SampleDetailSheet({
             <h4 className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wider">
               Historial
             </h4>
-            <ul className="space-y-1.5 text-sm">
-              {MOCK_HISTORY.map((h, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="text-muted-foreground shrink-0 font-mono text-xs">{h.at}</span>
-                  <span>{h.event}</span>
-                </li>
-              ))}
-            </ul>
+            {detailLoading ? (
+              <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Cargando historial...
+              </div>
+            ) : history.length > 0 ? (
+              <ul className="space-y-1.5 text-sm">
+                {history.map((h, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-muted-foreground shrink-0 font-mono text-xs">
+                      {h.at}
+                    </span>
+                    <span>{h.event}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground py-2 text-sm">
+                Sin eventos registrados.
+              </p>
+            )}
           </div>
         </div>
         <SheetFooter className="flex flex-col gap-2 sm:flex-col">

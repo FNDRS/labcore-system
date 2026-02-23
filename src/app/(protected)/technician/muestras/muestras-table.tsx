@@ -148,15 +148,13 @@ export function MuestrasTable({
                             Procesar
                           </DropdownMenuItem>
                         )}
-                      {row.status !== "Received" &&
-                        row.status !== "Completed" &&
-                        row.status !== "Flagged" && (
-                          <DropdownMenuItem
-                            onClick={() => onMarkReceived(row.id)}
-                          >
-                            Marcar recibida
-                          </DropdownMenuItem>
-                        )}
+                      {row.status === "Received" && (
+                        <DropdownMenuItem
+                          onClick={() => onMarkReceived(row.id)}
+                        >
+                          Marcar recibida
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => onReportProblem(row.id)}

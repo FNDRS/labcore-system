@@ -4,7 +4,10 @@ export type QuickFilter = "Todas" | "Hoy" | "Urgentes" | "Sin muestras" | "Lista
 export type PrintState = "pending" | "generating" | "printed" | "error";
 
 export type ReceptionOrder = {
+  /** Backend WorkOrder.id — use for mutations. */
   id: string;
+  /** Display label (accession or short id). */
+  displayId: string;
   patientName: string;
   patientAge: number;
   doctor: string;
@@ -25,6 +28,7 @@ export type GeneratedSpecimen = {
 export type GenerationModalState = {
   open: boolean;
   orderId: string;
+  displayId: string;
   patientName: string;
   specimens: GeneratedSpecimen[];
   printState: PrintState;

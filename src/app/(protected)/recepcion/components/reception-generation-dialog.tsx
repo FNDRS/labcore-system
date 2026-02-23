@@ -29,7 +29,7 @@ export function ReceptionGenerationDialog({
         <DialogHeader>
           <DialogTitle>{state.specimens.length} muestras creadas</DialogTitle>
           <DialogDescription>
-            Orden {state.orderId} · {state.patientName}
+            Orden {state.displayId || state.orderId} · {state.patientName}
           </DialogDescription>
         </DialogHeader>
 

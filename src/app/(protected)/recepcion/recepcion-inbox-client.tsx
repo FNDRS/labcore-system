@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ScanBarcode } from "lucide-react";
+import { AlertCircle, Loader2, ScanBarcode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,6 +22,8 @@ export function ReceptionInboxClient() {
     pendingCount,
     urgentPendingCount,
     visibleOrders,
+    ordersLoading,
+    ordersError,
     setSearch,
     setActiveFilter,
     setSelectedOrderId,
@@ -30,25 +32,23 @@ export function ReceptionInboxClient() {
     confirmReadyForLab,
     setGenerationModalOpen,
     findOrderByScannedCode,
+    loadOrders,
   } = useReceptionInbox();
 
   const [scanModeOpen, setScanModeOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
 
   const handleScannedCode = useCallback(
-    (code: string) => {
+    async (code: string) => {
       setScanStatus("searching");
-      const order = findOrderByScannedCode(code);
-      const delay = order ? 300 : 800;
-      window.setTimeout(() => {
-        if (order) {
-          setSelectedOrderId(order.id);
-          setScanModeOpen(false);
-          setScanStatus("idle");
-        } else {
-          setScanStatus("not_found");
-        }
-      }, delay);
+      const order = await findOrderByScannedCode(code);
+      if (order) {
+        setSelectedOrderId(order.id);
+        setScanModeOpen(false);
+        setScanStatus("idle");
+      } else {
+        setScanStatus("not_found");
+      }
     },
     [findOrderByScannedCode, setSelectedOrderId]
   );
@@ -117,6 +117,22 @@ export function ReceptionInboxClient() {
               onFilterChange={setActiveFilter}
             />
 
+            {ordersError ? (
+              <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-800/60 dark:bg-red-950/30">
+                <AlertCircle className="size-5 shrink-0 text-red-600 dark:text-red-400" />
+                <p className="flex-1 text-sm text-red-800 dark:text-red-200">{ordersError}</p>
+                <Button variant="outline" size="sm" onClick={loadOrders} className="rounded-full">
+                  Reintentar
+                </Button>
+              </div>
+            ) : null}
+
+            {ordersLoading ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-zinc-500">
+                <Loader2 className="size-5 animate-spin" aria-hidden />
+                <span>Cargando órdenes...</span>
+              </div>
+            ) : (
             <ReceptionOrdersTable
               orders={visibleOrders}
               highlightedNewIds={highlightedNewIds}
@@ -126,6 +142,7 @@ export function ReceptionInboxClient() {
                 setSelectedOrderId(order.id);
               }}
             />
+            )}
           </div>
         </Card>
       </div>

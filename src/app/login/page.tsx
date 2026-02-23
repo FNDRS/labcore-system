@@ -110,7 +110,7 @@ export default function LoginPage() {
             <FormField
               control={form.control}
               name="email"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                     Correo
@@ -119,6 +119,7 @@ export default function LoginPage() {
                     <Input
                       {...field}
                       type="email"
+                      aria-invalid={fieldState.invalid}
                       autoComplete="email"
                       placeholder="nombre@empresa.com"
                       spellCheck={false}
@@ -132,7 +133,7 @@ export default function LoginPage() {
             <FormField
               control={form.control}
               name="password"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem className="space-y-2">
                   <div className="flex items-center justify-between">
                     <FormLabel className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -149,6 +150,7 @@ export default function LoginPage() {
                     <Input
                       {...field}
                       type="password"
+                      aria-invalid={fieldState.invalid}
                       autoComplete="current-password"
                       placeholder="················"
                       className="h-11 rounded-lg border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"

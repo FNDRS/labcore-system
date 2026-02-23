@@ -45,6 +45,7 @@ export const AUDIT_ACTIONS = {
 	// Specimen lifecycle
 	SPECIMENS_GENERATED: "SPECIMENS_GENERATED",
 	LABEL_PRINTED: "LABEL_PRINTED",
+	LABEL_REPRINTED: "LABEL_REPRINTED",
 	ORDER_READY_FOR_LAB: "ORDER_READY_FOR_LAB",
 	SPECIMEN_SCANNED: "SPECIMEN_SCANNED",
 	SPECIMEN_RECEIVED: "SPECIMEN_RECEIVED",
@@ -74,3 +75,26 @@ export const AUDIT_ENTITY_TYPES = {
 } as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[keyof typeof AUDIT_ENTITY_TYPES];
+
+/** Map schema Sample.status to technician workstation UI status. */
+export const SAMPLE_STATUS_TO_WORKSTATION: Record<
+	(typeof SAMPLE_STATUS)[number],
+	"Received" | "Processing" | "Completed" | "Flagged"
+> = {
+	pending: "Received",
+	labeled: "Received",
+	ready_for_lab: "Received",
+	received: "Received",
+	inprogress: "Processing",
+	completed: "Completed",
+	rejected: "Flagged",
+} as const;
+
+/** Map schema sampleType enum to Spanish display. */
+export const SAMPLE_TYPE_TO_DISPLAY: Record<string, string> = {
+	urine: "Orina",
+	stool: "Heces",
+	wholebloodedta: "Sangre EDTA",
+	serum: "Suero",
+	other: "Otro",
+};
