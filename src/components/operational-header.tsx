@@ -10,6 +10,8 @@ const ROLE_LABEL: Record<string, string> = {
   tecnico: "Técnico",
   supervisor: "Supervisor",
   admin: "Admin",
+  doctor: "Doctor",
+  recepcion: "Recepción",
 };
 
 type OperationalHeaderProps = {

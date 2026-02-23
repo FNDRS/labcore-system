@@ -1,16 +1,21 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { connection } from "next/server";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AnimatedSidebar } from "@/components/animated-sidebar";
 import { AnimatedPageContent } from "@/components/animated-page-content";
+import { AnimatedSidebar } from "@/components/animated-sidebar";
 import { AppHeader } from "@/components/app-header";
-import { runWithAmplifyServerContext } from "@/utils/amplifyServerUtils";
-import { requireAuthWithGroup } from "@/lib/auth-server";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getRequiredGroupForPath, GROUP_TO_ROUTE } from "@/lib/auth";
-import { cookies } from "next/headers";
+import { requireAuthWithGroup } from "@/lib/auth-server";
+import { runWithAmplifyServerContext } from "@/utils/amplifyServerUtils";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
-const DEV_BYPASS_GROUPS = ["tecnico", "doctor", "supervisor"] as const;
+const DEV_BYPASS_GROUPS = [
+	"tecnico",
+	"doctor",
+	"supervisor",
+	"admin",
+	"recepcion",
+] as const;
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   await connection();
