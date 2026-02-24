@@ -135,6 +135,8 @@ interface FieldSchema {
 
 **Exit:** Safer multi-user experience; no accidental data loss.
 
+**3e.4 Implementation note:** Draft persistence uses `src/app/(protected)/technician/muestras/process/draft-storage.ts`. While the form is dirty, values are persisted to `localStorage` every 5 seconds. On successful "Guardar borrador", draft is saved to `localStorage` as backup. On page load, if a draft exists for the exam, a banner offers "Recuperar" or "Descartar". Key format: `lis-dignitas:exam-draft:{examId}`.
+
 ---
 
 ## Execution Order

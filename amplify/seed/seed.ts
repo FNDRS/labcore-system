@@ -1,7 +1,9 @@
 /**
  * LIS Sandbox Seed
  *
- * Populates Amplify sandbox with ExamTypes, Patients, WorkOrders, Samples, and Exams.
+ * Populates Amplify sandbox with ExamTypes, Patients, and WorkOrders only.
+ * No Samples or Exams — work orders are in reception state for end-to-end testing
+ * of Phase 0–3 (reception → technician queue → process workspace).
  * Based on docs/Reportes de laboratorio Claudio.pdf
  *
  * @see https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/seed
@@ -486,34 +488,17 @@ const PATIENTS = [
 ];
 
 const WORK_ORDER_SPECS = [
-  {
-    patientIndex: 0,
-    examCodes: ["URO", "HEM"],
-    accessionNumber: "ORD-2025-001",
-    priority: "routine" as const,
-    /** When false, only create WorkOrder (no samples) — for testing "Generar muestras" in reception. */
-    generateSamples: false,
-  },
-  {
-    patientIndex: 1,
-    examCodes: ["COP", "QS"],
-    accessionNumber: "ORD-2025-002",
-    priority: "urgent" as const,
-    generateSamples: false,
-  },
-  {
-    patientIndex: 2,
-    examCodes: ["URO", "COP", "HEM"],
-    accessionNumber: "ORD-2025-003",
-    priority: "routine" as const,
-    /** When true, creates samples so order shows "Muestras creadas" — for testing full flow. */
-    generateSamples: true,
-  },
+  { patientIndex: 0, examCodes: ["URO", "HEM"], accessionNumber: "ORD-2025-001", priority: "routine" as const },
+  { patientIndex: 1, examCodes: ["COP", "QS"], accessionNumber: "ORD-2025-002", priority: "urgent" as const },
+  { patientIndex: 2, examCodes: ["URO", "COP", "HEM"], accessionNumber: "ORD-2025-003", priority: "routine" as const },
+  { patientIndex: 0, examCodes: ["QS"], accessionNumber: "ORD-2025-004", priority: "routine" as const },
+  { patientIndex: 1, examCodes: ["HEM"], accessionNumber: "ORD-2025-005", priority: "urgent" as const },
+  { patientIndex: 2, examCodes: ["URO"], accessionNumber: "ORD-2025-006", priority: "routine" as const },
+  { patientIndex: 0, examCodes: ["COP", "HEM"], accessionNumber: "ORD-2025-007", priority: "stat" as const },
+  { patientIndex: 1, examCodes: ["URO", "QS"], accessionNumber: "ORD-2025-008", priority: "routine" as const },
+  { patientIndex: 2, examCodes: ["HEM", "QS"], accessionNumber: "ORD-2025-009", priority: "urgent" as const },
+  { patientIndex: 0, examCodes: ["URO", "COP", "QS"], accessionNumber: "ORD-2025-010", priority: "routine" as const },
 ];
-
-function generateBarcode(prefix: string, index: number): string {
-  return `${prefix}-${Date.now().toString(36).toUpperCase()}-${String(index).padStart(3, "0")}`;
-}
 
 console.log("🌱 Starting LIS sandbox seed...\n");
 console.log("[DEBUG] Seed data - EXAM_TYPES count:", EXAM_TYPES.length);
@@ -581,7 +566,7 @@ for (let i = 0; i < PATIENTS.length; i++) {
 }
 console.log("[DEBUG] patientIds:", patientIds);
 
-console.log("\n[DEBUG] 3. Seeding WorkOrders, Samples, Exams...");
+console.log("\n[DEBUG] 3. Seeding WorkOrders (no samples — reception state)...");
 const now = new Date().toISOString();
 console.log("[DEBUG] requestedAt:", now);
 console.log("[DEBUG] WORK_ORDER_SPECS:", WORK_ORDER_SPECS);
@@ -607,48 +592,12 @@ for (let woIndex = 0; woIndex < WORK_ORDER_SPECS.length; woIndex++) {
   if (woErrors?.length) throw new Error(`WorkOrder create failed: ${JSON.stringify(woErrors)}`);
   if (!workOrder?.id) throw new Error("WorkOrder create returned no data");
 
-  const samplesCreated = spec.generateSamples ?? true;
   console.log(
-    `   ✓ WorkOrder ${spec.accessionNumber} for ${PATIENTS[spec.patientIndex].firstName} [id=${workOrder.id}]${!samplesCreated ? " (sin muestras — para recepción)" : ""}`
+    `   ✓ WorkOrder ${spec.accessionNumber} for ${PATIENTS[spec.patientIndex].firstName} [id=${workOrder.id}] (sin muestras — recepción)`
   );
-
-  if (samplesCreated) {
-    for (let exIndex = 0; exIndex < spec.examCodes.length; exIndex++) {
-      const code = spec.examCodes[exIndex];
-      const examTypeId = examTypeIds[code];
-      if (!examTypeId) {
-        console.error("[DEBUG] ExamType not found:", code, "examTypeIds:", examTypeIds);
-        throw new Error(`ExamType ${code} not found`);
-      }
-
-      const barcode = generateBarcode("SMP", woIndex * 10 + exIndex);
-      console.log("[DEBUG] Creating Sample:", { workOrderId: workOrder!.id, examTypeId, barcode });
-
-      const { data: sample, errors: sampleErrors } = await client.models.Sample.create({
-        workOrderId: workOrder.id,
-        examTypeId,
-        barcode,
-        status: "labeled",
-      });
-      if (sampleErrors?.length)
-        throw new Error(`Sample create failed: ${JSON.stringify(sampleErrors)}`);
-      if (!sample?.id) throw new Error("Sample create returned no data");
-
-      const { data: exam, errors: examErrors } = await client.models.Exam.create({
-        sampleId: sample.id,
-        examTypeId,
-        status: "pending",
-      });
-      if (examErrors?.length) throw new Error(`Exam create failed: ${JSON.stringify(examErrors)}`);
-      if (!exam?.id) throw new Error("Exam create returned no data");
-
-      console.log(`      → Sample ${barcode} (${code}) [sampleId=${sample.id}, examId=${exam.id}]`);
-    }
-  }
 }
 
-console.log("\n✅ Seed complete. 3 work orders created.");
-console.log("   — 2 without samples (Sin muestras) for testing 'Generar muestras' in reception");
-console.log("   — 1 with samples (Muestras creadas) for testing full flow");
+console.log("\n✅ Seed complete. 10 work orders created (reception state, no samples).");
+console.log("   → Use reception to generate specimens, then technician queue → process workspace.");
 console.log("[DEBUG] Summary - examTypeIds:", examTypeIds);
 console.log("[DEBUG] Summary - patientIds:", patientIds);
