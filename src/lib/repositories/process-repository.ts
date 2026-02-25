@@ -5,6 +5,27 @@ import type { FieldSchema } from "@/lib/process/field-schema-types";
 import { parseFieldSchema } from "@/lib/process/field-schema-types";
 import type { ExamStatus } from "@/lib/contracts";
 
+function parseResults(
+	value: unknown,
+): Record<string, unknown> | null {
+	if (value == null) return null;
+	if (typeof value === "string") {
+		try {
+			const parsed = JSON.parse(value) as unknown;
+			if (parsed && typeof parsed === "object") {
+				return parsed as Record<string, unknown>;
+			}
+		} catch {
+			return null;
+		}
+		return null;
+	}
+	if (typeof value === "object") {
+		return value as Record<string, unknown>;
+	}
+	return null;
+}
+
 /** Process workspace context: Sample + Exam + ExamType with parsed fieldSchema. */
 export interface ProcessContext {
   sample: {
@@ -83,7 +104,7 @@ export async function getProcessContext(sampleId: string): Promise<ProcessContex
       sampleId: exam.sampleId,
       examTypeId: exam.examTypeId,
       status: (exam.status as ExamStatus) ?? null,
-      results: (exam.results as Record<string, unknown>) ?? null,
+      results: parseResults(exam.results),
       startedAt: exam.startedAt ?? null,
       resultedAt: exam.resultedAt ?? null,
       performedBy: exam.performedBy ?? null,

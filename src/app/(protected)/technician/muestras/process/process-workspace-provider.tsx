@@ -77,6 +77,9 @@ export function ProcessWorkspaceProvider({
 	const [isDirty, setIsDirty] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [conflict, setConflict] = useState(false);
+	const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | null>(
+		initialContext?.exam?.updatedAt ?? null,
+	);
 	const [pendingDraft, setPendingDraft] = useState<ResultsRecord | null>(null);
 
 	// Check for localStorage draft on mount (Phase 3e.4)
@@ -114,10 +117,16 @@ export function ProcessWorkspaceProvider({
 	// Mark exam as started when opening (pending → inprogress)
 	useEffect(() => {
 		if (!context?.exam?.id || context.exam.status !== "pending") return;
-		markExamStartedAction(context.exam.id).catch(() => {
-			// Non-fatal: exam may already be inprogress
-		});
-	}, [context?.exam?.id, context?.exam?.status]);
+		markExamStartedAction(context.exam.id)
+			.then((status) => {
+				if (status.ok && status.updatedAt != null) {
+					setExpectedUpdatedAt(status.updatedAt);
+				}
+			})
+			.catch(() => {
+				// Non-fatal: exam may already be inprogress
+			});
+	}, [context?.exam?.id, context?.exam?.status, context?.exam?.updatedAt]);
 
 	const onReload = useCallback(() => {
 		router.refresh();
@@ -134,9 +143,12 @@ export function ProcessWorkspaceProvider({
 				const status = await saveExamDraftAction(
 					context.exam.id,
 					results,
-					context.exam.updatedAt,
+					expectedUpdatedAt,
 				);
 				if (status.ok) {
+					if (status.updatedAt != null) {
+						setExpectedUpdatedAt(status.updatedAt);
+					}
 					toast.success("Borrador guardado");
 					setIsDirty(false);
 					saveDraft(context.exam.id, results);
@@ -146,11 +158,13 @@ export function ProcessWorkspaceProvider({
 				} else {
 					toast.error(status.error);
 				}
+			} catch {
+				toast.error("No se pudo guardar el borrador");
 			} finally {
 				setIsSubmitting(false);
 			}
 		},
-		[context?.exam?.id, context?.exam?.updatedAt],
+		[context?.exam?.id, expectedUpdatedAt, isDirty],
 	);
 
 	const onSendToValidation = useCallback(
@@ -164,7 +178,7 @@ export function ProcessWorkspaceProvider({
 					const finalizeStatus = await finalizeExamAction(
 						context.exam.id,
 						results,
-						context.exam.updatedAt,
+						expectedUpdatedAt,
 					);
 					if (!finalizeStatus.ok) {
 						if (finalizeStatus.conflict) {
@@ -172,6 +186,9 @@ export function ProcessWorkspaceProvider({
 						}
 						toast.error(finalizeStatus.error);
 						return;
+					}
+					if (finalizeStatus.updatedAt != null) {
+						setExpectedUpdatedAt(finalizeStatus.updatedAt);
 					}
 				}
 
@@ -183,11 +200,13 @@ export function ProcessWorkspaceProvider({
 				} else {
 					toast.error(sendStatus.error);
 				}
+			} catch {
+				toast.error("No se pudo enviar a validación");
 			} finally {
 				setIsSubmitting(false);
 			}
 		},
-		[context?.exam?.id, context?.exam?.status, context?.exam?.updatedAt, router],
+		[context?.exam?.id, context?.exam?.status, expectedUpdatedAt, router],
 	);
 
 	const value: ProcessWorkspaceContextValue = {

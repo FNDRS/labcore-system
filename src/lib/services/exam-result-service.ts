@@ -9,8 +9,25 @@ import { cookieBasedClient } from "@/utils/amplifyServerUtils";
 
 /** Result of exam result service operations. */
 export type ExamResultStatus =
-	| { ok: true }
+	| { ok: true; updatedAt?: string | null }
 	| { ok: false; error: string; conflict?: boolean };
+
+function mutationErrorMessage(
+	errors: Array<{ message?: string } | null | undefined> | null | undefined,
+	fallback: string,
+): string {
+	return errors?.[0]?.message ?? fallback;
+}
+
+function serializeResultsForAwsJson(
+	results: ResultsRecord,
+): string | null {
+	try {
+		return JSON.stringify(results ?? {});
+	} catch {
+		return null;
+	}
+}
 
 function emitAudit(
 	entityType: string,
@@ -18,15 +35,26 @@ function emitAudit(
 	action: string,
 	userId: string,
 	metadata?: Record<string, unknown>,
-): Promise<unknown> {
+): Promise<void> {
 	const now = new Date().toISOString();
+	const serializedMetadata =
+		metadata == null ? undefined : JSON.stringify(metadata);
 	return cookieBasedClient.models.AuditEvent.create({
 		entityType,
 		entityId,
 		action,
 		userId,
 		timestamp: now,
-		metadata: metadata ?? undefined,
+		metadata: serializedMetadata,
+	}).then((result) => {
+		if (result.errors?.length || !result.data?.id) {
+			throw new Error(
+				mutationErrorMessage(
+					result.errors,
+					"No se pudo registrar el evento de auditoría",
+				),
+			);
+		}
 	});
 }
 
@@ -48,12 +76,21 @@ export async function markExamStarted(
 	}
 
 	const now = new Date().toISOString();
-	await cookieBasedClient.models.Exam.update({
+	const startUpdate = await cookieBasedClient.models.Exam.update({
 		id: examId,
 		status: "inprogress",
 		startedAt: now,
 		performedBy: userId,
 	});
+	if (startUpdate.errors?.length || !startUpdate.data?.id) {
+		return {
+			ok: false,
+			error: mutationErrorMessage(
+				startUpdate.errors,
+				"No se pudo iniciar el examen",
+			),
+		};
+	}
 	await emitAudit(
 		AUDIT_ENTITY_TYPES.EXAM,
 		examId,
@@ -61,7 +98,9 @@ export async function markExamStarted(
 		userId,
 		{ sampleId: exam.sampleId },
 	);
-	return { ok: true };
+	const startedUpdatedAt =
+		(startUpdate.data as { updatedAt?: string | null } | null)?.updatedAt ?? null;
+	return { ok: true, updatedAt: startedUpdatedAt };
 }
 
 /**
@@ -100,10 +139,23 @@ export async function saveExamDraft(
 		};
 	}
 
-	await cookieBasedClient.models.Exam.update({
+	const serializedResults = serializeResultsForAwsJson(results);
+	if (serializedResults == null) {
+		return { ok: false, error: "Formato de resultados inválido" };
+	}
+	const draftUpdate = await cookieBasedClient.models.Exam.update({
 		id: examId,
-		results: results as Record<string, unknown>,
+		results: serializedResults,
 	});
+	if (draftUpdate.errors?.length || !draftUpdate.data?.id) {
+		return {
+			ok: false,
+			error: mutationErrorMessage(
+				draftUpdate.errors,
+				"No se pudo guardar el borrador",
+			),
+		};
+	}
 	await emitAudit(
 		AUDIT_ENTITY_TYPES.EXAM,
 		examId,
@@ -111,7 +163,9 @@ export async function saveExamDraft(
 		userId,
 		{ sampleId: exam.sampleId, draft: true },
 	);
-	return { ok: true };
+	const draftUpdatedAt =
+		(draftUpdate.data as { updatedAt?: string | null } | null)?.updatedAt ?? null;
+	return { ok: true, updatedAt: draftUpdatedAt };
 }
 
 /**
@@ -150,14 +204,27 @@ export async function finalizeExam(
 		};
 	}
 
+	const serializedFinalizeResults = serializeResultsForAwsJson(results);
+	if (serializedFinalizeResults == null) {
+		return { ok: false, error: "Formato de resultados inválido" };
+	}
 	const now = new Date().toISOString();
-	await cookieBasedClient.models.Exam.update({
+	const finalizeUpdate = await cookieBasedClient.models.Exam.update({
 		id: examId,
-		results: results as Record<string, unknown>,
+		results: serializedFinalizeResults,
 		status: "completed",
 		resultedAt: now,
 		performedBy: userId,
 	});
+	if (finalizeUpdate.errors?.length || !finalizeUpdate.data?.id) {
+		return {
+			ok: false,
+			error: mutationErrorMessage(
+				finalizeUpdate.errors,
+				"No se pudo finalizar el examen",
+			),
+		};
+	}
 	await emitAudit(
 		AUDIT_ENTITY_TYPES.EXAM,
 		examId,
@@ -165,7 +232,9 @@ export async function finalizeExam(
 		userId,
 		{ sampleId: exam.sampleId, finalized: true },
 	);
-	return { ok: true };
+	const finalizeUpdatedAt =
+		(finalizeUpdate.data as { updatedAt?: string | null } | null)?.updatedAt ?? null;
+	return { ok: true, updatedAt: finalizeUpdatedAt };
 }
 
 /**
@@ -189,10 +258,19 @@ export async function sendToValidation(
 		};
 	}
 
-	await cookieBasedClient.models.Exam.update({
+	const sendUpdate = await cookieBasedClient.models.Exam.update({
 		id: examId,
 		status: "ready_for_validation",
 	});
+	if (sendUpdate.errors?.length || !sendUpdate.data?.id) {
+		return {
+			ok: false,
+			error: mutationErrorMessage(
+				sendUpdate.errors,
+				"No se pudo enviar a validación",
+			),
+		};
+	}
 	await emitAudit(
 		AUDIT_ENTITY_TYPES.EXAM,
 		examId,
@@ -238,7 +316,6 @@ async function syncSampleStatusWhenExamSentToValidation(
 	});
 	if (!sample?.id || sample.status === "completed") return;
 
-	const now = new Date().toISOString();
 	await cookieBasedClient.models.Sample.update({
 		id: sampleId,
 		status: "completed",
