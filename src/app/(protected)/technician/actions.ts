@@ -31,7 +31,6 @@ import type {
 	SampleStatus,
 	SampleWorkstationDetail,
 	SampleWorkstationRow,
-	SampleWorkstationStatus,
 } from "./types";
 
 /** Set to true to use mock data (e.g. when backend unavailable). Phase 2b: default real data. */

@@ -194,6 +194,13 @@ export function TechnicianWorkstationProvider({
 		async (id: string) => {
 			setActionError(null);
 			const sample = samples.find((s) => s.id === id);
+			if (sample?.status === "Processing") {
+				setPanelOpen(false);
+				router.push(
+					`/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample.sampleId ?? "")}`,
+				);
+				return;
+			}
 			const result = await markInProgressAction(id);
 			if (result.ok) {
 				setPanelOpen(false);
