@@ -168,12 +168,12 @@ export async function getTechnicianDashboardData() {
 }
 
 const MOCK_MUESTRAS: SampleWorkstationRow[] = [
-	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Processing", waitMins: 4, collectedAt: "08:00", notes: null, assignedEquipment: "AN-01", assignedToMe: true },
-	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", sampleType: "Sangre", priority: "Routine", status: "Processing", waitMins: 12, collectedAt: "07:45", notes: null, assignedEquipment: null, assignedToMe: false },
-	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", sampleType: "Sangre", priority: "Urgent", status: "Flagged", waitMins: 8, collectedAt: "08:15", notes: "Muestra hemolizada", assignedEquipment: null, assignedToMe: true },
-	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", sampleType: "Orina", priority: "Routine", status: "Completed", waitMins: 0, collectedAt: "07:30", notes: null, assignedEquipment: "AN-02", assignedToMe: false },
-	{ id: "5", sampleId: "#LC-9026", patientName: "James Wilson", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Received", waitMins: 2, collectedAt: "08:20", notes: null, assignedEquipment: null, assignedToMe: false },
-	{ id: "6", sampleId: "#LC-9027", patientName: "Anna Bell", testType: "CBC", sampleType: "Sangre", priority: "Urgent", status: "Waiting Equipment", waitMins: 15, collectedAt: "08:10", notes: null, assignedEquipment: null, assignedToMe: true },
+	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Processing", backendStatus: "inprogress", waitMins: 4, collectedAt: "08:00", notes: null, assignedEquipment: "AN-01", assignedToMe: true },
+	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", sampleType: "Sangre", priority: "Routine", status: "Processing", backendStatus: "inprogress", waitMins: 12, collectedAt: "07:45", notes: null, assignedEquipment: null, assignedToMe: false },
+	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", sampleType: "Sangre", priority: "Urgent", status: "Flagged", backendStatus: "rejected", waitMins: 8, collectedAt: "08:15", notes: "Muestra hemolizada", assignedEquipment: null, assignedToMe: true },
+	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", sampleType: "Orina", priority: "Routine", status: "Completed", backendStatus: "completed", waitMins: 0, collectedAt: "07:30", notes: null, assignedEquipment: "AN-02", assignedToMe: false },
+	{ id: "5", sampleId: "#LC-9026", patientName: "James Wilson", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Received", backendStatus: "received", waitMins: 2, collectedAt: "08:20", notes: null, assignedEquipment: null, assignedToMe: false },
+	{ id: "6", sampleId: "#LC-9027", patientName: "Anna Bell", testType: "CBC", sampleType: "Sangre", priority: "Urgent", status: "Waiting Equipment", backendStatus: "inprogress", waitMins: 15, collectedAt: "08:10", notes: null, assignedEquipment: null, assignedToMe: true },
 ];
 
 export const fetchMuestrasWorkstation = cache(async () => {

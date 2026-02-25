@@ -79,11 +79,15 @@ export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[keyof typeof AUDIT_ENT
 /** Map schema Sample.status to technician workstation UI status. */
 export const SAMPLE_STATUS_TO_WORKSTATION: Record<
 	(typeof SAMPLE_STATUS)[number],
-	"Received" | "Processing" | "Completed" | "Flagged"
+	| "Awaiting Receipt"
+	| "Received"
+	| "Processing"
+	| "Completed"
+	| "Flagged"
 > = {
-	pending: "Received",
-	labeled: "Received",
-	ready_for_lab: "Received",
+	pending: "Awaiting Receipt",
+	labeled: "Awaiting Receipt",
+	ready_for_lab: "Awaiting Receipt",
 	received: "Received",
 	inprogress: "Processing",
 	completed: "Completed",

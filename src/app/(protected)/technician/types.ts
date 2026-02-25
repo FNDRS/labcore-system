@@ -1,3 +1,5 @@
+import type { SampleStatus as BackendSampleStatus } from "@/lib/contracts";
+
 /**
  * Technician DTOs for dashboard and muestras workstation.
  * Aligned with schema and lib/contracts.ts.
@@ -32,6 +34,7 @@ export interface DashboardMetrics {
 }
 
 export type SampleWorkstationStatus =
+	| "Awaiting Receipt"
 	| "Received"
 	| "Processing"
 	| "Waiting Equipment"
@@ -48,6 +51,7 @@ export interface SampleWorkstationRow {
 	sampleType: string;
 	priority: SampleWorkstationPriority;
 	status: SampleWorkstationStatus;
+	backendStatus: BackendSampleStatus;
 	waitMins: number;
 	collectedAt: string | null;
 	notes: string | null;

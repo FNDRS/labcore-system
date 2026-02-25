@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createSimplePdf } from "./pdf";
 import type { GenerationModalState, QuickFilter, ReceptionOrder } from "./types";
 import { filterAndSortOrders } from "./utils";
 import {
 	fetchReceptionOrders,
 	generateSpecimensAction,
+	markLabelsPrintedAction,
 	lookupReceptionOrderByCode,
 	markReadyForLabAction,
 } from "./actions";
@@ -26,27 +27,38 @@ export function useReceptionInbox() {
 	const [ordersLoading, setOrdersLoading] = useState(true);
 	const [ordersError, setOrdersError] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
+	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [activeFilter, setActiveFilter] = useState<QuickFilter>("Sin muestras");
 	const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 	const [highlightedNewIds, setHighlightedNewIds] = useState<string[]>([]);
 	const [generationModal, setGenerationModal] = useState<GenerationModalState>(INITIAL_MODAL_STATE);
+	const latestLoadIdRef = useRef(0);
+
+	useEffect(() => {
+		const timeoutId = window.setTimeout(() => {
+			setDebouncedSearch(search);
+		}, 250);
+		return () => window.clearTimeout(timeoutId);
+	}, [search]);
 
 	const loadOrders = useCallback(async () => {
+		const loadId = ++latestLoadIdRef.current;
 		setOrdersLoading(true);
 		setOrdersError(null);
 		try {
-			const data = await fetchReceptionOrders({
-				quickFilter: activeFilter,
-				search: search.trim() || undefined,
-			});
+			// Fetch full inbox once; search/filter are applied client-side.
+			const data = await fetchReceptionOrders({});
+			if (latestLoadIdRef.current !== loadId) return;
 			setOrders(data);
 		} catch (err) {
+			if (latestLoadIdRef.current !== loadId) return;
 			setOrdersError(err instanceof Error ? err.message : "Error al cargar órdenes");
 			setOrders([]);
 		} finally {
+			if (latestLoadIdRef.current !== loadId) return;
 			setOrdersLoading(false);
 		}
-	}, [activeFilter, search]);
+	}, []);
 
 	useEffect(() => {
 		loadOrders();
@@ -71,8 +83,8 @@ export function useReceptionInbox() {
 	);
 
 	const visibleOrders = useMemo(
-		() => filterAndSortOrders(orders, search, activeFilter),
-		[activeFilter, orders, search],
+		() => filterAndSortOrders(orders, debouncedSearch, activeFilter),
+		[activeFilter, orders, debouncedSearch],
 	);
 
 	async function findOrderByScannedCode(raw: string): Promise<ReceptionOrder | null> {
@@ -128,6 +140,10 @@ export function useReceptionInbox() {
 	async function downloadSpecimensPdf() {
 		if (!generationModal.orderId) return;
 		if (generationModal.printState === "generating") return;
+		if (generationModal.specimens.length === 0) {
+			setGenerationModal((prev) => ({ ...prev, printState: "error" }));
+			return;
+		}
 
 		setGenerationModal((prev) => ({
 			...prev,
@@ -157,6 +173,12 @@ export function useReceptionInbox() {
 			anchor.click();
 			URL.revokeObjectURL(url);
 
+			const markPrintedResult = await markLabelsPrintedAction(generationModal.orderId);
+			if (!markPrintedResult.ok) {
+				setGenerationModal((prev) => ({ ...prev, printState: "error" }));
+				return;
+			}
+
 			setGenerationModal((prev) => ({ ...prev, printState: "printed" }));
 			setHighlightedNewIds((prev) => [...prev, generationModal.orderId]);
 			await loadOrders();
@@ -177,7 +199,9 @@ export function useReceptionInbox() {
 	}
 
 	function setGenerationModalOpen(open: boolean) {
-		if (generationModal.printState === "generating" && !open) return;
+		if (!open && generationModal.printState !== "printed") {
+			return;
+		}
 		setGenerationModal((prev) => ({ ...prev, open }));
 	}
 

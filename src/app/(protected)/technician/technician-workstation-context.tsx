@@ -194,7 +194,15 @@ export function TechnicianWorkstationProvider({
 		async (id: string) => {
 			setActionError(null);
 			const sample = samples.find((s) => s.id === id);
-			if (sample?.status === "Processing") {
+			if (
+				sample?.backendStatus === "ready_for_lab" ||
+				sample?.backendStatus === "pending" ||
+				sample?.backendStatus === "labeled"
+			) {
+				setActionError("Primero marca la muestra como recibida");
+				return;
+			}
+			if (sample?.backendStatus === "inprogress") {
 				setPanelOpen(false);
 				router.push(
 					`/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample.sampleId ?? "")}`,

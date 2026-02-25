@@ -7,6 +7,7 @@ import {
   SAMPLE_STATUS_TO_WORKSTATION,
   SAMPLE_TYPE_TO_DISPLAY,
 } from "@/lib/contracts";
+import type { SampleStatus as BackendSampleStatus } from "@/lib/contracts";
 import type {
   DashboardMetrics,
   MuestrasSummary,
@@ -43,9 +44,17 @@ function toWorkstationPriority(
 function toWorkstationStatus(
   s: string | null | undefined,
 ): SampleWorkstationRow["status"] {
-  if (!s) return "Received";
+  if (!s) return "Awaiting Receipt";
   return (SAMPLE_STATUS_TO_WORKSTATION[s as keyof typeof SAMPLE_STATUS_TO_WORKSTATION] ??
-    "Received") as SampleWorkstationRow["status"];
+    "Awaiting Receipt") as SampleWorkstationRow["status"];
+}
+
+function toBackendSampleStatus(
+  s: string | null | undefined,
+): BackendSampleStatus {
+  if (!s) return "ready_for_lab";
+  if (s === "pending" || s === "labeled") return "ready_for_lab";
+  return s as BackendSampleStatus;
 }
 
 /** Map ExamType.sampleType to Spanish display. */
@@ -104,6 +113,7 @@ export async function computeDashboardMetrics(
   const inProcess = samples.filter(
     (s) =>
       s.status === "Processing" ||
+      s.status === "Awaiting Receipt" ||
       s.status === "Received" ||
       s.status === "Waiting Equipment",
   ).length;
@@ -122,7 +132,9 @@ export async function computeMuestrasSummary(
   samples: SampleWorkstationRow[],
 ): Promise<MuestrasSummary> {
   return {
-    pending: samples.filter((s) => s.status === "Received").length,
+    pending: samples.filter(
+      (s) => s.status === "Awaiting Receipt" || s.status === "Received",
+    ).length,
     inProcess: samples.filter(
       (s) =>
         s.status === "Processing" || s.status === "Waiting Equipment",
@@ -240,6 +252,7 @@ export async function listTechnicianSamples(): Promise<
       sampleType: toSampleTypeDisplay(examType.sampleType),
       priority: toWorkstationPriority(workOrder.priority),
       status: toWorkstationStatus(s.status),
+      backendStatus: toBackendSampleStatus(s.status),
       waitMins,
       collectedAt,
       notes: null,
@@ -254,11 +267,12 @@ export async function listTechnicianSamples(): Promise<
     if (a.priority !== "Urgent" && b.priority === "Urgent") return 1;
     if (a.waitMins !== b.waitMins) return b.waitMins - a.waitMins;
     const statusOrder: Record<string, number> = {
-      Received: 0,
-      Processing: 1,
-      "Waiting Equipment": 2,
-      Completed: 3,
-      Flagged: 4,
+      "Awaiting Receipt": 0,
+      Received: 1,
+      Processing: 2,
+      "Waiting Equipment": 3,
+      Completed: 4,
+      Flagged: 5,
     };
     return (statusOrder[a.status] ?? 0) - (statusOrder[b.status] ?? 0);
   });
@@ -300,6 +314,11 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 	[AUDIT_ACTIONS.LABEL_PRINTED]: "Etiqueta impresa",
 	[AUDIT_ACTIONS.LABEL_REPRINTED]: "Etiqueta reimpresa",
 	[AUDIT_ACTIONS.ORDER_READY_FOR_LAB]: "Lista para lab",
+	[AUDIT_ACTIONS.EXAM_STARTED]: "Examen iniciado",
+	[AUDIT_ACTIONS.EXAM_RESULTS_SAVED]: "Resultados guardados",
+	[AUDIT_ACTIONS.EXAM_SENT_TO_VALIDATION]: "Enviado a validacion",
+	[AUDIT_ACTIONS.EXAM_APPROVED]: "Examen aprobado",
+	[AUDIT_ACTIONS.EXAM_REJECTED]: "Examen rechazado",
 	[AUDIT_ACTIONS.SPECIMEN_RECEIVED]: "Recibida",
 	[AUDIT_ACTIONS.SPECIMEN_IN_PROGRESS]: "En proceso",
 	[AUDIT_ACTIONS.SPECIMEN_COMPLETED]: "Completada",
@@ -317,7 +336,7 @@ export async function getSampleDetail(
 	});
 	if (!sample?.id || !sample.workOrderId || !sample.examTypeId) return null;
 
-	const [workOrderResult, examTypeResult, auditResult] = await Promise.all([
+	const [workOrderResult, examTypeResult, auditResult, examListResult] = await Promise.all([
 		cookieBasedClient.models.WorkOrder.get({ id: sample.workOrderId }),
 		cookieBasedClient.models.ExamType.get({ id: sample.examTypeId }),
 		cookieBasedClient.models.AuditEvent.list({
@@ -328,12 +347,39 @@ export async function getSampleDetail(
 				],
 			},
 		}),
+		cookieBasedClient.models.Exam.list({
+			filter: { sampleId: { eq: sampleId } },
+		}),
 	]);
 
 	const workOrder = workOrderResult.data;
 	const examType = examTypeResult.data;
 	if (!workOrder || !examType) return null;
-
+	const examIds = (examListResult.data ?? [])
+		.map((exam) => exam.id)
+		.filter((id): id is string => id != null);
+	const [workOrderAuditResult, examAuditResults] = await Promise.all([
+		cookieBasedClient.models.AuditEvent.list({
+			filter: {
+				and: [
+					{ entityType: { eq: AUDIT_ENTITY_TYPES.WORK_ORDER } },
+					{ entityId: { eq: workOrder.id } },
+				],
+			},
+		}),
+		Promise.all(
+			examIds.map((examId) =>
+				cookieBasedClient.models.AuditEvent.list({
+					filter: {
+						and: [
+							{ entityType: { eq: AUDIT_ENTITY_TYPES.EXAM } },
+							{ entityId: { eq: examId } },
+						],
+					},
+				}),
+			),
+		),
+	]);
 	const patient = workOrder.patientId
 		? (
 				await cookieBasedClient.models.Patient.get({
@@ -355,8 +401,13 @@ export async function getSampleDetail(
 			})
 		: null;
 
-	// Sort by timestamp descending (newest first)
-	const sortedAudits = [...(auditResult.data ?? [])].filter(
+	// Merge sample + work order + exam events, then sort newest first.
+	const combinedAudits = [
+		...(auditResult.data ?? []),
+		...(workOrderAuditResult.data ?? []),
+		...examAuditResults.flatMap((result) => result.data ?? []),
+	];
+	const sortedAudits = combinedAudits.filter(
 		(e): e is NonNullable<typeof e> & { timestamp: string } =>
 			e != null && e.timestamp != null,
 	);
@@ -380,6 +431,7 @@ export async function getSampleDetail(
 		sampleType: toSampleTypeDisplay(examType.sampleType),
 		priority: toWorkstationPriority(workOrder.priority),
 		status: toWorkstationStatus(sample.status),
+		backendStatus: toBackendSampleStatus(sample.status),
 		waitMins,
 		collectedAt,
 		notes: null,

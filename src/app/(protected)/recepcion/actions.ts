@@ -3,6 +3,7 @@
 import { getCurrentUser } from "aws-amplify/auth/server";
 import {
 	generateSpecimensForOrder,
+	markLabelsPrintedForOrder,
 	markOrderReadyForLab,
 } from "@/lib/services/specimen-generation-service";
 import {
@@ -53,9 +54,20 @@ export type MarkReadyForLabActionResult =
 	| { ok: true }
 	| { ok: false; error: string };
 
+export type MarkLabelsPrintedActionResult =
+	| { ok: true }
+	| { ok: false; error: string };
+
 export async function markReadyForLabAction(
 	workOrderId: string,
 ): Promise<MarkReadyForLabActionResult> {
 	const userId = await getUserId();
 	return markOrderReadyForLab(workOrderId, userId);
+}
+
+export async function markLabelsPrintedAction(
+	workOrderId: string,
+): Promise<MarkLabelsPrintedActionResult> {
+	const userId = await getUserId();
+	return markLabelsPrintedForOrder(workOrderId, userId);
 }

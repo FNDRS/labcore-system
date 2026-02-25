@@ -10,6 +10,17 @@ export type GenerateSpecimensResult =
 	| { ok: true; sampleIds: string[]; barcodes: string[] }
 	| { ok: false; error: string };
 
+function serializeJsonForAwsJson(
+	value: Record<string, unknown> | undefined,
+): string | undefined {
+	if (value == null) return undefined;
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return undefined;
+	}
+}
+
 /**
  * Generate specimens for a work order. Idempotent: if samples already exist,
  * returns them without creating duplicates.
@@ -67,7 +78,7 @@ export async function generateSpecimensForOrder(
 	const createdBarcodes: string[] = [];
 
 	for (let i = 0; i < samplesToCreate.length; i++) {
-		const { examTypeCode, examTypeId } = samplesToCreate[i];
+		const { examTypeId } = samplesToCreate[i];
 		const barcode = `SMP-${prefix.replace(/^#/, "")}-${String(i + 1).padStart(2, "0")}`;
 
 		const { data: sample, errors: sampleErrors } =
@@ -120,20 +131,11 @@ export async function generateSpecimensForOrder(
 		action: AUDIT_ACTIONS.SPECIMENS_GENERATED,
 		userId,
 		timestamp: now,
-		metadata: {
+		metadata: serializeJsonForAwsJson({
 			sampleIds: createdSampleIds,
 			barcodes: createdBarcodes,
 			examTypeCodes: samplesToCreate.map((s) => s.examTypeCode),
-		},
-	});
-
-	await cookieBasedClient.models.AuditEvent.create({
-		entityType: AUDIT_ENTITY_TYPES.WORK_ORDER,
-		entityId: workOrderId,
-		action: AUDIT_ACTIONS.LABEL_PRINTED,
-		userId,
-		timestamp: now,
-		metadata: { barcodes: createdBarcodes },
+		}),
 	});
 
 	return {
@@ -141,6 +143,30 @@ export async function generateSpecimensForOrder(
 		sampleIds: createdSampleIds,
 		barcodes: createdBarcodes,
 	};
+}
+
+export async function markLabelsPrintedForOrder(
+	workOrderId: string,
+	userId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	const { data: samples } = await cookieBasedClient.models.Sample.list({
+		filter: { workOrderId: { eq: workOrderId } },
+	});
+	if (!samples || samples.length === 0) {
+		return { ok: false, error: "No hay muestras para esta orden" };
+	}
+	const barcodes = samples
+		.map((sample) => sample.barcode)
+		.filter((barcode): barcode is string => Boolean(barcode));
+	await cookieBasedClient.models.AuditEvent.create({
+		entityType: AUDIT_ENTITY_TYPES.WORK_ORDER,
+		entityId: workOrderId,
+		action: AUDIT_ACTIONS.LABEL_PRINTED,
+		userId,
+		timestamp: new Date().toISOString(),
+		metadata: serializeJsonForAwsJson({ barcodes }),
+	});
+	return { ok: true };
 }
 
 /**
@@ -174,7 +200,7 @@ export async function markOrderReadyForLab(
 		action: AUDIT_ACTIONS.ORDER_READY_FOR_LAB,
 		userId,
 		timestamp: now,
-		metadata: { sampleIds: samples.map((s) => s.id) },
+		metadata: serializeJsonForAwsJson({ sampleIds: samples.map((s) => s.id) }),
 	});
 
 	return { ok: true };

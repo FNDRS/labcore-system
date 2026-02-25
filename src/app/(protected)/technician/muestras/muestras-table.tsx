@@ -142,13 +142,15 @@ export function MuestrasTable({
                       <DropdownMenuItem onClick={() => onSelect(row.id)}>
                         Ver detalle
                       </DropdownMenuItem>
-                      {row.status !== "Completed" &&
-                        row.status !== "Flagged" && (
+                      {(row.backendStatus === "received" ||
+                        row.backendStatus === "inprogress") && (
                           <DropdownMenuItem onClick={() => onProcess(row.id)}>
                             Procesar
                           </DropdownMenuItem>
                         )}
-                      {row.status === "Received" && (
+                      {(row.backendStatus === "ready_for_lab" ||
+                        row.backendStatus === "pending" ||
+                        row.backendStatus === "labeled") && (
                         <DropdownMenuItem
                           onClick={() => onMarkReceived(row.id)}
                         >

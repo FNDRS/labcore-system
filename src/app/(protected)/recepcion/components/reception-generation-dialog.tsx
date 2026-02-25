@@ -23,9 +23,19 @@ export function ReceptionGenerationDialog({
   onDownloadPdf,
   onReady,
 }: ReceptionGenerationDialogProps) {
+  const canClose = state.printState === "printed";
+
   return (
     <Dialog open={state.open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        showCloseButton={canClose}
+        onEscapeKeyDown={(event) => {
+          if (!canClose) event.preventDefault();
+        }}
+        onInteractOutside={(event) => {
+          if (!canClose) event.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{state.specimens.length} muestras creadas</DialogTitle>
           <DialogDescription>

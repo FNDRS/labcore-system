@@ -6,10 +6,22 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/com
 import type { SampleWorkstationRow, SampleWorkstationStatus } from "../actions";
 import type { SampleWorkstationDetail } from "../types";
 
-type SampleExam = { id: string; name: string; status: SampleWorkstationStatus };
+type SampleExam = {
+  id: string;
+  name: string;
+  status: SampleWorkstationStatus;
+  backendStatus: SampleWorkstationRow["backendStatus"];
+};
 
 function getExamsFromSample(sample: SampleWorkstationRow): SampleExam[] {
-  return [{ id: sample.id, name: sample.testType, status: sample.status }];
+  return [
+    {
+      id: sample.id,
+      name: sample.testType,
+      status: sample.status,
+      backendStatus: sample.backendStatus,
+    },
+  ];
 }
 
 function getHistory(sample: SampleWorkstationRow | SampleWorkstationDetail): { at: string; event: string }[] {
@@ -17,6 +29,7 @@ function getHistory(sample: SampleWorkstationRow | SampleWorkstationDetail): { a
 }
 
 const EXAM_LABELS: Record<SampleWorkstationStatus, string> = {
+  "Awaiting Receipt": "Por recibir",
   Received: "Pendiente",
   Processing: "En proceso",
   "Waiting Equipment": "Esperando equipo",
@@ -109,14 +122,14 @@ export function SampleDetailSheet({
                     <span className="font-medium">{exam.name}</span>
                     <ExamStatusBadge status={exam.status} />
                   </div>
-                  {/* Procesar/Continuar solo si Recibida o En proceso; Waiting Equipment no permite procesar */}
-                  {(exam.status === "Received" || exam.status === "Processing") && (
+                  {(exam.backendStatus === "received" ||
+                    exam.backendStatus === "inprogress") && (
                     <Button
                       size="sm"
                       className="shrink-0 rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
                       onClick={() => onProcess(exam.id)}
                     >
-                      {exam.status === "Processing" ? "Continuar" : "Procesar"}
+                      {exam.backendStatus === "inprogress" ? "Continuar" : "Procesar"}
                     </Button>
                   )}
                 </li>
