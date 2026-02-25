@@ -24,6 +24,7 @@ function formatProcessedTime(iso: string | null): string {
 		return d.toLocaleTimeString("es-CL", {
 			hour: "2-digit",
 			minute: "2-digit",
+			hour12: false,
 		});
 	} catch {
 		return "—";

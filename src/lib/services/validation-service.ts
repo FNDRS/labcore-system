@@ -117,16 +117,16 @@ export async function approveExam(
 ): Promise<ValidationServiceResult> {
 	const { data: exam } = await cookieBasedClient.models.Exam.get({ id: examId });
 	if (!exam?.id) return { ok: false, error: "Examen no encontrado" };
+
+	const currentUpdatedAt = (exam as { updatedAt?: string | null }).updatedAt ?? null;
+	if (hasConflict(currentUpdatedAt, expectedUpdatedAt)) {
+		return { ok: false, error: "Otro usuario modificó este examen", conflict: true };
+	}
 	if (exam.status !== "ready_for_validation") {
 		return {
 			ok: false,
 			error: "Solo exámenes listos para validación pueden aprobarse",
 		};
-	}
-
-	const currentUpdatedAt = (exam as { updatedAt?: string | null }).updatedAt ?? null;
-	if (hasConflict(currentUpdatedAt, expectedUpdatedAt)) {
-		return { ok: false, error: "Otro usuario modificó este examen", conflict: true };
 	}
 
 	const now = new Date().toISOString();
@@ -179,16 +179,16 @@ export async function rejectExam(
 
 	const { data: exam } = await cookieBasedClient.models.Exam.get({ id: examId });
 	if (!exam?.id) return { ok: false, error: "Examen no encontrado" };
+
+	const currentUpdatedAt = (exam as { updatedAt?: string | null }).updatedAt ?? null;
+	if (hasConflict(currentUpdatedAt, expectedUpdatedAt)) {
+		return { ok: false, error: "Otro usuario modificó este examen", conflict: true };
+	}
 	if (exam.status !== "ready_for_validation") {
 		return {
 			ok: false,
 			error: "Solo exámenes listos para validación pueden rechazarse",
 		};
-	}
-
-	const currentUpdatedAt = (exam as { updatedAt?: string | null }).updatedAt ?? null;
-	if (hasConflict(currentUpdatedAt, expectedUpdatedAt)) {
-		return { ok: false, error: "Otro usuario modificó este examen", conflict: true };
 	}
 
 	const now = new Date().toISOString();
