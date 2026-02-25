@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import ConfigureAmplifyClientSide from "@/components/ConfigureAmplifyClientSide";
 import { AuthProvider } from "@/contexts/auth-context";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
 				<ConfigureAmplifyClientSide />
 				<AuthProvider>
 					<TooltipProvider>{children}</TooltipProvider>
+					<Toaster />
 				</AuthProvider>
 			</body>
 		</html>
