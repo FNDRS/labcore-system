@@ -1,21 +1,79 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { listPendingValidation } from "@/lib/repositories/supervisor-repository";
+import type {
+	ValidationQueueFilterFlag,
+	ValidationQueueFilters,
+	ValidationQueueStatusFilter,
+} from "@/lib/types/validation-types";
+import { ValidationListClient } from "./validation-list-client";
+import { ValidationProvider } from "./validation-provider";
 
-export default function SupervisorValidacionesPage() {
-  return (
-    <div className="min-h-0 flex-1 bg-zinc-50 px-4 py-6">
-      <div className="mx-auto max-w-4xl">
-        <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
-          <CardHeader>
-            <CardTitle>Validaciones</CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Lista de resultados listos para validar. Revisar → Aprobar / Rechazar / Marcar incidencia / Solicitar repetición.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">Próximamente.</p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+type PageProps = {
+	searchParams: Promise<{
+		status?: string;
+		flag?: string;
+		from?: string;
+		to?: string;
+	}>;
+};
+
+function parseFilters(searchParams: {
+	status?: string;
+	flag?: string;
+	from?: string;
+	to?: string;
+}): ValidationQueueFilters {
+	const statusFilter = (searchParams.status === "all"
+		? "all"
+		: "pending") as ValidationQueueStatusFilter;
+
+	const flag = searchParams.flag?.trim();
+	const validFlags: ValidationQueueFilterFlag[] = [
+		"critico",
+		"atencion",
+		"normal",
+		"abnormal",
+	];
+	const flagFilter = flag && validFlags.includes(flag as ValidationQueueFilterFlag)
+		? (flag as ValidationQueueFilterFlag)
+		: undefined;
+
+	let fromResultedAt: string | undefined;
+	let toResultedAt: string | undefined;
+
+	if (searchParams.from?.trim()) {
+		const fromDate = searchParams.from.trim();
+		if (/^\d{4}-\d{2}-\d{2}$/.test(fromDate)) {
+			fromResultedAt = `${fromDate}T00:00:00.000Z`;
+		}
+	}
+	if (searchParams.to?.trim()) {
+		const toDate = searchParams.to.trim();
+		if (/^\d{4}-\d{2}-\d{2}$/.test(toDate)) {
+			toResultedAt = `${toDate}T23:59:59.999Z`;
+		}
+	}
+
+	return {
+		statusFilter,
+		flag: flagFilter,
+		fromResultedAt,
+		toResultedAt,
+	};
+}
+
+export default async function SupervisorValidacionesPage({
+	searchParams,
+}: PageProps) {
+	const params = await searchParams;
+	const filters = parseFilters(params);
+	const initialItems = await listPendingValidation(filters);
+
+	return (
+		<ValidationProvider
+			initialItems={initialItems}
+			initialFilters={filters}
+		>
+			<ValidationListClient />
+		</ValidationProvider>
+	);
 }

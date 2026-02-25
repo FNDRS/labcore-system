@@ -5,5 +5,5 @@ import { redirect } from "next/navigation";
  * the login page decides whether to show the form or redirect to the dashboard based on auth state.
  */
 export default function HomePage() {
-	redirect("/login");
+  redirect("/login");
 }

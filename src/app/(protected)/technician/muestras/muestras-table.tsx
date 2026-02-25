@@ -142,21 +142,21 @@ export function MuestrasTable({
                       <DropdownMenuItem onClick={() => onSelect(row.id)}>
                         Ver detalle
                       </DropdownMenuItem>
-                      {row.status !== "Completed" &&
-                        row.status !== "Flagged" && (
+                      {(row.backendStatus === "received" ||
+                        row.backendStatus === "inprogress") && (
                           <DropdownMenuItem onClick={() => onProcess(row.id)}>
                             Procesar
                           </DropdownMenuItem>
                         )}
-                      {row.status !== "Received" &&
-                        row.status !== "Completed" &&
-                        row.status !== "Flagged" && (
-                          <DropdownMenuItem
-                            onClick={() => onMarkReceived(row.id)}
-                          >
-                            Marcar recibida
-                          </DropdownMenuItem>
-                        )}
+                      {(row.backendStatus === "ready_for_lab" ||
+                        row.backendStatus === "pending" ||
+                        row.backendStatus === "labeled") && (
+                        <DropdownMenuItem
+                          onClick={() => onMarkReceived(row.id)}
+                        >
+                          Marcar recibida
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => onReportProblem(row.id)}

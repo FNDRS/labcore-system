@@ -1,14 +1,40 @@
 "use server";
 
 import { cache } from "react";
+import { getCurrentUser } from "aws-amplify/auth/server";
 import {
 	cookieBasedClient,
 	runWithAmplifyServerContext,
 } from "@/utils/amplifyServerUtils";
 import { requireAuthWithGroup } from "@/lib/auth-server";
 import { cookies } from "next/headers";
+import {
+	computeDashboardMetrics,
+	getCompletedTodayCount,
+	listTechnicianSamples,
+	computeMuestrasSummary,
+	getSampleDetail as getSampleDetailFromRepo,
+	lookupSampleByBarcode,
+} from "@/lib/repositories/technician-repository";
+import {
+	markSampleCompleted,
+	markSampleReceived,
+	markSampleInProgress,
+	markSampleRejected,
+	reprintSampleLabel,
+} from "@/lib/services/sample-status-service";
+import type {
+	DashboardMetrics,
+	MuestrasSummary,
+	NextSample,
+	QueueRow,
+	SampleStatus,
+	SampleWorkstationDetail,
+	SampleWorkstationRow,
+} from "./types";
 
-const MOCK_TECHNICIAN = true;
+/** Set to true to use mock data (e.g. when backend unavailable). Phase 2b: default real data. */
+const MOCK_TECHNICIAN = process.env.NEXT_PUBLIC_MOCK_TECHNICIAN === "true";
 
 async function requireTechnicianAuth() {
 	const { user } = await runWithAmplifyServerContext({
@@ -30,33 +56,21 @@ const MOCK_SAMPLES = [
 	{ id: "s-3", barcode: "BC-003", status: "received" as const, examTypeName: "Uroanálisis", patientName: "Carlos López" },
 ];
 
-export type SampleStatus = "Complete" | "Processing" | "Flagged";
-export type SamplePriority = "Routine" | "Urgent";
+export type {
+	SampleStatus,
+	SamplePriority,
+	SampleWorkstationPriority,
+} from "./types";
+export type {
+	QueueRow,
+	NextSample,
+	DashboardMetrics,
+	SampleWorkstationStatus,
+	SampleWorkstationRow,
+	SampleWorkstationDetail,
+	MuestrasSummary,
+} from "./types";
 
-export interface QueueRow {
-	id: string;
-	sampleId: string;
-	patientName: string;
-	testType: string;
-	priority: SamplePriority;
-	status: SampleStatus;
-	waitMins: number;
-	assignedToMe?: boolean;
-}
-
-export interface NextSample {
-	sampleId: string;
-	testType: string;
-	patientName: string;
-	priority: SamplePriority;
-	waitMins: number;
-}
-
-export interface DashboardMetrics {
-	completedToday: number;
-	inProcess: number;
-	errors: number;
-}
 
 const MOCK_QUEUE: QueueRow[] = [
 	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", priority: "Routine", status: "Processing", waitMins: 4, assignedToMe: true },
@@ -153,76 +167,142 @@ export async function getTechnicianDashboardData() {
 	return { workOrders, samples };
 }
 
-/** Data for the operative dashboard: next sample, urgent count, queue table, metrics, last scanned. */
-/** Estados únicos para pantalla Muestras (estación de trabajo). */
-export type SampleWorkstationStatus =
-	| "Received"
-	| "Processing"
-	| "Waiting Equipment"
-	| "Completed"
-	| "Flagged";
-
-export type SampleWorkstationPriority = "Routine" | "Urgent";
-
-export interface SampleWorkstationRow {
-	id: string;
-	sampleId: string;
-	patientName: string;
-	testType: string;
-	sampleType: string;
-	priority: SampleWorkstationPriority;
-	status: SampleWorkstationStatus;
-	waitMins: number;
-	collectedAt: string | null;
-	notes: string | null;
-	assignedEquipment: string | null;
-	assignedToMe: boolean;
-}
-
-export interface SampleWorkstationDetail extends SampleWorkstationRow {
-	history: { at: string; event: string }[];
-}
-
-export interface MuestrasSummary {
-	pending: number;
-	inProcess: number;
-	urgent: number;
-	incidencias: number;
-}
-
 const MOCK_MUESTRAS: SampleWorkstationRow[] = [
-	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Processing", waitMins: 4, collectedAt: "08:00", notes: null, assignedEquipment: "AN-01", assignedToMe: true },
-	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", sampleType: "Sangre", priority: "Routine", status: "Processing", waitMins: 12, collectedAt: "07:45", notes: null, assignedEquipment: null, assignedToMe: false },
-	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", sampleType: "Sangre", priority: "Urgent", status: "Flagged", waitMins: 8, collectedAt: "08:15", notes: "Muestra hemolizada", assignedEquipment: null, assignedToMe: true },
-	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", sampleType: "Orina", priority: "Routine", status: "Completed", waitMins: 0, collectedAt: "07:30", notes: null, assignedEquipment: "AN-02", assignedToMe: false },
-	{ id: "5", sampleId: "#LC-9026", patientName: "James Wilson", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Received", waitMins: 2, collectedAt: "08:20", notes: null, assignedEquipment: null, assignedToMe: false },
-	{ id: "6", sampleId: "#LC-9027", patientName: "Anna Bell", testType: "CBC", sampleType: "Sangre", priority: "Urgent", status: "Waiting Equipment", waitMins: 15, collectedAt: "08:10", notes: null, assignedEquipment: null, assignedToMe: true },
+	{ id: "1", sampleId: "#LC-9024", patientName: "Sarah Jenkins", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Processing", backendStatus: "inprogress", waitMins: 4, collectedAt: "08:00", notes: null, assignedEquipment: "AN-01", assignedToMe: true },
+	{ id: "2", sampleId: "#LC-9022", patientName: "Michael Ross", testType: "Hemoglobin A1C", sampleType: "Sangre", priority: "Routine", status: "Processing", backendStatus: "inprogress", waitMins: 12, collectedAt: "07:45", notes: null, assignedEquipment: null, assignedToMe: false },
+	{ id: "3", sampleId: "#LC-9023", patientName: "Eleanor Rigby", testType: "Thyroid Panel", sampleType: "Sangre", priority: "Urgent", status: "Flagged", backendStatus: "rejected", waitMins: 8, collectedAt: "08:15", notes: "Muestra hemolizada", assignedEquipment: null, assignedToMe: true },
+	{ id: "4", sampleId: "#LC-9025", patientName: "Jessica Hyde", testType: "Urinalysis", sampleType: "Orina", priority: "Routine", status: "Completed", backendStatus: "completed", waitMins: 0, collectedAt: "07:30", notes: null, assignedEquipment: "AN-02", assignedToMe: false },
+	{ id: "5", sampleId: "#LC-9026", patientName: "James Wilson", testType: "Lipid Panel", sampleType: "Sangre", priority: "Routine", status: "Received", backendStatus: "received", waitMins: 2, collectedAt: "08:20", notes: null, assignedEquipment: null, assignedToMe: false },
+	{ id: "6", sampleId: "#LC-9027", patientName: "Anna Bell", testType: "CBC", sampleType: "Sangre", priority: "Urgent", status: "Waiting Equipment", backendStatus: "inprogress", waitMins: 15, collectedAt: "08:10", notes: null, assignedEquipment: null, assignedToMe: true },
 ];
 
 export const fetchMuestrasWorkstation = cache(async () => {
-	// TODO: cuando MOCK_TECHNICIAN sea false, cargar desde API
-	const samples = MOCK_MUESTRAS;
-	const summary: MuestrasSummary = {
-		pending: samples.filter((s) => s.status === "Received").length,
-		inProcess: samples.filter((s) => s.status === "Processing" || s.status === "Waiting Equipment").length,
-		urgent: samples.filter((s) => s.priority === "Urgent" && s.status !== "Completed").length,
-		incidencias: samples.filter((s) => s.status === "Flagged").length,
-	};
+	if (MOCK_TECHNICIAN) {
+		const samples = MOCK_MUESTRAS;
+		const summary: MuestrasSummary = {
+			pending: samples.filter((s) => s.status === "Received").length,
+			inProcess: samples.filter((s) => s.status === "Processing" || s.status === "Waiting Equipment").length,
+			urgent: samples.filter((s) => s.priority === "Urgent" && s.status !== "Completed").length,
+			incidencias: samples.filter((s) => s.status === "Flagged").length,
+		};
+		return { samples, summary };
+	}
+	await requireTechnicianAuth();
+	const samples = await listTechnicianSamples();
+	const summary = await computeMuestrasSummary(samples);
 	return { samples, summary };
 });
 
-export async function getSampleDetail(id: string): Promise<SampleWorkstationDetail | null> {
-	// TODO: API
-	const row = MOCK_MUESTRAS.find((s) => s.id === id);
-	if (!row) return null;
-	return {
-		...row,
-		history: [
-			{ at: "08:24", event: "En proceso" },
-			{ at: "08:20", event: "Recibida" },
-			{ at: "08:00", event: "Recolección" },
-		],
-	};
+export async function getSampleDetail(
+	id: string,
+): Promise<SampleWorkstationDetail | null> {
+	if (MOCK_TECHNICIAN) {
+		const row = MOCK_MUESTRAS.find((s) => s.id === id);
+		if (!row) return null;
+		return {
+			...row,
+			history: [
+				{ at: "08:24", event: "En proceso" },
+				{ at: "08:20", event: "Recibida" },
+				{ at: "08:00", event: "Recolección" },
+			],
+		};
+	}
+	await requireTechnicianAuth();
+	return getSampleDetailFromRepo(id);
+}
+
+async function getUserId(): Promise<string> {
+	await requireTechnicianAuth();
+	const { userId } = await runWithAmplifyServerContext({
+		nextServerContext: { cookies },
+		operation: (ctx) => getCurrentUser(ctx),
+	});
+	return userId ?? "unknown";
+}
+
+export async function markReceivedAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) return { ok: true };
+	await requireTechnicianAuth();
+	const userId = await getUserId();
+	return markSampleReceived(sampleId, userId);
+}
+
+export async function markInProgressAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) return { ok: true };
+	await requireTechnicianAuth();
+	const userId = await getUserId();
+	return markSampleInProgress(sampleId, userId);
+}
+
+export async function markRejectedAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) return { ok: true };
+	await requireTechnicianAuth();
+	const userId = await getUserId();
+	return markSampleRejected(sampleId, userId);
+}
+
+export async function markCompletedAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) return { ok: true };
+	await requireTechnicianAuth();
+	const userId = await getUserId();
+	return markSampleCompleted(sampleId, userId);
+}
+
+export async function lookupSampleByBarcodeAction(
+	code: string,
+): Promise<{ ok: true; sample: SampleWorkstationRow } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) {
+		const mock = MOCK_MUESTRAS.find(
+			(s) =>
+				s.sampleId.toLowerCase().includes(code.trim().toLowerCase()) ||
+				s.id === code.trim(),
+		);
+		if (mock) return { ok: true, sample: mock };
+		return { ok: false, error: "Muestra no encontrada" };
+	}
+	await requireTechnicianAuth();
+	const sample = await lookupSampleByBarcode(code);
+	if (sample) return { ok: true, sample };
+	return { ok: false, error: "Muestra no encontrada" };
+}
+
+export async function reprintLabelAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	if (MOCK_TECHNICIAN) return { ok: true };
+	await requireTechnicianAuth();
+	const userId = await getUserId();
+	return reprintSampleLabel(sampleId, userId);
+}
+
+/** Alias for markRejectedAction; sets Sample.status = "rejected" and audits SPECIMEN_REJECTED. */
+export async function reportProblemAction(
+	sampleId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	return markRejectedAction(sampleId);
+}
+
+export async function fetchMuestrasAction(): Promise<{
+	samples: SampleWorkstationRow[];
+	summary: MuestrasSummary;
+}> {
+	if (MOCK_TECHNICIAN) {
+		const { samples, summary } = await fetchMuestrasWorkstation();
+		return { samples, summary };
+	}
+	await requireTechnicianAuth();
+	const samples = await listTechnicianSamples();
+	const summary = await computeMuestrasSummary(samples);
+	return { samples, summary };
 }
 
 export const fetchOperativeDashboard = cache(async () => {
@@ -242,17 +322,20 @@ export const fetchOperativeDashboard = cache(async () => {
 		};
 	}
 	await requireTechnicianAuth();
-	const samples = await fetchPendingSamples();
-	const workOrders = await fetchPendingWorkOrders();
-	const queueRows: QueueRow[] = samples.map((s, i) => ({
+	const [samples, completedToday] = await Promise.all([
+		listTechnicianSamples(),
+		getCompletedTodayCount(),
+	]);
+	const metrics = await computeDashboardMetrics(samples, completedToday);
+	const queueRows: QueueRow[] = samples.map((s) => ({
 		id: s.id,
-		sampleId: s.barcode,
+		sampleId: s.sampleId,
 		patientName: s.patientName,
-		testType: s.examTypeName,
-		priority: "Routine" as SamplePriority,
-		status: (s.status === "received" ? "Processing" : "Processing") as SampleStatus,
-		waitMins: i * 2,
-		assignedToMe: false, // TODO: desde API cuando exista asignación
+		testType: s.testType,
+		priority: s.priority,
+		status: (s.status === "Completed" ? "Complete" : s.status === "Flagged" ? "Flagged" : "Processing") as SampleStatus,
+		waitMins: s.waitMins,
+		assignedToMe: s.assignedToMe,
 	}));
 	const next = queueRows[0]
 		? {
@@ -266,11 +349,12 @@ export const fetchOperativeDashboard = cache(async () => {
 	const lastScanned = queueRows[0]
 		? { sampleId: queueRows[0].sampleId, status: queueRows[0].status }
 		: null;
+	const urgentCount = samples.filter((s) => s.priority === "Urgent" && s.status !== "Completed").length;
 	return {
 		nextSample: next,
-		urgentCount: workOrders.filter((wo) => wo.priority === "urgent").length,
+		urgentCount,
 		queueRows,
-		metrics: { completedToday: 0, inProcess: queueRows.length, errors: 0 },
+		metrics,
 		lastScanned,
 	};
 });

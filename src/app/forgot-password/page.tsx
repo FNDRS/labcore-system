@@ -131,7 +131,7 @@ function ForgotPasswordForm() {
               <FormField
                 control={requestForm.control}
                 name="email"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Correo
@@ -143,6 +143,7 @@ function ForgotPasswordForm() {
                         autoComplete="email"
                         placeholder="nombre@empresa.com"
                         spellCheck={false}
+                        aria-invalid={fieldState.invalid}
                         className="h-11 rounded-lg border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
                       />
                     </FormControl>
@@ -178,7 +179,7 @@ function ForgotPasswordForm() {
               <FormField
                 control={confirmForm.control}
                 name="code"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Código
@@ -191,6 +192,7 @@ function ForgotPasswordForm() {
                         autoComplete="one-time-code"
                         placeholder="123456"
                         spellCheck={false}
+                        aria-invalid={fieldState.invalid}
                         className="h-11 rounded-lg border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
                       />
                     </FormControl>
@@ -201,7 +203,7 @@ function ForgotPasswordForm() {
               <FormField
                 control={confirmForm.control}
                 name="newPassword"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Nueva contraseña
@@ -212,6 +214,7 @@ function ForgotPasswordForm() {
                         type="password"
                         autoComplete="new-password"
                         placeholder="················"
+                        aria-invalid={fieldState.invalid}
                         className="h-11 rounded-lg border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
                       />
                     </FormControl>
@@ -250,7 +253,7 @@ function ForgotPasswordForm() {
         <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
           ¿Ya tienes cuenta?{" "}
           <Link
-            href="/"
+            href="/login"
             className="font-medium text-black underline hover:no-underline dark:text-white"
           >
             Iniciar sesión

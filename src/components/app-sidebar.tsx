@@ -41,8 +41,8 @@ type NavItem = {
     strokeWidth?: number;
   }>;
   activeWhen: (pathname: string) => boolean;
-  /** Group required to see this item (tecnico, supervisor, admin) */
-  group: "tecnico" | "supervisor" | "admin" | "doctor";
+  /** Group required to see this item */
+  group: "tecnico" | "supervisor" | "admin" | "doctor" | "recepcion";
 };
 
 /**
@@ -77,6 +77,11 @@ const supervisorNavItems: NavItem[] = [
   { href: "/supervisor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/supervisor/settings"), group: "supervisor" },
 ];
 
+/** Recepción: órdenes, generación de muestras. */
+const recepcionNavItems: NavItem[] = [
+  { href: "/recepcion", label: "Recepción", icon: FileText, activeWhen: (p) => p.startsWith("/recepcion"), group: "recepcion" },
+];
+
 /** Admin: solo dashboard por ahora. */
 const adminNavItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"), group: "admin" },
@@ -97,9 +102,11 @@ function getNavItems(pathname: string, groups: string[]): NavItem[] {
   if (pathname.startsWith("/technician")) return tecnicoNavItems;
   if (pathname.startsWith("/supervisor")) return supervisorNavItems;
   if (pathname.startsWith("/admin")) return adminNavItems;
+  if (pathname.startsWith("/recepcion")) return recepcionNavItems;
   if (groups.includes("doctor") && !groups.includes("supervisor") && !groups.includes("admin")) return doctorNavItems;
   if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return tecnicoNavItems;
-  return [...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter((item) => groups.includes(item.group));
+  if (groups.includes("recepcion") && !groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return recepcionNavItems;
+  return [...recepcionNavItems, ...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter((item) => groups.includes(item.group));
 }
 
 function getRoleLabel(pathname: string, groups: string[]): string {
@@ -107,6 +114,7 @@ function getRoleLabel(pathname: string, groups: string[]): string {
   if (pathname.startsWith("/supervisor")) return "supervisor";
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/technician")) return "tecnico";
+  if (pathname.startsWith("/recepcion")) return "recepcion";
   return groups[0] ?? "Usuario";
 }
 

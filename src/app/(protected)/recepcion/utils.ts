@@ -1,5 +1,4 @@
-import { TEST_TO_TUBE } from "./constants";
-import type { GeneratedSpecimen, Priority, QuickFilter, ReceptionOrder, ReceptionStatus } from "./types";
+import type { Priority, QuickFilter, ReceptionOrder, ReceptionStatus } from "./types";
 
 export function formatDateTime(dateIso: string) {
   return new Intl.DateTimeFormat("es-HN", {
@@ -38,26 +37,13 @@ export function priorityPillClass(priority: Priority) {
   return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
 }
 
-export function generateSpecimens(order: ReceptionOrder): GeneratedSpecimen[] {
-  const grouped = new Map<string, number>();
-  for (const test of order.tests) {
-    const tube = TEST_TO_TUBE[test] ?? "Tubo adicional";
-    grouped.set(tube, (grouped.get(tube) ?? 0) + 1);
-  }
-  return Array.from(grouped.entries()).map(([tubeLabel, examCount], index) => ({
-    tubeLabel,
-    examCount,
-    specimenCode: `${order.id.replace("#", "SP-")}-${index + 1}`,
-  }));
-}
-
 export function filterAndSortOrders(orders: ReceptionOrder[], search: string, activeFilter: QuickFilter) {
   const q = search.trim().toLowerCase();
 
   const searched = orders.filter((order) => {
     if (!q) return true;
     const inPatient = order.patientName.toLowerCase().includes(q);
-    const inOrder = order.id.toLowerCase().includes(q);
+    const inOrder = order.displayId.toLowerCase().includes(q);
     const inTest = order.tests.some((test) => test.toLowerCase().includes(q));
     return inPatient || inOrder || inTest;
   });

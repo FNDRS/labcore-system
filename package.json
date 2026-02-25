@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sandbox": "pnpm ampx sandbox --profile Nimbus --identifier Nimbus",
-    "seed": "pnpm ampx sandbox seed --profile Nimbus "
+    "seed": "pnpm ampx sandbox seed --profile Nimbus --identifier Nimbus"
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.7.2",

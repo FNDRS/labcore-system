@@ -7,6 +7,11 @@ const CONFIG: Record<
   SampleWorkstationStatus,
   { label: string; className: string; icon: React.ReactNode }
 > = {
+  "Awaiting Receipt": {
+    label: "Awaiting receipt",
+    className: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    icon: <Package className="size-3.5" />,
+  },
   Received: {
     label: "Received",
     className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",

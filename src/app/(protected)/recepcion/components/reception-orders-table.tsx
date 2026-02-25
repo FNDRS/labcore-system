@@ -51,7 +51,7 @@ export function ReceptionOrdersTable({
                 }
                 onClick={() => onSelectOrder(order.id)}
               >
-                <TableCell className="font-medium">{order.id}</TableCell>
+                <TableCell className="font-medium">{order.displayId}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span>{order.patientName}</span>

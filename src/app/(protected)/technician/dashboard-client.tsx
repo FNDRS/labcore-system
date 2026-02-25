@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { lookupSampleByBarcodeAction } from "./actions";
 import { CheckCircle2, AlertCircle, Clock, Search, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -261,17 +262,34 @@ function ScanSampleDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const router = useRouter();
   const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleOpenChange = (next: boolean) => {
-    if (!next) setValue("");
+    if (!next) {
+      setValue("");
+      setError(null);
+    }
     onOpenChange(next);
   };
 
-  const handleScan = () => {
-    // TODO: integrar con lector/API
-    if (value.trim()) {
-      handleOpenChange(false);
+  const handleScan = async () => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await lookupSampleByBarcodeAction(trimmed);
+      if (result.ok) {
+        handleOpenChange(false);
+        router.push(`/technician/muestras?sample=${result.sample.id}`);
+      } else {
+        setError(result.error);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -297,10 +315,15 @@ function ScanSampleDialog({
             placeholder="Ej. #LC-9024 o código de barras"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleScan()}
+            onKeyDown={(e) => e.key === "Enter" && void handleScan()}
             className="font-mono"
             autoFocus
           />
+          {error && (
+            <p className="text-destructive text-sm" role="alert">
+              {error}
+            </p>
+          )}
         </div>
         <DialogFooter className="gap-2 sm:flex-row sm:gap-2">
           <Button variant="outline" className="rounded-full" onClick={() => handleOpenChange(false)}>
@@ -308,9 +331,10 @@ function ScanSampleDialog({
           </Button>
           <Button
             className="rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
-            onClick={handleScan}
+            onClick={() => void handleScan()}
+            disabled={loading || !value.trim()}
           >
-            Escanear
+            {loading ? "Buscando..." : "Escanear"}
           </Button>
         </DialogFooter>
       </DialogContent>
