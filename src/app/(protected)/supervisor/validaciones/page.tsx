@@ -13,6 +13,8 @@ type PageProps = {
 		flag?: string;
 		from?: string;
 		to?: string;
+		feedback?: string;
+		reviewed?: string;
 	}>;
 };
 
@@ -66,14 +68,20 @@ export default async function SupervisorValidacionesPage({
 }: PageProps) {
 	const params = await searchParams;
 	const filters = parseFilters(params);
+	const initialFeedback =
+		params.feedback === "approved" || params.feedback === "rejected"
+			? params.feedback
+			: null;
+	const initialReviewedId = params.reviewed?.trim() || null;
 	const initialItems = await listPendingValidation(filters);
 
 	return (
 		<ValidationProvider
 			initialItems={initialItems}
 			initialFilters={filters}
+			initialReviewedId={initialReviewedId}
 		>
-			<ValidationListClient />
+			<ValidationListClient initialFeedback={initialFeedback} />
 		</ValidationProvider>
 	);
 }

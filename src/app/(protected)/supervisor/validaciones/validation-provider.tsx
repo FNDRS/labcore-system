@@ -82,16 +82,19 @@ export function ValidationProvider({
 	children,
 	initialItems,
 	initialFilters,
+	initialReviewedId = null,
 }: {
 	children: ReactNode;
 	initialItems: ValidationQueueItem[];
 	initialFilters: ValidationQueueFilters;
+	initialReviewedId?: string | null;
 }) {
 	const router = useRouter();
 	const pathname = usePathname();
 
 	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedId, setSelectedId] = useState<string | null>(null);
+	const [selectedId, setSelectedId] = useState<string | null>(initialReviewedId);
+	const reviewedId = initialReviewedId?.trim() ?? "";
 
 	const filters: ValidationFilterState = useMemo(
 		() => ({
@@ -114,27 +117,35 @@ export function ValidationProvider({
 		],
 	);
 
+	const visibleItems = useMemo(
+		() =>
+			reviewedId
+				? initialItems.filter((item) => item.examId !== reviewedId)
+				: initialItems,
+		[initialItems, reviewedId],
+	);
+
 	const filteredItems = useMemo(() => {
-		return initialItems.filter((item) =>
+		return visibleItems.filter((item) =>
 			matchesSearchQuery(item, searchQuery),
 		);
-	}, [initialItems, searchQuery]);
+	}, [visibleItems, searchQuery]);
 
 	const pendingCount = useMemo(
 		() =>
-			initialItems.filter(
+			visibleItems.filter(
 				(item) => item.status === "ready_for_validation",
 			).length,
-		[initialItems],
+		[visibleItems],
 	);
 
 	const criticalCount = useMemo(
 		() =>
-			initialItems.filter(
+			visibleItems.filter(
 				(item) =>
 					item.clinicalFlag !== "normal" || item.hasReferenceRangeViolation,
 			).length,
-		[initialItems],
+		[visibleItems],
 	);
 
 	const buildSearchParams = useCallback(
@@ -200,7 +211,7 @@ export function ValidationProvider({
 	const value: ValidationProviderContextValue = useMemo(
 		() => ({
 			state: {
-				items: initialItems,
+				items: visibleItems,
 				filteredItems,
 				filters: { ...filters, searchQuery },
 				pendingCount,
@@ -220,7 +231,7 @@ export function ValidationProvider({
 			},
 		}),
 		[
-			initialItems,
+			visibleItems,
 			filteredItems,
 			filters,
 			searchQuery,
