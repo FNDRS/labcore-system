@@ -8,7 +8,10 @@ export type ValidationQueueFilterFlag =
 	| ValidationClinicalFlag
 	| "abnormal";
 
+export type ValidationQueueStatusFilter = "pending" | "all";
+
 export interface ValidationQueueFilters {
+	statusFilter?: ValidationQueueStatusFilter;
 	flag?: ValidationQueueFilterFlag;
 	priority?: "routine" | "urgent" | "stat" | null;
 	fromResultedAt?: string;

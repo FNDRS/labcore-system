@@ -158,15 +158,24 @@ function matchFlagFilter(
 }
 
 /**
- * List exams ready for supervisor validation with patient/order/exam context.
- * Supports optional filters for flag, priority, date range, and technician.
+ * List exams for supervisor validation queue with patient/order/exam context.
+ * Supports optional filters: status (pending/all), flag, priority, date range, technician.
  */
 export async function listPendingValidation(
 	filters: ValidationQueueFilters = {},
 ): Promise<ValidationQueueItem[]> {
-	const examAndFilters: Array<Record<string, unknown>> = [
-		{ status: { eq: "ready_for_validation" } },
-	];
+	const statusFilter =
+		filters.statusFilter === "all"
+			? {
+					or: [
+						{ status: { eq: "ready_for_validation" } },
+						{ status: { eq: "approved" } },
+						{ status: { eq: "rejected" } },
+					],
+				}
+			: { status: { eq: "ready_for_validation" } };
+
+	const examAndFilters: Array<Record<string, unknown>> = [statusFilter];
 	if (filters.technicianId?.trim()) {
 		examAndFilters.push({ performedBy: { eq: filters.technicianId.trim() } });
 	}
@@ -293,7 +302,7 @@ export async function listPendingValidation(
 			accessionNumber: workOrder.accessionNumber ?? null,
 			examTypeName: examType.name,
 			technicianId: exam.performedBy,
-			status: "ready_for_validation",
+			status: (exam.status as ValidationQueueItem["status"]) ?? "ready_for_validation",
 			processedAt: exam.resultedAt,
 			clinicalFlag,
 			hasReferenceRangeViolation: hasViolation,
