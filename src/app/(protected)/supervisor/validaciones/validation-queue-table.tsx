@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -83,6 +84,7 @@ function formatProcessedAt(processedAt: string | null): string {
 			year: "numeric",
 			hour: "2-digit",
 			minute: "2-digit",
+			hour12: false,
 		});
 	} catch {
 		return processedAt;
@@ -92,10 +94,19 @@ function formatProcessedAt(processedAt: string | null): string {
 export function ValidationQueueTable({
 	items,
 	highlightCritical = true,
+	selectedId = null,
+	onReview,
 }: {
 	items: ValidationQueueItem[];
 	highlightCritical?: boolean;
+	selectedId?: string | null;
+	onReview?: (id: string) => void;
 }) {
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const query = searchParams.toString();
+	const returnTo = query ? `${pathname}?${query}` : pathname;
+
 	if (items.length === 0) {
 		return (
 			<div className="py-12 text-center text-sm text-muted-foreground">
@@ -136,11 +147,13 @@ export function ValidationQueueTable({
 					const isCritical =
 						highlightCritical &&
 						(row.clinicalFlag !== "normal" || row.hasReferenceRangeViolation);
+					const detailHref = `/supervisor/validaciones/${row.examId}?from=${encodeURIComponent(returnTo)}`;
 					return (
 						<TableRow
 							key={row.examId}
 							className={cn(
 								"border-zinc-100",
+								selectedId === row.examId && "bg-zinc-100/70 dark:bg-zinc-800/40",
 								isCritical &&
 									"bg-red-50/50 dark:bg-red-950/20 border-l-2 border-l-red-400",
 							)}
@@ -174,7 +187,7 @@ export function ValidationQueueTable({
 							<TableCell>
 								{row.status === "ready_for_validation" ? (
 									<Button variant="outline" size="sm" className="rounded-full" asChild>
-										<Link href={`/supervisor/validaciones/${row.examId}`}>
+										<Link href={detailHref} onClick={() => onReview?.(row.examId)}>
 											Revisar
 										</Link>
 									</Button>
@@ -185,7 +198,7 @@ export function ValidationQueueTable({
 										className="rounded-full"
 										asChild
 									>
-										<Link href={`/supervisor/validaciones/${row.examId}`}>
+										<Link href={detailHref} onClick={() => onReview?.(row.examId)}>
 											Ver
 										</Link>
 									</Button>

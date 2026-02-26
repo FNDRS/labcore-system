@@ -15,9 +15,11 @@
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.7.2",
     "@aws-amplify/ui-react": "^6.15.0",
+    "@aws-sdk/client-lambda": "^3.998.0",
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
     "aws-amplify": "^6.16.2",
+    "aws-lambda": "^1.0.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -25,6 +27,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.574.0",
+    "motion": "^11.15.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
@@ -37,14 +40,14 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.1",
     "vaul": "^1.1.2",
-    "zod": "^4.3.6",
-    "motion": "^11.15.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.21.0",
     "@aws-amplify/backend-cli": "^1.8.2",
     "@aws-amplify/seed": "^1.1.1",
     "@tailwindcss/postcss": "^4",
+    "@types/aws-lambda": "^8.10.160",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -41,15 +41,20 @@ export function useReceptionInbox() {
 		return () => window.clearTimeout(timeoutId);
 	}, [search]);
 
+	const nextTokenRef = useRef<string | null>(null);
+	const [hasMore, setHasMore] = useState(false);
+	const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+
 	const loadOrders = useCallback(async () => {
 		const loadId = ++latestLoadIdRef.current;
 		setOrdersLoading(true);
 		setOrdersError(null);
 		try {
-			// Fetch full inbox once; search/filter are applied client-side.
-			const data = await fetchReceptionOrders({});
+			const { orders: data, nextToken: nt, hasMore: more } = await fetchReceptionOrders({});
 			if (latestLoadIdRef.current !== loadId) return;
 			setOrders(data);
+			nextTokenRef.current = nt;
+			setHasMore(more ?? false);
 		} catch (err) {
 			if (latestLoadIdRef.current !== loadId) return;
 			setOrdersError(err instanceof Error ? err.message : "Error al cargar órdenes");
@@ -59,6 +64,29 @@ export function useReceptionInbox() {
 			setOrdersLoading(false);
 		}
 	}, []);
+
+	const loadMore = useCallback(async () => {
+		const token = nextTokenRef.current;
+		if (!token || loadMoreLoading || ordersLoading) return;
+		const loadId = ++latestLoadIdRef.current;
+		setLoadMoreLoading(true);
+		try {
+			const { orders: data, nextToken: nt, hasMore: more } = await fetchReceptionOrders(
+				{},
+				{ nextToken: token }
+			);
+			if (latestLoadIdRef.current !== loadId) return;
+			setOrders((prev) => [...prev, ...data]);
+			nextTokenRef.current = nt;
+			setHasMore(more ?? false);
+		} catch (err) {
+			if (latestLoadIdRef.current !== loadId) return;
+			setOrdersError(err instanceof Error ? err.message : "Error al cargar órdenes");
+		} finally {
+			if (latestLoadIdRef.current !== loadId) return;
+			setLoadMoreLoading(false);
+		}
+	}, [loadMoreLoading, ordersLoading]);
 
 	useEffect(() => {
 		loadOrders();
@@ -90,6 +118,17 @@ export function useReceptionInbox() {
 	async function findOrderByScannedCode(raw: string): Promise<ReceptionOrder | null> {
 		const code = raw.trim();
 		if (!code) return null;
+		const normalized = code.startsWith("#") ? code.slice(1) : code;
+		// Check local fetched orders first (instant when order is in view)
+		const local = orders.find(
+			(o) =>
+				o.displayId === code ||
+				o.displayId === normalized ||
+				o.id === normalized ||
+				o.displayId.replace("#", "") === normalized
+		);
+		if (local) return local;
+		// Fall back to API lookup (for orders not yet loaded)
 		return lookupReceptionOrderByCode(code);
 	}
 
@@ -218,6 +257,8 @@ export function useReceptionInbox() {
 		urgentPendingCount,
 		selectedOrder,
 		visibleOrders,
+		hasMore,
+		loadMoreLoading,
 		setSearch,
 		setActiveFilter,
 		setSelectedOrderId,
@@ -227,5 +268,6 @@ export function useReceptionInbox() {
 		setGenerationModalOpen,
 		findOrderByScannedCode,
 		loadOrders,
+		loadMore,
 	};
 }

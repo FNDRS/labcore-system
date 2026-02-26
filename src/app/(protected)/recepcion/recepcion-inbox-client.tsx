@@ -24,6 +24,8 @@ export function ReceptionInboxClient() {
     visibleOrders,
     ordersLoading,
     ordersError,
+    hasMore,
+    loadMoreLoading,
     setSearch,
     setActiveFilter,
     setSelectedOrderId,
@@ -33,6 +35,7 @@ export function ReceptionInboxClient() {
     setGenerationModalOpen,
     findOrderByScannedCode,
     loadOrders,
+    loadMore,
   } = useReceptionInbox();
 
   const [scanModeOpen, setScanModeOpen] = useState(false);
@@ -133,15 +136,36 @@ export function ReceptionInboxClient() {
                 <span>Cargando órdenes...</span>
               </div>
             ) : (
-            <ReceptionOrdersTable
-              orders={visibleOrders}
-              highlightedNewIds={highlightedNewIds}
-              onSelectOrder={setSelectedOrderId}
-              onGenerateForOrder={(order) => {
-                runGenerateSpecimens(order);
-                setSelectedOrderId(order.id);
-              }}
-            />
+            <>
+              <ReceptionOrdersTable
+                orders={visibleOrders}
+                highlightedNewIds={highlightedNewIds}
+                onSelectOrder={setSelectedOrderId}
+                onGenerateForOrder={(order) => {
+                  runGenerateSpecimens(order);
+                  setSelectedOrderId(order.id);
+                }}
+              />
+              {hasMore && (
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={loadMore}
+                    disabled={loadMoreLoading}
+                  >
+                    {loadMoreLoading ? (
+                      <>
+                        <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                        Cargando más...
+                      </>
+                    ) : (
+                      "Cargar más órdenes"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
             )}
           </div>
         </Card>

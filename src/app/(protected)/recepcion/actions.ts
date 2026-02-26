@@ -10,6 +10,7 @@ import {
 	listReceptionOrders,
 	lookupOrderByCode,
 	type ReceptionListFilters,
+	type ReceptionListPage,
 } from "@/lib/repositories/reception-repository";
 import type { ReceptionOrder } from "./types";
 import { runWithAmplifyServerContext } from "@/utils/amplifyServerUtils";
@@ -25,8 +26,9 @@ async function getUserId(): Promise<string> {
 
 export async function fetchReceptionOrders(
 	filters: ReceptionListFilters,
-): Promise<ReceptionOrder[]> {
-	return listReceptionOrders(filters);
+	pagination?: { limit?: number; nextToken?: string | null },
+): Promise<ReceptionListPage> {
+	return listReceptionOrders(filters, pagination);
 }
 
 export async function lookupReceptionOrderByCode(

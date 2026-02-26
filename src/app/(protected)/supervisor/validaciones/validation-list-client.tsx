@@ -27,13 +27,18 @@ const FLAG_OPTIONS = [
 	{ value: "abnormal", label: "Anormales" },
 ] as const;
 
-export function ValidationListClient() {
+export function ValidationListClient({
+	initialFeedback = null,
+}: {
+	initialFeedback?: "approved" | "rejected" | null;
+}) {
 	const {
 		state: {
 			filteredItems,
 			filters,
 			pendingCount,
 			criticalCount,
+			selectedId,
 		},
 		actions: {
 			setSearchQuery,
@@ -42,6 +47,7 @@ export function ValidationListClient() {
 			setFromDate,
 			setToDate,
 			clearFilters,
+			setSelectedId,
 		},
 	} = useValidationProvider();
 
@@ -85,6 +91,13 @@ export function ValidationListClient() {
 						</div>
 					</CardHeader>
 					<CardContent className="space-y-4">
+						{initialFeedback ? (
+							<div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300">
+								{initialFeedback === "approved"
+									? "Examen aprobado correctamente."
+									: "Examen rechazado correctamente."}
+							</div>
+						) : null}
 						{/* Filters */}
 						<div className="flex flex-wrap items-center gap-3">
 							<div className="relative w-full min-w-0 max-w-sm sm:w-72">
@@ -170,6 +183,8 @@ export function ValidationListClient() {
 							<ValidationQueueTable
 								items={filteredItems}
 								highlightCritical
+								selectedId={selectedId}
+								onReview={setSelectedId}
 							/>
 						</div>
 					</CardContent>

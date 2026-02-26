@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { AnimatedPageContent } from "@/components/animated-page-content";
 import { AnimatedSidebar } from "@/components/animated-sidebar";
 import { AppHeader } from "@/components/app-header";
@@ -9,62 +10,31 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
-const DEV_BYPASS_GROUPS = [
-	"tecnico",
-	"doctor",
-	"supervisor",
-	"admin",
-	"recepcion",
-] as const;
+/** Per-request deduplication for auth check (server-cache-react). */
+const getAuthForLayout = cache(async () => {
+  return runWithAmplifyServerContext({
+    nextServerContext: { cookies },
+    operation: (ctx) => requireAuthWithGroup(ctx),
+  });
+});
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   await connection();
 
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") ?? "";
-  const bypassEnv = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS;
 
-  // Logs de depuración (solo en dev)
-  if (process.env.NODE_ENV === "development") {
-    console.log("[protected layout]", {
-      pathname,
-      NEXT_PUBLIC_DEV_AUTH_BYPASS: bypassEnv,
-      bypassActive: bypassEnv === "true",
-    });
-  }
+  const requiredGroup = getRequiredGroupForPath(pathname);
+  const hasPathRequirement = requiredGroup !== null;
 
-  // Bypass: no llamar a Amplify (evita fallos si amplify_outputs no está listo)
-  if (bypassEnv === "true") {
-    const requiredGroup = getRequiredGroupForPath(pathname);
-    if (requiredGroup && !DEV_BYPASS_GROUPS.includes(requiredGroup)) {
-      console.log("[protected layout] REDIRECT → /login (bypass activo pero rol no permitido)", {
-        requiredGroup,
-      });
-      redirect("/login");
-    }
-    if (process.env.NODE_ENV === "development") {
-      console.log("[protected layout] BYPASS OK → renderizando dashboard");
-    }
-  } else {
-    try {
-      const { groups } = await runWithAmplifyServerContext({
-        nextServerContext: { cookies },
-        operation: (ctx) => requireAuthWithGroup(ctx),
-      });
+  try {
+    const { groups } = await getAuthForLayout();
 
-      const requiredGroup = getRequiredGroupForPath(pathname);
-      if (requiredGroup && !groups.includes(requiredGroup)) {
-        const fallbackRoute = groups[0] ? GROUP_TO_ROUTE[groups[0]] : "/login";
-        console.log("[protected layout] REDIRECT → fallback (sin permiso)", {
-          requiredGroup,
-          fallbackRoute,
-        });
-        redirect(fallbackRoute);
-      }
-    } catch (err) {
-      console.log("[protected layout] REDIRECT → /login (catch)", err);
-      redirect("/login");
+    if (hasPathRequirement && !groups.includes(requiredGroup!)) {
+      redirect(groups[0] ? GROUP_TO_ROUTE[groups[0]] : "/login");
     }
+  } catch {
+    redirect("/login");
   }
 
   return (
