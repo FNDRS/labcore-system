@@ -70,10 +70,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         <SidebarInset className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50 text-zinc-900 w-full md:ml-(--sidebar-width) md:peer-data-[state=collapsed]:ml-(--sidebar-width-icon) pr-0">
           <AppHeader />
           <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto rounded-none bg-zinc-50 w-full">
-            <main className="min-h-0 min-w-0 flex-1 p-4">
-              <div className="w-full min-w-0 space-y-6">{children}</div>
-            </main>
-            <AppFooter />
+            <div className="flex min-h-full min-w-0 flex-col">
+              <main className="min-w-0 flex-1 p-4">
+                <div className="w-full min-w-0 space-y-6">{children}</div>
+              </main>
+              <AppFooter variant="dashboard" />
+            </div>
           </AnimatedPageContent>
         </SidebarInset>
       </SidebarProvider>

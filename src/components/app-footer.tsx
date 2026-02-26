@@ -16,24 +16,45 @@ const footerLinks = {
   ],
 };
 
-export function AppFooter() {
+type AppFooterProps = {
+  variant?: "default" | "dashboard";
+};
+
+export function AppFooter({ variant = "default" }: AppFooterProps) {
+  if (variant === "dashboard") {
+    return (
+      <footer
+        className="mt-6 min-w-0 w-full shrink-0 border-t border-zinc-200 bg-white"
+        role="contentinfo"
+      >
+        <div className="mx-auto flex min-w-0 max-w-6xl flex-col items-center justify-between gap-2 px-4 py-3 text-xs text-zinc-500 sm:flex-row sm:px-6">
+          <p className="min-w-0 shrink-0">© {CURRENT_YEAR} LabCore LIS</p>
+          <p className="flex min-w-0 shrink-0 items-center gap-1.5">
+            <Shield className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
+            Datos seguros · v1.0
+          </p>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer
-      className="min-w-0 w-full shrink-0 border-t-2 border-zinc-100 bg-white"
+      className="mt-10 min-w-0 w-full shrink-0 border-t border-zinc-200 bg-white"
       role="contentinfo"
     >
       <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="grid grid-cols-1 min-w-0 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[auto_1fr_1fr]">
           {/* Marca */}
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="min-w-0">
             <p className="text-sm font-semibold tracking-tight text-zinc-900">LabCore LIS</p>
-            <p className="mt-2 text-xs text-zinc-500">Sistema de trazabilidad</p>
+            <p className="mt-1 text-xs text-zinc-500">Sistema de trazabilidad</p>
           </div>
 
           {/* Soporte */}
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Soporte</p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2 space-y-1">
               {footerLinks.soporte.map((item) => {
                 const Icon = item.icon;
                 const isInternal = item.href.startsWith("/");
@@ -42,19 +63,19 @@ export function AppFooter() {
                     {isInternal ? (
                       <Link
                         href={item.href}
-                        className="flex min-h-11 min-w-0 items-center gap-2 py-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900 sm:min-h-0 sm:py-0"
+                        className="inline-flex items-center gap-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900"
                       >
-                        <Icon className="size-3.5 text-zinc-400" aria-hidden />
+                        <Icon className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
                         {item.label}
                       </Link>
                     ) : (
                       <a
                         href={item.href}
-                        className="flex min-h-11 min-w-0 items-center gap-2 py-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900 sm:min-h-0 sm:py-0"
+                        className="inline-flex items-center gap-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Icon className="size-3.5 text-zinc-400" aria-hidden />
+                        <Icon className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
                         {item.label}
                       </a>
                     )}
@@ -64,19 +85,19 @@ export function AppFooter() {
             </ul>
           </div>
 
-          {/* Legal / Enlaces */}
-          <div>
+          {/* Legal */}
+          <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Legal</p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2 space-y-1">
               {footerLinks.legal.map((item) => {
                 const Icon = item.icon;
                 return (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="flex min-h-11 min-w-0 items-center gap-2 py-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900 sm:min-h-0 sm:py-0"
+                      className="inline-flex items-center gap-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900"
                     >
-                      <Icon className="size-3.5 text-zinc-400" aria-hidden />
+                      <Icon className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
                       {item.label}
                     </Link>
                   </li>
@@ -86,18 +107,15 @@ export function AppFooter() {
           </div>
         </div>
 
-        {/* Línea inferior */}
-        <div className="mt-6 flex min-w-0 flex-col gap-3 border-t border-zinc-200 pt-6 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-          <p className="min-w-0 break-words text-xs text-zinc-500">
+        {/* Línea inferior: copyright + versión */}
+        <div className="mt-6 flex min-w-0 flex-col gap-2 border-t border-zinc-200 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <p className="min-w-0 shrink-0 text-xs text-zinc-500">
             © {CURRENT_YEAR} LabCore LIS. Todos los derechos reservados.
           </p>
-          <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-zinc-500 sm:gap-4">
-            <span className="flex items-center gap-1.5">
-              <Shield className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
-              Datos seguros
-            </span>
-            <span className="shrink-0">LabCore LIS v1.0</span>
-          </div>
+          <p className="flex min-w-0 shrink-0 items-center gap-1.5 text-xs text-zinc-500">
+            <Shield className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
+            Datos seguros · LabCore LIS v1.0
+          </p>
         </div>
       </div>
     </footer>
