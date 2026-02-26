@@ -64,6 +64,13 @@ const tecnicoNavItems: NavItem[] = [
     activeWhen: (p) => p.startsWith("/technician/muestras"),
     group: "tecnico",
   },
+  {
+    href: "/technician/settings",
+    label: "Configuración",
+    icon: Settings,
+    activeWhen: (p) => p.startsWith("/technician/settings"),
+    group: "tecnico",
+  },
 ];
 
 /** Supervisor: validación, muestras, resultados, incidencias, analítica, auditoría (ver navegacion-por-roles). */

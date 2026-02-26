@@ -1,12 +1,21 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,6 +28,8 @@ import type { SampleWorkstationRow } from "../actions";
 import type { Filter } from "./constants";
 import { filterRows } from "./filter-utils";
 import { StatusBadge } from "./status-badge";
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
 export function MuestrasTable({
   rows,
@@ -55,9 +66,28 @@ export function MuestrasTable({
     );
   });
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, searchQuery]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const start = (page - 1) * pageSize;
+  const paginatedRows = filtered.slice(start, start + pageSize);
+
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
+
   return (
-    <div ref={tableRef} className="overflow-x-auto rounded-xl border border-zinc-100 bg-white">
-      <Table>
+    <div className="space-y-3">
+      <div
+          ref={tableRef}
+          className={`overflow-x-auto border border-zinc-100 bg-white ${total > 0 ? "rounded-t-xl border-b-0" : "rounded-xl"}`}
+        >
+        <Table>
         <TableHeader className="bg-zinc-50">
           <TableRow className="border-b border-border/60 hover:bg-transparent">
             <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -84,14 +114,14 @@ export function MuestrasTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.length === 0 ? (
+          {paginatedRows.length === 0 ? (
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                 No hay muestras en esta vista.
               </TableCell>
             </TableRow>
           ) : (
-            filtered.map((row) => (
+            paginatedRows.map((row) => (
               <TableRow
                 key={row.id}
                 ref={rowRefs(row.id)}
@@ -160,6 +190,59 @@ export function MuestrasTable({
           )}
         </TableBody>
       </Table>
+      </div>
+
+      {total > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-b-xl border border-zinc-100 border-t-0 bg-zinc-50/50 px-4 py-3">
+          <p className="text-muted-foreground text-sm">
+            Mostrando {start + 1}-{Math.min(start + pageSize, total)} de {total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-[100px]" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                disabled={!canPrev}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                aria-label="Página anterior"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                disabled={!canNext}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                aria-label="Página siguiente"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
