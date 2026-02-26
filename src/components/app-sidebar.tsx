@@ -30,9 +30,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { CLINIC_BRANDING, initialsFromName } from "@/lib/branding";
 
 type NavItem = {
   href: string;
@@ -112,13 +110,51 @@ function getNavItems(pathname: string, groups: string[]): NavItem[] {
   return [...recepcionNavItems, ...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter((item) => groups.includes(item.group));
 }
 
-function getRoleLabel(pathname: string, groups: string[]): string {
-  if (pathname.startsWith("/doctor")) return "doctor";
-  if (pathname.startsWith("/supervisor")) return "supervisor";
-  if (pathname.startsWith("/admin")) return "admin";
-  if (pathname.startsWith("/technician")) return "tecnico";
-  if (pathname.startsWith("/recepcion")) return "recepcion";
-  return groups[0] ?? "Usuario";
+/** Barra de navegación horizontal debajo del header (mismos enlaces que el sidebar). */
+export function AppNavBar() {
+  const pathname = usePathname();
+  const { state: authState } = useAuth();
+  const navItems = getNavItems(pathname ?? "", authState.groups);
+
+  return (
+    <nav
+      className="shrink-0 border-b border-zinc-200 bg-white"
+      role="navigation"
+      aria-label="Navegación principal"
+    >
+      <div className="flex items-center gap-1 px-4 py-2 md:px-6">
+        {navItems.map((item) => {
+          const isActive = item.activeWhen(pathname ?? "");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 hover:text-zinc-900 ${
+                isActive
+                  ? "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 hover:text-white"
+                  : "text-zinc-700"
+              }`}
+            >
+              {Icon === HomeSidebarIcon ? (
+                <Icon className="size-4 shrink-0" active={isActive} strokeWidth={2} />
+              ) : (
+                <Icon className="size-4 shrink-0" strokeWidth={2} />
+              )}
+              {item.label}
+            </Link>
+          );
+        })}
+        <Link
+          href="/support"
+          className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <Shield className="size-4 shrink-0" strokeWidth={1.75} />
+          Soporte
+        </Link>
+      </div>
+    </nav>
+  );
 }
 
 export function AppSidebar() {
@@ -127,7 +163,6 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
 
   const navItems = getNavItems(pathname ?? "", authState.groups);
-  const roleLabel = getRoleLabel(pathname ?? "", authState.groups);
 
   const isCollapsed = state === "collapsed";
 
@@ -143,52 +178,35 @@ export function AppSidebar() {
       className="overflow-hidden border-r border-zinc-200 bg-white text-zinc-900"
     >
       <SidebarHeader className="rounded-md px-2 py-1.5 ml-2 mr-0 mt-2 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mr-2">
-        <div className="w-full space-y-1.5 group-data-[collapsible=icon]:space-y-0">
-          <div className="flex w-full items-center gap-2 group-data-[collapsible=icon]:justify-center">
-            <button
-              type="button"
-              onClick={() => toggleSidebar()}
-              className="flex min-w-0 size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-zinc-900 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:rounded"
-              aria-label={isCollapsed ? "Expandir barra" : "LabCore"}
-            >
-              <Image
-                src="/images/logo-white.png"
-                alt="LabCore"
-                width={24}
-                height={24}
-                className="size-full max-w-[24px] max-h-[24px] object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
-                priority
-                sizes="(max-width: 24px) 18px, 24px"
-              />
-            </button>
-            <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold leading-tight text-zinc-900">LabCore</p>
-              <p className="truncate text-xs leading-tight text-zinc-500">LIS</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => toggleSidebar()}
-              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 group-data-[collapsible=icon]:hidden"
-              aria-label="Contraer barra"
-            >
-              <PanelRight className="size-4 rotate-180" />
-            </button>
+        <div className="flex w-full items-center gap-2 group-data-[collapsible=icon]:justify-center">
+          <button
+            type="button"
+            onClick={() => toggleSidebar()}
+            className="flex min-w-0 size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-zinc-900 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:rounded"
+            aria-label={isCollapsed ? "Expandir barra" : "LabCore"}
+          >
+            <Image
+              src="/images/logo-white.png"
+              alt="LabCore"
+              width={24}
+              height={24}
+              className="size-full max-w-[24px] max-h-[24px] object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
+              priority
+              sizes="(max-width: 24px) 18px, 24px"
+            />
+          </button>
+          <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-sm font-semibold leading-tight text-zinc-900">LabCore</p>
+            <p className="truncate text-xs leading-tight text-zinc-500">LIS</p>
           </div>
-
-          <div className="mr-2 flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 group-data-[collapsible=icon]:hidden">
-            <Avatar className="size-8 shrink-0 ring-1 ring-zinc-900/10">
-              {CLINIC_BRANDING.logoUrl ? (
-                <AvatarImage src={CLINIC_BRANDING.logoUrl} alt={CLINIC_BRANDING.name} />
-              ) : null}
-              <AvatarFallback className="bg-zinc-100 text-xs font-semibold text-zinc-700">
-                {initialsFromName(CLINIC_BRANDING.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-900">{CLINIC_BRANDING.name}</p>
-              <p className="truncate text-xs text-zinc-500">{roleLabel}</p>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => toggleSidebar()}
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 group-data-[collapsible=icon]:hidden"
+            aria-label="Contraer barra"
+          >
+            <PanelRight className="size-4 rotate-180" />
+          </button>
         </div>
       </SidebarHeader>
 

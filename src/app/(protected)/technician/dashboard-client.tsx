@@ -101,7 +101,11 @@ export function NextSampleCard({ nextSample }: { nextSample: NextSample | null }
       <p className="mt-2 text-xs text-muted-foreground">
         Tiempo en espera: {nextSample.waitMins} min
       </p>
-      <Button className="mt-4 rounded-full" size="lg" onClick={() => router.push("/technician/muestras")}>
+      <Button
+        className="mt-4 rounded-full"
+        size="lg"
+        onClick={() => router.push("/technician/muestras")}
+      >
         Procesar ahora
       </Button>
     </div>
@@ -172,85 +176,96 @@ export function QueueTable({
   const hasMore = showOnlyTop && filtered.length > DASHBOARD_QUEUE_TOP;
 
   return (
-    <div className="overflow-hidden">
-      <Table>
-        <TableHeader className="bg-zinc-50">
-          <TableRow className="border-b border-border/60 hover:bg-transparent">
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Sample ID
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Paciente
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Prueba
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Prioridad
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Estado
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Espera
-            </TableHead>
-            <TableHead className="h-12 w-[120px] px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Acción
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayed.length === 0 ? (
-            <TableRow className="border-b border-border/40 hover:bg-transparent">
-              <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
-                No hay muestras en esta vista.
-              </TableCell>
+    <div className="overflow-x-auto rounded-xl border border-zinc-100 bg-white">
+      <div className="min-w-0">
+        <Table>
+          <TableHeader className="bg-zinc-50">
+            <TableRow className="border-b border-border/60 hover:bg-transparent">
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Sample ID
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Paciente
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Prueba
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Prioridad
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Estado
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Espera
+              </TableHead>
+              <TableHead className="h-12 w-[120px] px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Acción
+              </TableHead>
             </TableRow>
-          ) : (
-            displayed.map((row) => (
-              <TableRow
-                key={row.id}
-                className="border-b border-border/40 transition-colors hover:bg-muted/70"
-              >
-                <TableCell className="px-6 py-4 font-mono text-sm font-semibold text-muted-foreground">
-                  {row.sampleId}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm font-semibold">{row.patientName}</TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.testType}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.priority}
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <StatusBadge status={row.status} />
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  {row.status !== "Complete" ? (
-                    <button
-                      type="button"
-                      className="text-sm font-medium text-orange-500 underline-offset-4 hover:underline dark:text-orange-400"
-                      onClick={() => onProcess(row.id)}
-                    >
-                      Procesar
-                    </button>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
+          </TableHeader>
+          <TableBody>
+            {displayed.length === 0 ? (
+              <TableRow className="border-b border-border/40 hover:bg-transparent">
+                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  No hay muestras en esta vista.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-      {hasMore && (
-        <p className="text-muted-foreground px-6 py-2 text-center text-sm">
-          Mostrando {DASHBOARD_QUEUE_TOP} de {filtered.length}. Ver lista completa en Muestras.
-        </p>
-      )}
+            ) : (
+              displayed.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="border-b border-border/40 transition-colors hover:bg-muted/70"
+                >
+                  <TableCell className="px-6 py-4 font-mono text-sm font-semibold text-muted-foreground">
+                    {row.sampleId}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm font-semibold">
+                    {row.patientName}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {row.testType}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {row.priority}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <StatusBadge status={row.status} />
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    {row.status !== "Complete" ? (
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-orange-500 underline-offset-4 hover:underline dark:text-orange-400"
+                        onClick={() => onProcess(row.id)}
+                      >
+                        Procesar
+                      </button>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {hasMore && (
+          <p className="text-muted-foreground px-6 py-2 text-center text-sm">
+            Mostrando {DASHBOARD_QUEUE_TOP} de {filtered.length}. Ver lista completa en{" "}
+            <Link
+              href="/technician/muestras"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              Muestras
+            </Link>
+            .
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -326,7 +341,11 @@ function ScanSampleDialog({
           )}
         </div>
         <DialogFooter className="gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" className="rounded-full" onClick={() => handleOpenChange(false)}>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => handleOpenChange(false)}
+          >
             Cancelar
           </Button>
           <Button

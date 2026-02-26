@@ -56,32 +56,29 @@ export function MuestrasTable({
   });
 
   return (
-    <div
-      ref={tableRef}
-      className="overflow-hidden rounded-2xl border border-border bg-card"
-    >
+    <div ref={tableRef} className="overflow-x-auto rounded-xl border border-zinc-100 bg-white">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-zinc-50">
           <TableRow className="border-b border-border/60 hover:bg-transparent">
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               ID
             </TableHead>
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Paciente
             </TableHead>
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Prueba
             </TableHead>
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Estado
             </TableHead>
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Prioridad
             </TableHead>
-            <TableHead className="h-12 px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Espera
             </TableHead>
-            <TableHead className="h-12 w-[220px] px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <TableHead className="h-12 w-[220px] px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Acción
             </TableHead>
           </TableRow>
@@ -89,10 +86,7 @@ export function MuestrasTable({
         <TableBody>
           {filtered.length === 0 ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell
-                colSpan={7}
-                className="py-12 text-center text-muted-foreground"
-              >
+              <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                 No hay muestras en esta vista.
               </TableCell>
             </TableRow>
@@ -109,25 +103,23 @@ export function MuestrasTable({
                       : ""
                 }`}
               >
-                <TableCell className="px-4 py-3 font-mono text-sm font-semibold text-muted-foreground">
+                <TableCell className="px-6 py-4 font-mono text-sm font-semibold text-muted-foreground">
                   {row.sampleId}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-sm font-semibold">
-                  {row.patientName}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground">
+                <TableCell className="px-6 py-4 text-sm font-semibold">{row.patientName}</TableCell>
+                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                   {row.testType}
                 </TableCell>
-                <TableCell className="px-4 py-3">
+                <TableCell className="px-6 py-4">
                   <StatusBadge status={row.status} />
                 </TableCell>
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground">
+                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                   {row.priority}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground">
+                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                   {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
                 </TableCell>
-                <TableCell className="px-4 py-3">
+                <TableCell className="px-6 py-4">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -142,18 +134,15 @@ export function MuestrasTable({
                       <DropdownMenuItem onClick={() => onSelect(row.id)}>
                         Ver detalle
                       </DropdownMenuItem>
-                      {(row.backendStatus === "received" ||
-                        row.backendStatus === "inprogress") && (
-                          <DropdownMenuItem onClick={() => onProcess(row.id)}>
-                            Procesar
-                          </DropdownMenuItem>
-                        )}
+                      {(row.backendStatus === "received" || row.backendStatus === "inprogress") && (
+                        <DropdownMenuItem onClick={() => onProcess(row.id)}>
+                          Procesar
+                        </DropdownMenuItem>
+                      )}
                       {(row.backendStatus === "ready_for_lab" ||
                         row.backendStatus === "pending" ||
                         row.backendStatus === "labeled") && (
-                        <DropdownMenuItem
-                          onClick={() => onMarkReceived(row.id)}
-                        >
+                        <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
                           Marcar recibida
                         </DropdownMenuItem>
                       )}

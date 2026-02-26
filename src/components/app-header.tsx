@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Settings } from "lucide-react";
@@ -40,31 +39,18 @@ export function AppHeader() {
   const sectionLabel = getSectionLabel(pathname ?? "");
 
   return (
-    <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white py-2">
-      <div className="flex min-h-12 w-full items-center gap-2 px-4 py-1">
+    <header className="sticky top-0 z-20 w-full border-b border-zinc-200 bg-white py-2">
+      <div className="flex min-h-12 w-full items-center gap-2 py-1">
         <div className="flex flex-none items-center gap-2 min-w-0">
-          <Image
-            src="/images/logo-black.png"
-            alt="LabCore"
-            width={24}
-            height={24}
-            className="shrink-0"
-          />
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-col">
             <span className="truncate text-lg font-semibold tracking-tight text-zinc-900">
-              LabCore
+              {CLINIC_BRANDING.name}
             </span>
-            <div className="w-px shrink-0 self-stretch bg-zinc-300" aria-hidden />
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate text-lg font-semibold tracking-tight text-zinc-900">
-                {CLINIC_BRANDING.name}
+            {sectionLabel && (
+              <span className="truncate text-xs text-zinc-500" aria-hidden>
+                {sectionLabel}
               </span>
-              {sectionLabel && (
-                <span className="truncate text-xs text-zinc-500" aria-hidden>
-                  {sectionLabel}
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
