@@ -39,7 +39,7 @@ export function AppHeader() {
   const sectionLabel = getSectionLabel(pathname ?? "");
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-zinc-200 bg-white py-2">
+    <header className="sticky top-0 z-20 w-full border-b border-zinc-200 bg-white py-2 px-4 md:px-6">
       <div className="flex min-h-12 w-full items-center gap-2 py-1">
         <div className="flex flex-none items-center gap-2 min-w-0">
           <div className="flex min-w-0 flex-col">
