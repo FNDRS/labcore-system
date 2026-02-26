@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -9,6 +11,7 @@ import {
   Circle,
   Clock,
   FlaskConical,
+  Loader2,
   TestTube,
   XCircle,
 } from "lucide-react";
@@ -90,7 +93,15 @@ function formatTimestamp(iso: string): string {
 
 // ─── Feed item ────────────────────────────────────────────────────────────────
 
-function IncidentFeedRow({ item }: { item: IncidentFeedItem }) {
+function IncidentFeedRow({
+  item,
+  isPending,
+  onDetailClick,
+}: {
+  item: IncidentFeedItem;
+  isPending: boolean;
+  onDetailClick: () => void;
+}) {
   const severity = SEVERITY_CONFIG[item.severity] ?? SEVERITY_CONFIG.low;
   const typeConfig = TYPE_CONFIG[item.incidentType] ?? TYPE_CONFIG.incidence_created;
   const { Icon } = typeConfig;
@@ -181,11 +192,25 @@ function IncidentFeedRow({ item }: { item: IncidentFeedItem }) {
       <div className="flex shrink-0 items-start pt-0.5">
         <Link
           href={`/supervisor/auditoria?orden=${item.workOrderId}`}
-          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200 transition-all hover:bg-zinc-100 hover:text-zinc-900 hover:ring-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-          aria-label={`Ver detalle de ${item.patientName}`}
+          onClick={onDetailClick}
+          aria-busy={isPending}
+          aria-label={isPending ? "Cargando…" : `Ver detalle de ${item.patientName}`}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200 transition-all hover:bg-zinc-100 hover:text-zinc-900 hover:ring-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+            isPending && "pointer-events-none opacity-80",
+          )}
         >
-          Ver detalle
-          <ArrowRight className="size-3" />
+          {isPending ? (
+            <>
+              Cargando…
+              <Loader2 className="size-3 animate-spin" aria-hidden />
+            </>
+          ) : (
+            <>
+              Ver detalle
+              <ArrowRight className="size-3" />
+            </>
+          )}
         </Link>
       </div>
     </li>
@@ -241,7 +266,17 @@ function EmptyFeed() {
 // ─── Feed ─────────────────────────────────────────────────────────────────────
 
 export function IncidentFeed() {
+  const pathname = usePathname();
+  const [pendingDetailId, setPendingDetailId] = useState<string | null>(null);
   const { state } = useIncidencias();
+
+  // Limpiar pending cuando se navega a auditoría
+  useEffect(() => {
+    if (!pendingDetailId || pathname == null) return;
+    if (pathname === "/supervisor/auditoria" || pathname.startsWith("/supervisor/auditoria/")) {
+      setPendingDetailId(null);
+    }
+  }, [pathname, pendingDetailId]);
 
   return (
     <div className="overflow-hidden rounded-b-xl">
@@ -257,7 +292,12 @@ export function IncidentFeed() {
       ) : (
         <ul className="divide-y divide-zinc-100" role="list" aria-label="Lista de incidencias">
           {state.feed.map((item) => (
-            <IncidentFeedRow key={item.id} item={item} />
+            <IncidentFeedRow
+              key={item.id}
+              item={item}
+              isPending={pendingDetailId === item.id}
+              onDetailClick={() => setPendingDetailId(item.id)}
+            />
           ))}
         </ul>
       )}
