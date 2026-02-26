@@ -18,7 +18,10 @@ const footerLinks = {
 
 export function AppFooter() {
   return (
-    <footer className="min-w-0 w-full shrink-0 border-t-2 border-zinc-200 bg-zinc-100" role="contentinfo">
+    <footer
+      className="min-w-0 w-full shrink-0 border-t-2 border-zinc-100 bg-white"
+      role="contentinfo"
+    >
       <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="grid grid-cols-1 min-w-0 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
           {/* Marca */}

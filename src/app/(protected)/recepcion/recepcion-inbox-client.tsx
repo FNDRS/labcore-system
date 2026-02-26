@@ -62,7 +62,7 @@ export function ReceptionInboxClient() {
 
   return (
     <div className="min-w-0 overflow-x-hidden bg-zinc-50">
-      <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6">
+      <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6">
         <Card className="rounded-xl border border-zinc-200 bg-white p-4 shadow-none sm:p-6">
           <div className="flex flex-col gap-4 sm:gap-5">
             <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -106,8 +106,14 @@ export function ReceptionInboxClient() {
             {ordersError ? (
               <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center dark:border-red-800/60 dark:bg-red-950/30">
                 <AlertCircle className="size-5 shrink-0 text-red-600 dark:text-red-400" />
-                <p className="min-w-0 flex-1 text-sm text-red-800 dark:text-red-200">{ordersError}</p>
-                <Button variant="outline" onClick={loadOrders} className="min-h-11 shrink-0 rounded-full">
+                <p className="min-w-0 flex-1 text-sm text-red-800 dark:text-red-200">
+                  {ordersError}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={loadOrders}
+                  className="min-h-11 shrink-0 rounded-full"
+                >
                   Reintentar
                 </Button>
               </div>
