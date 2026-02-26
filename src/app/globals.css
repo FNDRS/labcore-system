@@ -144,3 +144,9 @@
 [data-slot="card"] {
   box-shadow: none !important;
 }
+
+/* Inputs y textareas sin sombra */
+[data-slot="input"],
+[data-slot="textarea"] {
+  box-shadow: none !important;
+}

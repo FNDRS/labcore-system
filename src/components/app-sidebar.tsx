@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
 import {
   AlertTriangle,
@@ -13,6 +14,7 @@ import {
   FileText,
   FlaskConical,
   History,
+  Loader2,
   PanelRight,
   Settings,
   Shield,
@@ -274,10 +276,19 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { state: authState } = useAuth();
   const { state, toggleSidebar } = useSidebar();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const navItems = getNavItems(pathname ?? "", authState.groups);
 
   const isCollapsed = state === "collapsed";
+
+  // Limpiar pending cuando la navegación termina (pathname actualizado)
+  useEffect(() => {
+    if (!pendingHref || pathname == null) return;
+    if (pathname === pendingHref || pathname.startsWith(pendingHref + "/")) {
+      setPendingHref(null);
+    }
+  }, [pathname, pendingHref]);
 
   return (
     <Sidebar
@@ -329,18 +340,26 @@ export function AppSidebar() {
             <SidebarMenu className="gap-4 mt-4">
               {navItems.map((item) => {
                 const isActive = item.activeWhen(pathname);
+                const isPending = pendingHref === item.href;
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      isActive={isActive}
-                      tooltip={item.label}
+                      isActive={isActive && !isPending}
+                      tooltip={isPending ? "Cargando…" : item.label}
                       className="group h-10 justify-start rounded-r-full rounded-l-none pr-3 text-[13px] text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 data-[active=true]:bg-zinc-900 data-[active=true]:text-white data-[active=true]:shadow-sm pl-4 group-data-[collapsible=icon]:w-12! group-data-[collapsible=icon]:justify-start!"
                     >
-                      <Link href={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setPendingHref(item.href)}
+                        aria-busy={isPending}
+                        className={isPending ? "pointer-events-none opacity-90" : undefined}
+                      >
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center text-zinc-500 group-data-[active=true]:text-white">
-                          {Icon === HomeSidebarIcon ? (
+                          {isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                          ) : Icon === HomeSidebarIcon ? (
                             <Icon className="h-4 w-4" active={isActive} strokeWidth={2} />
                           ) : (
                             <Icon className="h-4 w-4" strokeWidth={2} />
@@ -364,12 +383,21 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              tooltip="Soporte"
+              tooltip={pendingHref === "/support" ? "Cargando…" : "Soporte"}
               className="group h-10 justify-start rounded-r-full rounded-l-none pl-4 pr-3 text-[13px] text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 group-data-[collapsible=icon]:w-12! group-data-[collapsible=icon]:justify-start! group-data-[collapsible=icon]:rounded-r-full group-data-[collapsible=icon]:pl-2"
             >
-              <Link href="/support">
+              <Link
+                href="/support"
+                onClick={() => setPendingHref("/support")}
+                aria-busy={pendingHref === "/support"}
+                className={pendingHref === "/support" ? "pointer-events-none opacity-90" : undefined}
+              >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center text-zinc-500">
-                  <Shield className="h-4 w-4" strokeWidth={1.75} />
+                  {pendingHref === "/support" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Shield className="h-4 w-4" strokeWidth={1.75} />
+                  )}
                 </span>
                 <span className="truncate text-md font-medium group-data-[collapsible=icon]:hidden">
                   Soporte
