@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   FileCheck,
   FileText,
-  FlaskConical,
   History,
   Loader2,
   PanelRight,
@@ -49,7 +48,7 @@ type NavItem = {
 
 /**
  * Sidebar técnico: minimalista (ver docs/navegacion-por-roles.md).
- * Órdenes y Resultados son módulos administrativos/clínicos; el técnico solo ve Dashboard + Muestras.
+ * Órdenes y Resultados son módulos administrativos/clínicos; el técnico ve Dashboard y Configuración.
  */
 const tecnicoNavItems: NavItem[] = [
   {
@@ -57,13 +56,6 @@ const tecnicoNavItems: NavItem[] = [
     label: "Dashboard",
     icon: HomeSidebarIcon,
     activeWhen: (p) => p === "/technician",
-    group: "tecnico",
-  },
-  {
-    href: "/technician/muestras",
-    label: "Muestras",
-    icon: FlaskConical,
-    activeWhen: (p) => p.startsWith("/technician/muestras"),
     group: "tecnico",
   },
   {
@@ -75,7 +67,7 @@ const tecnicoNavItems: NavItem[] = [
   },
 ];
 
-/** Supervisor: validación, muestras, resultados, incidencias, analítica, auditoría (ver navegacion-por-roles). */
+/** Supervisor: validación, resultados, incidencias, analítica, auditoría (ver navegacion-por-roles). */
 const supervisorNavItems: NavItem[] = [
   {
     href: "/supervisor",
@@ -89,13 +81,6 @@ const supervisorNavItems: NavItem[] = [
     label: "Validaciones",
     icon: FileCheck,
     activeWhen: (p) => p.startsWith("/supervisor/validaciones"),
-    group: "supervisor",
-  },
-  {
-    href: "/supervisor/muestras",
-    label: "Muestras",
-    icon: FlaskConical,
-    activeWhen: (p) => p.startsWith("/supervisor/muestras"),
     group: "supervisor",
   },
   {

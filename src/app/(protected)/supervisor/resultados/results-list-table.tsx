@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, FileText } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ChevronRight, FileText, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -114,9 +116,20 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
 }
 
 export function ResultsTable() {
+  const pathname = usePathname();
+  const [pendingWorkOrderId, setPendingWorkOrderId] = useState<string | null>(null);
+
   const {
     state: { filteredItems, filters, search, isLoading },
   } = useResultsListProvider();
+
+  // Limpiar pending cuando la navegación a resultados termina
+  useEffect(() => {
+    if (!pendingWorkOrderId || pathname == null) return;
+    if (pathname === `/supervisor/resultados/${pendingWorkOrderId}` || pathname.startsWith(`/supervisor/resultados/${pendingWorkOrderId}/`)) {
+      setPendingWorkOrderId(null);
+    }
+  }, [pathname, pendingWorkOrderId]);
 
   const status = filters.status ?? "todas";
   const hasActiveFilters =
@@ -168,53 +181,70 @@ export function ResultsTable() {
               </TableCell>
             </TableRow>
           ) : (
-            filteredItems.map((item) => (
-              <TableRow
-                key={item.workOrderId}
-                className="group border-zinc-100 transition-colors hover:bg-zinc-50/60"
-              >
-                <TableCell className="py-3.5 pl-5">
-                  <span className="font-mono text-[13px] tabular-nums text-zinc-800">
-                    {item.accessionNumber ?? <span className="text-zinc-300">—</span>}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <span className="text-[13px] font-medium text-zinc-900">{item.patientName}</span>
-                  {item.referringDoctor ? (
-                    <p className="mt-0.5 text-[11px] text-zinc-400">{item.referringDoctor}</p>
-                  ) : null}
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <span className="text-[13px] text-zinc-600">{formatDate(item.requestedAt)}</span>
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <PriorityChip priority={item.priority} />
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <ExamProgressBar
-                    terminalCount={item.terminalExamCount}
-                    total={item.examCount}
-                  />
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <StatusPill status={item.status} />
-                </TableCell>
-                <TableCell className="py-3.5">
-                  <span className="text-[13px] text-zinc-600">
-                    {formatDate(item.lastValidatedAt)}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3.5 pr-5 text-right">
-                  <Link
-                    href={`/supervisor/resultados/${item.workOrderId}`}
-                    className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
-                  >
-                    Ver resultados
-                    <ChevronRight className="size-3 text-zinc-400 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))
+            filteredItems.map((item) => {
+              const isPending = pendingWorkOrderId === item.workOrderId;
+              return (
+                <TableRow
+                  key={item.workOrderId}
+                  className="group border-zinc-100 transition-colors hover:bg-zinc-50/60"
+                >
+                  <TableCell className="py-3.5 pl-5">
+                    <span className="font-mono text-[13px] tabular-nums text-zinc-800">
+                      {item.accessionNumber ?? <span className="text-zinc-300">—</span>}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <span className="text-[13px] font-medium text-zinc-900">{item.patientName}</span>
+                    {item.referringDoctor ? (
+                      <p className="mt-0.5 text-[11px] text-zinc-400">{item.referringDoctor}</p>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <span className="text-[13px] text-zinc-600">{formatDate(item.requestedAt)}</span>
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <PriorityChip priority={item.priority} />
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <ExamProgressBar
+                      terminalCount={item.terminalExamCount}
+                      total={item.examCount}
+                    />
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <StatusPill status={item.status} />
+                  </TableCell>
+                  <TableCell className="py-3.5">
+                    <span className="text-[13px] text-zinc-600">
+                      {formatDate(item.lastValidatedAt)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-3.5 pr-5 text-right">
+                    <Link
+                      href={`/supervisor/resultados/${item.workOrderId}`}
+                      onClick={() => setPendingWorkOrderId(item.workOrderId)}
+                      aria-busy={isPending}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300",
+                        isPending && "pointer-events-none opacity-80",
+                      )}
+                    >
+                      {isPending ? (
+                        <>
+                          Cargando…
+                          <Loader2 className="size-3 animate-spin text-zinc-400" aria-hidden />
+                        </>
+                      ) : (
+                        <>
+                          Ver resultados
+                          <ChevronRight className="size-3 text-zinc-400 transition-transform duration-150 group-hover:translate-x-0.5" />
+                        </>
+                      )}
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
