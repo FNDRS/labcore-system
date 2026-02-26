@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "tailwindcss-mobile-first": {
+      "source": "josiahsiegel/claude-plugin-marketplace",
+      "sourceType": "github",
+      "computedHash": "9caf8e2089086a5f67150065921e3137ef4e010565e21f0d179a45650b0c126d"
+    }
+  }
+}

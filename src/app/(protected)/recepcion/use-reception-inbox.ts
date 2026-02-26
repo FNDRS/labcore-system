@@ -238,9 +238,6 @@ export function useReceptionInbox() {
 	}
 
 	function setGenerationModalOpen(open: boolean) {
-		if (!open && generationModal.printState !== "printed") {
-			return;
-		}
 		setGenerationModal((prev) => ({ ...prev, open }));
 	}
 

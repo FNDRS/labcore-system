@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { AnimatedPageContent } from "@/components/animated-page-content";
 import { AnimatedSidebar } from "@/components/animated-sidebar";
+import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getRequiredGroupForPath, GROUP_TO_ROUTE } from "@/lib/auth";
@@ -37,8 +38,24 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
+  const isRecepcion = pathname.startsWith("/recepcion");
+
+  if (isRecepcion) {
+    return (
+      <div className="fixed inset-0 flex w-full min-w-0 flex-col overflow-hidden bg-zinc-50">
+        <AppHeader />
+        <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto rounded-none bg-zinc-50 w-full max-w-full">
+          <main className="min-w-0 shrink-0 p-4">
+            <div className="w-full min-w-0 space-y-6">{children}</div>
+          </main>
+          <AppFooter />
+        </AnimatedPageContent>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-zinc-50">
+    <div className="fixed inset-0 flex min-w-0 overflow-hidden bg-zinc-50">
       <SidebarProvider
         defaultOpen
         style={
@@ -50,12 +67,13 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         className="flex h-full min-h-0 w-full flex-1 overflow-hidden bg-zinc-50 p-0 **:data-[slot=sidebar-inner]:bg-white!"
       >
         <AnimatedSidebar />
-        <SidebarInset className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50 text-zinc-900 md:ml-(--sidebar-width) md:peer-data-[state=collapsed]:ml-(--sidebar-width-icon) pr-0">
+        <SidebarInset className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50 text-zinc-900 w-full md:ml-(--sidebar-width) md:peer-data-[state=collapsed]:ml-(--sidebar-width-icon) pr-0">
           <AppHeader />
-          <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none bg-zinc-50">
-            <main className="min-h-0 flex-1 overflow-y-auto p-4">
-              <div className="w-full space-y-6">{children}</div>
+          <AnimatedPageContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto rounded-none bg-zinc-50 w-full">
+            <main className="min-h-0 min-w-0 flex-1 p-4">
+              <div className="w-full min-w-0 space-y-6">{children}</div>
             </main>
+            <AppFooter />
           </AnimatedPageContent>
         </SidebarInset>
       </SidebarProvider>

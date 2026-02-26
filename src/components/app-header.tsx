@@ -1,17 +1,20 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/auth-context";
+import { CLINIC_BRANDING } from "@/lib/branding";
 
 function getSettingsHref(pathname: string, groups: string[]) {
   if (pathname.startsWith("/doctor")) return "/doctor/settings";
   if (pathname.startsWith("/supervisor")) return "/supervisor/settings";
   if (pathname.startsWith("/admin")) return "/admin/settings";
   if (pathname.startsWith("/technician")) return "/technician/settings";
+  if (pathname.startsWith("/recepcion")) return null;
   const role = groups[0];
   if (role === "tecnico") return "/technician/settings";
   if (role === "supervisor") return "/supervisor/settings";
@@ -20,31 +23,49 @@ function getSettingsHref(pathname: string, groups: string[]) {
   return null;
 }
 
-/** Título del header según la ruta actual (evita dos headers en navegación directa por URL). */
-function getHeaderTitle(pathname: string) {
-  if (pathname.startsWith("/doctor")) return { title: "Panel clínico", subtitle: "Resultados y decisiones médicas." };
-  if (pathname.startsWith("/supervisor")) return { title: "Supervisor", subtitle: "Validación y supervisión." };
-  if (pathname.startsWith("/admin")) return { title: "Administración", subtitle: "Configuración del sistema." };
-  if (pathname.startsWith("/technician")) return { title: "Panel Técnico", subtitle: "Resumen operativo y cola de procesamiento." };
-  return { title: "LabCore", subtitle: "" };
+/** Etiqueta breve de sección para el header (dónde estoy). */
+function getSectionLabel(pathname: string): string | null {
+  if (pathname.startsWith("/recepcion")) return "Recepción";
+  if (pathname.startsWith("/technician")) return "Panel técnico";
+  if (pathname.startsWith("/doctor")) return "Panel clínico";
+  if (pathname.startsWith("/supervisor")) return "Supervisor";
+  if (pathname.startsWith("/admin")) return "Administración";
+  return null;
 }
 
 export function AppHeader() {
   const pathname = usePathname();
   const { state: authState, actions } = useAuth();
   const settingsHref = getSettingsHref(pathname ?? "", authState.groups);
-  const { title, subtitle } = getHeaderTitle(pathname ?? "");
+  const sectionLabel = getSectionLabel(pathname ?? "");
 
   return (
-    <header className="sticky top-0 py-2 z-20 border-b border-zinc-200 bg-white">
-      <div className="flex h-12 w-full items-center gap-2 px-4">
-        <div className="min-w-0 space-y-0.5">
-          <h1 className="truncate text-lg font-semibold tracking-tight text-zinc-900">
-            {title}
-          </h1>
-          <p className="truncate text-xs text-zinc-500">
-            {subtitle}
-          </p>
+    <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white py-2">
+      <div className="flex min-h-12 w-full items-center gap-2 px-4 py-1">
+        <div className="flex flex-none items-center gap-2 min-w-0">
+          <Image
+            src="/images/logo-black.png"
+            alt="LabCore"
+            width={24}
+            height={24}
+            className="shrink-0"
+          />
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-lg font-semibold tracking-tight text-zinc-900">
+              LabCore
+            </span>
+            <div className="w-px shrink-0 self-stretch bg-zinc-300" aria-hidden />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-lg font-semibold tracking-tight text-zinc-900">
+                {CLINIC_BRANDING.name}
+              </span>
+              {sectionLabel && (
+                <span className="truncate text-xs text-zinc-500" aria-hidden>
+                  {sectionLabel}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -55,7 +76,7 @@ export function AppHeader() {
                 variant="ghost"
                 size="icon"
                 aria-label="Notificaciones"
-                className="size-9 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                className="min-h-11 min-w-11 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 md:size-9"
               >
                 <Bell className="size-4" />
               </Button>
@@ -74,7 +95,7 @@ export function AppHeader() {
               variant="ghost"
               size="icon"
               aria-label="Configuración"
-              className="size-9 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+              className="min-h-11 min-w-11 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 md:size-9"
             >
               <Link href={settingsHref}>
                 <Settings className="size-4" />
@@ -86,7 +107,7 @@ export function AppHeader() {
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex size-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10 md:size-9"
                 aria-label="Perfil"
               >
                 <span className="text-xs font-semibold">

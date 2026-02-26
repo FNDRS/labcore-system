@@ -19,25 +19,24 @@ export function ReceptionSearchFilters({
 }: ReceptionSearchFiltersProps) {
   return (
     <section className="space-y-3">
-      <div className="relative max-w-2xl">
-        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+      <div className="relative w-full max-w-2xl">
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 sm:left-4" />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Buscar paciente, orden o prueba…"
-          className="h-11 rounded-full pl-9 text-base"
+          className="min-h-11 w-full rounded-full pl-9 pr-4 text-base sm:pl-10"
           aria-label="Buscar paciente, orden o prueba"
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {QUICK_FILTERS.map((filter) => (
           <Button
             key={filter}
             type="button"
-            size="sm"
             variant={activeFilter === filter ? "default" : "outline"}
-            className="rounded-full"
+            className="min-h-11 min-w-0 rounded-full px-4 py-2 text-sm"
             onClick={() => onFilterChange(filter)}
           >
             {filter}

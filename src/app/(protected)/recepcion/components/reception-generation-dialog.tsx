@@ -23,17 +23,18 @@ export function ReceptionGenerationDialog({
   onDownloadPdf,
   onReady,
 }: ReceptionGenerationDialogProps) {
-  const canClose = state.printState === "printed";
+  const canCloseByEscapeOrOutside = state.printState === "printed";
+  const isLoadingSpecimens = state.specimens.length === 0 && state.printState === "pending";
 
   return (
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent
-        showCloseButton={canClose}
+        showCloseButton
         onEscapeKeyDown={(event) => {
-          if (!canClose) event.preventDefault();
+          if (!canCloseByEscapeOrOutside) event.preventDefault();
         }}
         onInteractOutside={(event) => {
-          if (!canClose) event.preventDefault();
+          if (!canCloseByEscapeOrOutside) event.preventDefault();
         }}
       >
         <DialogHeader>
@@ -44,14 +45,13 @@ export function ReceptionGenerationDialog({
         </DialogHeader>
 
         <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
-          {state.printState === "pending" ? (
+          {isLoadingSpecimens ? (
+            <p className="text-muted-foreground">Generando muestras…</p>
+          ) : state.printState === "pending" ? (
             <p className="text-muted-foreground">Estado: Pendiente de descarga de etiquetas.</p>
           ) : null}
           {state.printState === "generating" ? (
-            <p className="inline-flex items-center gap-2 text-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              Estado: Generando PDF...
-            </p>
+            <p className="text-muted-foreground">Generando PDF…</p>
           ) : null}
           {state.printState === "printed" ? (
             <p className="inline-flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
@@ -94,8 +94,22 @@ export function ReceptionGenerationDialog({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onDownloadPdf} disabled={state.printState === "generating"}>
-            {state.printState === "printed" ? "Reimprimir PDF" : "Descargar PDF"}
+          <Button type="button" variant="outline" onClick={onDownloadPdf} disabled={isLoadingSpecimens || state.printState === "generating"}>
+            {isLoadingSpecimens ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+                Cargando…
+              </span>
+            ) : state.printState === "generating" ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+                Generando…
+              </span>
+            ) : state.printState === "printed" ? (
+              "Reimprimir PDF"
+            ) : (
+              "Descargar PDF"
+            )}
           </Button>
           <Button type="button" onClick={onReady} disabled={state.printState !== "printed"}>
             Listo

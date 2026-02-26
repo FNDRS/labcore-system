@@ -25,20 +25,20 @@ export function ReceptionOrdersTable({
   onGenerateForOrder,
 }: ReceptionOrdersTableProps) {
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white">
-      <Table>
+    <section className="overflow-x-auto rounded-xl border border-zinc-200 bg-white -mx-1 px-1 sm:mx-0 sm:px-0">
+      <Table className="min-w-[600px] sm:min-w-0">
         <TableHeader>
           <TableRow>
-            <TableHead>Orden</TableHead>
-            <TableHead>Paciente</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acción</TableHead>
+            <TableHead className="text-sm sm:text-base">Orden</TableHead>
+            <TableHead className="text-sm sm:text-base">Paciente</TableHead>
+            <TableHead className="text-sm sm:text-base">Estado</TableHead>
+            <TableHead className="text-right text-sm sm:text-base">Acción</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground py-10 text-center">
+              <TableCell colSpan={4} className="text-muted-foreground py-10 text-center text-sm sm:text-base">
                 No hay órdenes para los filtros actuales.
               </TableCell>
             </TableRow>
@@ -51,9 +51,9 @@ export function ReceptionOrdersTable({
                 }
                 onClick={() => onSelectOrder(order.id)}
               >
-                <TableCell className="font-medium">{order.displayId}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
+                <TableCell className="font-medium text-sm sm:text-base">{order.displayId}</TableCell>
+                <TableCell className="text-sm sm:text-base">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span>{order.patientName}</span>
                     {order.priority === "Urgente" ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">
@@ -63,7 +63,7 @@ export function ReceptionOrdersTable({
                   </div>
                   <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt)}</p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-sm sm:text-base">
                   <span
                     className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusPillClass(order.status)}`}
                   >
@@ -74,8 +74,7 @@ export function ReceptionOrdersTable({
                   {order.status === "Sin muestras" ? (
                     <Button
                       type="button"
-                      size="sm"
-                      className="rounded-full"
+                      className="min-h-11 rounded-full px-4 text-sm"
                       onClick={(event) => {
                         event.stopPropagation();
                         onGenerateForOrder(order);
@@ -84,7 +83,7 @@ export function ReceptionOrdersTable({
                       Generar muestras
                     </Button>
                   ) : (
-                    <Badge variant="secondary" className="font-normal">
+                    <Badge variant="secondary" className="font-normal min-h-8 px-2.5 py-1">
                       ✔ Generadas
                     </Badge>
                   )}

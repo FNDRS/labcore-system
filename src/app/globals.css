@@ -126,3 +126,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Sin sombras en toda la app */
+@layer utilities {
+  .shadow-xs,
+  .shadow-sm,
+  .shadow,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+}
+
+/* Cards sin sombra */
+[data-slot="card"] {
+  box-shadow: none !important;
+}
