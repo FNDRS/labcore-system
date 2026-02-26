@@ -1,20 +1,35 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Suspense } from "react";
+import { fetchAuditTimelineAction, fetchRecentAuditAction } from "./actions";
+import { AuditSearchClient } from "./audit-search-client";
+import { AuditoriaSkeleton } from "./audit-skeleton";
 
-export default function SupervisorAuditoriaPage() {
+type PageSearchParams = {
+  orden?: string;
+};
+
+async function AuditoriaLoader({ searchParams }: { searchParams: PageSearchParams }) {
+  const workOrderId = searchParams.orden?.trim();
+  const [recentActivity, timeline] = await Promise.all([
+    fetchRecentAuditAction(10),
+    workOrderId ? fetchAuditTimelineAction(workOrderId) : Promise.resolve(null),
+  ]);
+  return (
+    <AuditSearchClient recentActivity={recentActivity} timeline={timeline} />
+  );
+}
+
+export default async function SupervisorAuditoriaPage({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
+  const resolved = await searchParams;
   return (
     <div className="min-h-0 flex-1 bg-zinc-50 px-4 py-6">
       <div className="mx-auto max-w-4xl">
-        <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
-          <CardHeader>
-            <CardTitle>Auditoría</CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Timeline por muestra: orden creada → etiquetada → escaneada → procesada → resultado ingresado/modificado → validado → doctor revisó.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">Próximamente.</p>
-          </CardContent>
-        </Card>
+        <Suspense fallback={<AuditoriaSkeleton />}>
+          <AuditoriaLoader searchParams={resolved} />
+        </Suspense>
       </div>
     </div>
   );

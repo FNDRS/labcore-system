@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 import { HomeSidebarIcon } from "@/components/icons/home-sidebar-icon";
 import {
   AlertTriangle,
+  BarChart3,
   Bell,
+  ClipboardCheck,
   FileCheck,
   FileText,
   FlaskConical,
@@ -66,13 +68,14 @@ const tecnicoNavItems: NavItem[] = [
   },
 ];
 
-/** Supervisor: validación, muestras, incidencias, reportes, auditoría (ver navegacion-por-roles). */
+/** Supervisor: validación, muestras, resultados, incidencias, analítica, auditoría (ver navegacion-por-roles). */
 const supervisorNavItems: NavItem[] = [
   { href: "/supervisor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/supervisor", group: "supervisor" },
   { href: "/supervisor/validaciones", label: "Validaciones", icon: FileCheck, activeWhen: (p) => p.startsWith("/supervisor/validaciones"), group: "supervisor" },
   { href: "/supervisor/muestras", label: "Muestras", icon: FlaskConical, activeWhen: (p) => p.startsWith("/supervisor/muestras"), group: "supervisor" },
+  { href: "/supervisor/resultados", label: "Resultados", icon: ClipboardCheck, activeWhen: (p) => p.startsWith("/supervisor/resultados"), group: "supervisor" },
   { href: "/supervisor/incidencias", label: "Incidencias", icon: AlertTriangle, activeWhen: (p) => p.startsWith("/supervisor/incidencias"), group: "supervisor" },
-  { href: "/supervisor/reportes", label: "Reportes", icon: FileText, activeWhen: (p) => p.startsWith("/supervisor/reportes"), group: "supervisor" },
+  { href: "/supervisor/analitica", label: "Analítica", icon: BarChart3, activeWhen: (p) => p.startsWith("/supervisor/analitica"), group: "supervisor" },
   { href: "/supervisor/auditoria", label: "Auditoría", icon: History, activeWhen: (p) => p.startsWith("/supervisor/auditoria"), group: "supervisor" },
   { href: "/supervisor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/supervisor/settings"), group: "supervisor" },
 ];

@@ -20,7 +20,7 @@ function getSettingsHref(pathname: string, groups: string[]) {
   return null;
 }
 
-/** Título del header según la ruta actual (evita dos headers cuando se navega por URL, ej. bypass a /doctor). */
+/** Título del header según la ruta actual (evita dos headers en navegación directa por URL). */
 function getHeaderTitle(pathname: string) {
   if (pathname.startsWith("/doctor")) return { title: "Panel clínico", subtitle: "Resultados y decisiones médicas." };
   if (pathname.startsWith("/supervisor")) return { title: "Supervisor", subtitle: "Validación y supervisión." };

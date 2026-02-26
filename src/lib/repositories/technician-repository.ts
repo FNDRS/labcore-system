@@ -94,6 +94,7 @@ export async function getCompletedTodayCount(): Promise<number> {
           { timestamp: { le: endOfToday } },
         ],
       },
+      selectionSet: ["id"],
     });
     return events?.length ?? 0;
   } catch {
@@ -153,9 +154,30 @@ export async function getTechnicianDashboardMetrics(
   return computeDashboardMetrics(samples);
 }
 
+/** Selection set for technician samples: eager-load workOrder+patient and examType in one call. */
+const TECHNICIAN_SAMPLE_SELECTION = [
+  "id",
+  "barcode",
+  "workOrderId",
+  "examTypeId",
+  "status",
+  "receivedAt",
+  "collectedAt",
+  "workOrder.id",
+  "workOrder.priority",
+  "workOrder.patientId",
+  "workOrder.patient.id",
+  "workOrder.patient.firstName",
+  "workOrder.patient.lastName",
+  "examType.id",
+  "examType.name",
+  "examType.sampleType",
+] as const;
+
 /**
  * List samples relevant to technician workflow (ready_for_lab through rejected).
- * Returns enriched SampleWorkstationRow[] for dashboard and muestras.
+ * Uses selection set to eager-load workOrder, patient, examType in a single GraphQL call
+ * instead of 90+ parallel get requests.
  */
 export async function listTechnicianSamples(): Promise<
   SampleWorkstationRow[]
@@ -166,82 +188,31 @@ export async function listTechnicianSamples(): Promise<
         status: { eq: status },
       })),
     },
+    selectionSet: TECHNICIAN_SAMPLE_SELECTION,
   });
 
   if (!samples?.length) return [];
 
-  // Batch-fetch WorkOrders, Patients, ExamTypes (avoid N+1)
-  const woIds = [...new Set(samples.map((s) => s.workOrderId).filter(Boolean))];
-  const examTypeIds = [
-    ...new Set(samples.map((s) => s.examTypeId).filter(Boolean)),
-  ];
-
-  const [workOrderResults, examTypeResults] = await Promise.all([
-    Promise.all(
-      woIds.map((id) =>
-        cookieBasedClient.models.WorkOrder.get({ id: id as string }),
-      ),
-    ),
-    Promise.all(
-      examTypeIds.map((id) =>
-        cookieBasedClient.models.ExamType.get({ id: id as string }),
-      ),
-    ),
-  ]);
-
-  const workOrders = new Map(
-    workOrderResults
-      .map((r) => r.data)
-      .filter((wo): wo is NonNullable<typeof wo> => wo != null && wo.id != null)
-      .map((wo) => [wo.id, wo]),
-  );
-  const examTypes = new Map(
-    examTypeResults
-      .map((r) => r.data)
-      .filter((e): e is NonNullable<typeof e> => e != null && e.id != null)
-      .map((e) => [e.id, e]),
-  );
-
-  // Fetch patients for work orders
-  const patientIds = [...new Set(workOrders.values())]
-    .map((wo) => wo.patientId)
-    .filter(Boolean);
-  const patientResults = await Promise.all(
-    patientIds.map((id) =>
-      cookieBasedClient.models.Patient.get({ id: id as string }),
-    ),
-  );
-  const patients = new Map(
-    patientResults
-      .map((r) => r.data)
-      .filter((p): p is NonNullable<typeof p> => p != null && p.id != null)
-      .map((p) => [p.id, p]),
-  );
-
   const rows: SampleWorkstationRow[] = [];
 
   for (const s of samples) {
-    if (!s.id || !s.workOrderId || !s.examTypeId) continue;
+    const workOrder = s.workOrder;
+    const examType = s.examType;
+    if (!s.id || !workOrder?.id || !examType?.id) continue;
 
-    const workOrder = workOrders.get(s.workOrderId);
-    const examType = examTypes.get(s.examTypeId);
-    if (!workOrder || !examType) continue;
-
-    const patient = workOrder.patientId
-      ? patients.get(workOrder.patientId)
-      : null;
+    const patient = workOrder.patient;
     const patientName = patient
       ? `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() ||
-      "Desconocido"
+        "Desconocido"
       : "Desconocido";
 
     const receivedAt = s.receivedAt ?? s.collectedAt;
     const waitMins = waitMinsFrom(receivedAt);
     const collectedAt = s.collectedAt
       ? new Date(s.collectedAt).toLocaleTimeString("es-CL", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+          hour: "2-digit",
+          minute: "2-digit",
+        })
       : null;
 
     rows.push({
