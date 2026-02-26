@@ -85,8 +85,7 @@ function MuestrasSkeleton() {
                           <Skeleton
                             className="h-4 w-full"
                             style={{
-                              maxWidth:
-                                colIndex === 0 ? 200 : colIndex === 1 ? 140 : 100,
+                              maxWidth: colIndex === 0 ? 200 : colIndex === 1 ? 140 : 100,
                             }}
                           />
                         </TableCell>
@@ -154,9 +153,8 @@ function MuestrasContent() {
   const summary = {
     completed: samples.filter((s) => s.status === "Completed").length,
     received: samples.filter((s) => s.status === "Received").length,
-    pending: samples.filter(
-      (s) => s.status === "Processing" || s.status === "Waiting Equipment",
-    ).length,
+    pending: samples.filter((s) => s.status === "Processing" || s.status === "Waiting Equipment")
+      .length,
     urgent: samples.filter((s) => s.priority === "Urgent").length,
     issues: samples.filter((s) => s.status === "Flagged").length,
   };
@@ -170,9 +168,7 @@ function MuestrasContent() {
     return (
       <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 p-8">
         <AlertCircle className="size-10 text-destructive" />
-        <p className="text-center text-sm text-muted-foreground">
-          {samplesError}
-        </p>
+        <p className="text-center text-sm text-muted-foreground">{samplesError}</p>
       </div>
     );
   }
@@ -213,9 +209,7 @@ function MuestrasContent() {
             )}
             <StatusSummary summary={summary} />
             <div className="mt-8 space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Cola de muestras
-              </h2>
+              <h2 className="text-sm font-medium text-muted-foreground">Cola de muestras</h2>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative w-full min-w-0 max-w-sm sm:w-72">
                   <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
@@ -242,11 +236,7 @@ function MuestrasContent() {
               </div>
             </div>
             <div className="mt-4">
-              <FilteredQueueView
-                filter={filter}
-                tableRef={tableRef}
-                rowRefs={rowRefs}
-              />
+              <FilteredQueueView filter={filter} tableRef={tableRef} rowRefs={rowRefs} />
             </div>
           </Card>
         </div>
@@ -264,9 +254,7 @@ function MuestrasContent() {
   );
 }
 
-export function MuestrasWorkstation({
-  initialSampleId,
-}: { initialSampleId?: string | null } = {}) {
+export function MuestrasWorkstation({ initialSampleId }: { initialSampleId?: string | null } = {}) {
   return (
     <TechnicianWorkstationProvider initialSampleId={initialSampleId}>
       <div className="flex min-h-0 flex-1 flex-col">

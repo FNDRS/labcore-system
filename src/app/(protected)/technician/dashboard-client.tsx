@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import type { NextSample, QueueRow, SampleStatus } from "./actions";
+import { formatWaitTime } from "./format-wait-time";
 
 const FILTERS = [
   { value: "All", label: "Todos" },
@@ -99,7 +100,7 @@ export function NextSampleCard({ nextSample }: { nextSample: NextSample | null }
         </span>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        Tiempo en espera: {nextSample.waitMins} min
+        Tiempo en espera: {formatWaitTime(nextSample.waitMins)}
       </p>
       <Button
         className="mt-4 rounded-full"
@@ -233,7 +234,7 @@ export function QueueTable({
                     <StatusBadge status={row.status} />
                   </TableCell>
                   <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                    {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
+                    {formatWaitTime(row.waitMins)}
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     {row.status !== "Complete" ? (

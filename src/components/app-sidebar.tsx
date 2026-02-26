@@ -75,33 +75,123 @@ const tecnicoNavItems: NavItem[] = [
 
 /** Supervisor: validación, muestras, resultados, incidencias, analítica, auditoría (ver navegacion-por-roles). */
 const supervisorNavItems: NavItem[] = [
-  { href: "/supervisor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/supervisor", group: "supervisor" },
-  { href: "/supervisor/validaciones", label: "Validaciones", icon: FileCheck, activeWhen: (p) => p.startsWith("/supervisor/validaciones"), group: "supervisor" },
-  { href: "/supervisor/muestras", label: "Muestras", icon: FlaskConical, activeWhen: (p) => p.startsWith("/supervisor/muestras"), group: "supervisor" },
-  { href: "/supervisor/resultados", label: "Resultados", icon: ClipboardCheck, activeWhen: (p) => p.startsWith("/supervisor/resultados"), group: "supervisor" },
-  { href: "/supervisor/incidencias", label: "Incidencias", icon: AlertTriangle, activeWhen: (p) => p.startsWith("/supervisor/incidencias"), group: "supervisor" },
-  { href: "/supervisor/analitica", label: "Analítica", icon: BarChart3, activeWhen: (p) => p.startsWith("/supervisor/analitica"), group: "supervisor" },
-  { href: "/supervisor/auditoria", label: "Auditoría", icon: History, activeWhen: (p) => p.startsWith("/supervisor/auditoria"), group: "supervisor" },
-  { href: "/supervisor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/supervisor/settings"), group: "supervisor" },
+  {
+    href: "/supervisor",
+    label: "Dashboard",
+    icon: HomeSidebarIcon,
+    activeWhen: (p) => p === "/supervisor",
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/validaciones",
+    label: "Validaciones",
+    icon: FileCheck,
+    activeWhen: (p) => p.startsWith("/supervisor/validaciones"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/muestras",
+    label: "Muestras",
+    icon: FlaskConical,
+    activeWhen: (p) => p.startsWith("/supervisor/muestras"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/resultados",
+    label: "Resultados",
+    icon: ClipboardCheck,
+    activeWhen: (p) => p.startsWith("/supervisor/resultados"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/incidencias",
+    label: "Incidencias",
+    icon: AlertTriangle,
+    activeWhen: (p) => p.startsWith("/supervisor/incidencias"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/analitica",
+    label: "Analítica",
+    icon: BarChart3,
+    activeWhen: (p) => p.startsWith("/supervisor/analitica"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/auditoria",
+    label: "Auditoría",
+    icon: History,
+    activeWhen: (p) => p.startsWith("/supervisor/auditoria"),
+    group: "supervisor",
+  },
+  {
+    href: "/supervisor/settings",
+    label: "Configuración",
+    icon: Settings,
+    activeWhen: (p) => p.startsWith("/supervisor/settings"),
+    group: "supervisor",
+  },
 ];
 
 /** Recepción: órdenes, generación de muestras. */
 const recepcionNavItems: NavItem[] = [
-  { href: "/recepcion", label: "Recepción", icon: FileText, activeWhen: (p) => p.startsWith("/recepcion"), group: "recepcion" },
+  {
+    href: "/recepcion",
+    label: "Recepción",
+    icon: FileText,
+    activeWhen: (p) => p.startsWith("/recepcion"),
+    group: "recepcion",
+  },
 ];
 
 /** Admin: solo dashboard por ahora. */
 const adminNavItems: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"), group: "admin" },
+  {
+    href: "/admin",
+    label: "Dashboard",
+    icon: HomeSidebarIcon,
+    activeWhen: (p) => p === "/admin" || p.startsWith("/admin/"),
+    group: "admin",
+  },
 ];
 
 /** Vista doctor: clínica, solo resultados y pacientes (ver navegacion-por-roles). */
 const doctorNavItems: NavItem[] = [
-  { href: "/doctor", label: "Dashboard", icon: HomeSidebarIcon, activeWhen: (p) => p === "/doctor", group: "doctor" },
-  { href: "/doctor/pacientes", label: "Pacientes", icon: Users, activeWhen: (p) => p.startsWith("/doctor/pacientes"), group: "doctor" },
-  { href: "/doctor/resultados", label: "Resultados", icon: FileText, activeWhen: (p) => p.startsWith("/doctor/resultados"), group: "doctor" },
-  { href: "/doctor/notificaciones", label: "Notificaciones", icon: Bell, activeWhen: (p) => p.startsWith("/doctor/notificaciones"), group: "doctor" },
-  { href: "/doctor/settings", label: "Configuración", icon: Settings, activeWhen: (p) => p.startsWith("/doctor/settings"), group: "doctor" },
+  {
+    href: "/doctor",
+    label: "Dashboard",
+    icon: HomeSidebarIcon,
+    activeWhen: (p) => p === "/doctor",
+    group: "doctor",
+  },
+  {
+    href: "/doctor/pacientes",
+    label: "Pacientes",
+    icon: Users,
+    activeWhen: (p) => p.startsWith("/doctor/pacientes"),
+    group: "doctor",
+  },
+  {
+    href: "/doctor/resultados",
+    label: "Resultados",
+    icon: FileText,
+    activeWhen: (p) => p.startsWith("/doctor/resultados"),
+    group: "doctor",
+  },
+  {
+    href: "/doctor/notificaciones",
+    label: "Notificaciones",
+    icon: Bell,
+    activeWhen: (p) => p.startsWith("/doctor/notificaciones"),
+    group: "doctor",
+  },
+  {
+    href: "/doctor/settings",
+    label: "Configuración",
+    icon: Settings,
+    activeWhen: (p) => p.startsWith("/doctor/settings"),
+    group: "doctor",
+  },
 ];
 
 /** Sidebar dinámico: según la ruta actual se muestra el menú del rol correspondiente. */
@@ -111,10 +201,26 @@ function getNavItems(pathname: string, groups: string[]): NavItem[] {
   if (pathname.startsWith("/supervisor")) return supervisorNavItems;
   if (pathname.startsWith("/admin")) return adminNavItems;
   if (pathname.startsWith("/recepcion")) return recepcionNavItems;
-  if (groups.includes("doctor") && !groups.includes("supervisor") && !groups.includes("admin")) return doctorNavItems;
-  if (groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return tecnicoNavItems;
-  if (groups.includes("recepcion") && !groups.includes("tecnico") && !groups.includes("supervisor") && !groups.includes("admin") && !groups.includes("doctor")) return recepcionNavItems;
-  return [...recepcionNavItems, ...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter((item) => groups.includes(item.group));
+  if (groups.includes("doctor") && !groups.includes("supervisor") && !groups.includes("admin"))
+    return doctorNavItems;
+  if (
+    groups.includes("tecnico") &&
+    !groups.includes("supervisor") &&
+    !groups.includes("admin") &&
+    !groups.includes("doctor")
+  )
+    return tecnicoNavItems;
+  if (
+    groups.includes("recepcion") &&
+    !groups.includes("tecnico") &&
+    !groups.includes("supervisor") &&
+    !groups.includes("admin") &&
+    !groups.includes("doctor")
+  )
+    return recepcionNavItems;
+  return [...recepcionNavItems, ...tecnicoNavItems, ...supervisorNavItems, ...adminNavItems].filter(
+    (item) => groups.includes(item.group)
+  );
 }
 
 /** Barra de navegación horizontal debajo del header (mismos enlaces que el sidebar). */

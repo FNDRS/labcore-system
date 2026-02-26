@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { SampleWorkstationRow } from "../actions";
+import { formatWaitTime } from "../format-wait-time";
 import type { Filter } from "./constants";
 import { filterRows } from "./filter-utils";
 import { StatusBadge } from "./status-badge";
@@ -147,7 +148,7 @@ export function MuestrasTable({
                   {row.priority}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.waitMins > 0 ? `${row.waitMins} min` : "—"}
+                  {formatWaitTime(row.waitMins)}
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <DropdownMenu>
