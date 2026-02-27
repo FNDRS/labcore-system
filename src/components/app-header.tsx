@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Settings } from "lucide-react";
+import { useContext } from "react";
+import { Bell, Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarContext } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/auth-context";
 import { CLINIC_BRANDING } from "@/lib/branding";
@@ -34,6 +36,7 @@ function getSectionLabel(pathname: string): string | null {
 
 export function AppHeader() {
   const pathname = usePathname();
+  const sidebarContext = useContext(SidebarContext);
   const { state: authState, actions } = useAuth();
   const settingsHref = getSettingsHref(pathname ?? "", authState.groups);
   const sectionLabel = getSectionLabel(pathname ?? "");
@@ -41,6 +44,18 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-20 w-full border-b border-zinc-200 bg-white py-2 px-4 md:px-6">
       <div className="flex min-h-12 w-full items-center gap-2 py-1">
+        {sidebarContext && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Abrir menú"
+            className="md:hidden min-h-11 min-w-11 shrink-0 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+            onClick={() => sidebarContext.toggleSidebar()}
+          >
+            <Menu className="size-5" />
+          </Button>
+        )}
         <div className="flex flex-none items-center gap-2 min-w-0">
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-lg font-semibold tracking-tight text-zinc-900">
