@@ -17,12 +17,13 @@ import {
 } from "@/components/ui/chart";
 import type { ExamMixEntry } from "@/lib/types/analytics-types";
 
+// Paleta moderna minimalista: tonos suaves, sin café/marrón
 const CHART_PALETTE = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  "oklch(0.55 0.11 168)",   // teal
+  "oklch(0.6 0.1 250)",     // slate/blue
+  "oklch(0.58 0.1 145)",    // sage
+  "oklch(0.6 0.1 300)",     // violet
+  "oklch(0.55 0.08 200)",   // cyan
 ];
 
 interface ExamMixChartProps {
@@ -61,35 +62,45 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
   const hasData = data.length > 0;
 
   return (
-    <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
-      <CardHeader className="space-y-0.5 pb-2">
-        <CardTitle className="text-base font-semibold text-zinc-900">
+    <Card className="flex h-full min-h-0 flex-col rounded-2xl border border-zinc-100 bg-white shadow-none">
+      <CardHeader className="space-y-0.5 pb-1 pt-6">
+        <CardTitle className="text-sm font-medium text-zinc-800">
           Distribución de exámenes
         </CardTitle>
-        <CardDescription className="text-xs text-zinc-500">
+        <CardDescription className="text-xs text-zinc-400">
           Proporción por tipo de examen
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden pb-6 pt-2">
         {hasData ? (
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-[280px]"
-          >
-            <PieChart accessibilityLayer>
-              <ChartTooltip
-                content={<ChartTooltipContent nameKey="type" hideLabel />}
-              />
-              <Pie
-                data={pieData}
-                dataKey="count"
-                nameKey="type"
-                innerRadius={64}
-                outerRadius={100}
-                strokeWidth={4}
-                stroke="var(--background)"
-                paddingAngle={2}
-              >
+          <>
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square max-h-[260px] w-full"
+            >
+              <PieChart accessibilityLayer>
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      nameKey="type"
+                      hideLabel
+                      className="rounded-xl border-zinc-100 bg-white shadow-lg"
+                    />
+                  }
+                />
+                <Pie
+                  data={pieData}
+                  dataKey="count"
+                  nameKey="type"
+                  innerRadius={58}
+                  outerRadius={88}
+                  strokeWidth={2}
+                  stroke="var(--background)"
+                  paddingAngle={0}
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={600}
+                >
                 <Label
                   content={({ viewBox }) => {
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -103,14 +114,14 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
                           <tspan
                             x={viewBox.cx}
                             y={viewBox.cy}
-                            className="fill-foreground text-3xl font-bold tabular-nums"
+                            className="fill-zinc-800 text-2xl font-semibold tabular-nums"
                           >
                             {total.toLocaleString("es-CL")}
                           </tspan>
                           <tspan
                             x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 22}
-                            className="fill-muted-foreground text-xs"
+                            y={(viewBox.cy || 0) + 18}
+                            className="fill-zinc-400 text-[11px]"
                           >
                             Exámenes
                           </tspan>
@@ -123,28 +134,29 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
               </Pie>
             </PieChart>
           </ChartContainer>
+            <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-2 px-1">
+              {data.map((entry, i) => (
+                <div
+                  key={entry.examTypeId}
+                  className="flex min-w-0 max-w-full shrink-0 items-center gap-1.5 text-[11px] text-zinc-500"
+                >
+                  <span
+                    className="size-2 shrink-0 rounded-sm"
+                    style={{ backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length] }}
+                  />
+                  <span className="min-w-0 max-w-[110px] truncate" title={entry.examTypeName}>
+                    {entry.examTypeName}
+                  </span>
+                  <span className="tabular-nums text-zinc-400">({entry.count})</span>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="flex min-h-[280px] items-center justify-center">
-            <p className="text-sm text-zinc-400">
+          <div className="flex min-h-[260px] items-center justify-center">
+            <p className="text-xs text-zinc-400">
               Sin datos de distribución para el periodo seleccionado
             </p>
-          </div>
-        )}
-
-        {hasData && (
-          <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
-            {data.map((entry, i) => (
-              <div key={entry.examTypeId} className="flex items-center gap-1.5 text-xs">
-                <span
-                  className="inline-block size-2.5 shrink-0 rounded-sm"
-                  style={{ backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length] }}
-                />
-                <span className="text-zinc-600">{entry.examTypeName}</span>
-                <span className="tabular-nums text-zinc-400">
-                  ({entry.count})
-                </span>
-              </div>
-            ))}
           </div>
         )}
       </CardContent>

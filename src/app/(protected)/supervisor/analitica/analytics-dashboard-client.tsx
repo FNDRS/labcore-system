@@ -62,14 +62,14 @@ function DashboardPrimaryCharts() {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 lg:grid-cols-5",
+        "grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-stretch",
         state.isLoading && "pointer-events-none opacity-60",
       )}
     >
-      <div className="lg:col-span-3">
+      <div className="min-h-0 lg:col-span-3 lg:h-full">
         <ThroughputChart data={state.charts.throughput} />
       </div>
-      <div className="lg:col-span-2">
+      <div className="min-h-0 lg:col-span-2 lg:h-full">
         <ExamMixChart data={state.charts.examMix} />
       </div>
     </div>
