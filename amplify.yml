@@ -1,0 +1,31 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - corepack enable
+        - pnpm install --frozen-lockfile
+        - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+    postBuild:
+      commands:
+        - |
+          if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "Triggering Vercel deployment..."
+            curl -sS -X POST "$VERCEL_DEPLOY_HOOK" -H "Content-Type: application/json" || true
+          else
+            echo "VERCEL_DEPLOY_HOOK not set, skipping Vercel trigger"
+          fi
+        - 'echo "Building for branch: $AWS_BRANCH"'
+
+frontend:
+  phases:
+    preBuild:
+      commands: []
+    build:
+      commands:
+        - mkdir -p public
+        - echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirect</title><meta http-equiv="refresh" content="0;url=https://poc-lis-dignitas.vercel.app"></head><body><p>Frontend hosted on Vercel. <a href="https://poc-lis-dignitas.vercel.app">Click here</a>.</p></body></html>' > public/index.html
+  artifacts:
+    baseDirectory: public
+    files:
+      - "**/*"
