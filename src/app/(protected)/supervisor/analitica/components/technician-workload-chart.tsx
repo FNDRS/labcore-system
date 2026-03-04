@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -49,7 +43,7 @@ export function TechnicianWorkloadChart({ data }: TechnicianWorkloadChartProps) 
         examCount: entry.examCount,
         fill: PALETTE[i % PALETTE.length],
       })),
-    [data],
+    [data]
   );
 
   const hasData = data.length > 0;
@@ -57,9 +51,7 @@ export function TechnicianWorkloadChart({ data }: TechnicianWorkloadChartProps) 
   return (
     <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
       <CardHeader className="space-y-0.5 pb-2">
-        <CardTitle className="text-sm font-semibold text-zinc-900">
-          Carga de técnicos
-        </CardTitle>
+        <CardTitle className="text-sm font-semibold text-zinc-900">Carga de técnicos</CardTitle>
         <CardDescription className="text-xs text-zinc-500">
           Exámenes procesados por operador
         </CardDescription>
@@ -86,20 +78,9 @@ export function TechnicianWorkloadChart({ data }: TechnicianWorkloadChartProps) 
                 width={100}
                 className="text-[11px]"
               />
-              <XAxis
-                type="number"
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent hideLabel indicator="dot" />}
-              />
-              <Bar
-                dataKey="examCount"
-                radius={[0, 4, 4, 0]}
-                barSize={24}
-              />
+              <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent hideLabel indicator="dot" />} />
+              <Bar dataKey="examCount" radius={[0, 4, 4, 0]} barSize={24} />
             </BarChart>
           </ChartContainer>
         ) : (

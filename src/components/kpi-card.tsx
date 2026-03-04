@@ -60,11 +60,7 @@ function TrendBadge({
         : "text-red-700 bg-red-50";
 
   const Icon =
-    trend.direction === "up"
-      ? TrendingUp
-      : trend.direction === "down"
-        ? TrendingDown
-        : Minus;
+    trend.direction === "up" ? TrendingUp : trend.direction === "down" ? TrendingDown : Minus;
 
   const ariaLabel =
     trend.direction === "flat"
@@ -75,7 +71,7 @@ function TrendBadge({
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium leading-none",
-        colorClass,
+        colorClass
       )}
       aria-label={ariaLabel}
     >
@@ -96,22 +92,21 @@ export function KPICard({
   variant = "default",
   className,
 }: KPICardProps) {
-  const formattedValue =
-    typeof value === "number" ? value.toLocaleString("es-CL") : value;
+  const formattedValue = typeof value === "number" ? value.toLocaleString("es-CL") : value;
 
   return (
     <Card
       className={cn(
         "rounded-xl border shadow-none transition-colors",
         VARIANT_CARD_STYLES[variant],
-        className,
+        className
       )}
     >
       <CardHeader className="pb-2">
         <CardTitle
           className={cn(
             "text-[11px] font-semibold uppercase tracking-widest",
-            VARIANT_TITLE_STYLES[variant],
+            VARIANT_TITLE_STYLES[variant]
           )}
         >
           {title}
@@ -122,22 +117,13 @@ export function KPICard({
           <p
             className={cn(
               "text-3xl font-bold tabular-nums leading-none",
-              VARIANT_VALUE_STYLES[variant],
+              VARIANT_VALUE_STYLES[variant]
             )}
           >
             {formattedValue}
-            {unit && (
-              <span className="ml-1 text-base font-medium text-zinc-400">
-                {unit}
-              </span>
-            )}
+            {unit && <span className="ml-1 text-base font-medium text-zinc-400">{unit}</span>}
           </p>
-          {trend && (
-            <TrendBadge
-              trend={trend}
-              positiveDirection={trendPositiveDirection}
-            />
-          )}
+          {trend && <TrendBadge trend={trend} positiveDirection={trendPositiveDirection} />}
         </div>
       </CardContent>
     </Card>

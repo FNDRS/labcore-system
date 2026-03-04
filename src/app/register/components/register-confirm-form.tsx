@@ -34,18 +34,10 @@ export function RegisterConfirmForm({ email, onUseOtherEmail }: RegisterConfirmF
   if (!email) {
     return (
       <div className="mt-6 space-y-4">
-        <p
-          className="text-sm text-zinc-600 dark:text-zinc-400"
-          role="status"
-        >
+        <p className="text-sm text-zinc-600 dark:text-zinc-400" role="status">
           No se encontró el correo. Regístrate de nuevo o usa el enlace del correo.
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full"
-          onClick={onUseOtherEmail}
-        >
+        <Button type="button" variant="outline" className="h-11 w-full" onClick={onUseOtherEmail}>
           Usar otro correo
         </Button>
       </div>
@@ -64,10 +56,7 @@ export function RegisterConfirmForm({ email, onUseOtherEmail }: RegisterConfirmF
         confirmationCode: values.code.trim(),
       });
 
-      if (
-        nextStep.signUpStep === "DONE" ||
-        nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN"
-      ) {
+      if (nextStep.signUpStep === "DONE" || nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN") {
         try {
           await autoSignIn();
         } catch {
@@ -91,11 +80,7 @@ export function RegisterConfirmForm({ email, onUseOtherEmail }: RegisterConfirmF
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="mt-6 space-y-4"
-        noValidate
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
         <FormField
           control={form.control}
           name="code"
@@ -125,11 +110,7 @@ export function RegisterConfirmForm({ email, onUseOtherEmail }: RegisterConfirmF
           )}
         />
         {rootError && (
-          <p
-            className="text-sm text-red-600 dark:text-red-400"
-            role="alert"
-            aria-live="polite"
-          >
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert" aria-live="polite">
             {rootError}
           </p>
         )}

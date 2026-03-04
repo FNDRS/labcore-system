@@ -91,18 +91,16 @@ function parsePayload(cacheKey: string): Payload {
   }
 }
 
-const fetchDashboardCached = cache(
-  async (cacheKey: string): Promise<AnalyticsDashboardData> => {
-    await requireSupervisorAuth();
-    const { range, filters } = parsePayload(cacheKey);
-    const [kpis, throughput, examMix] = await Promise.all([
-      getKPISummary(range, filters),
-      getThroughputSeries(range, filters),
-      getExamMixDistribution(range, filters),
-    ]);
-    return { range, kpis, throughput, examMix };
-  },
-);
+const fetchDashboardCached = cache(async (cacheKey: string): Promise<AnalyticsDashboardData> => {
+  await requireSupervisorAuth();
+  const { range, filters } = parsePayload(cacheKey);
+  const [kpis, throughput, examMix] = await Promise.all([
+    getKPISummary(range, filters),
+    getThroughputSeries(range, filters),
+    getExamMixDistribution(range, filters),
+  ]);
+  return { range, kpis, throughput, examMix };
+});
 
 const fetchDetailedCached = cache(
   async (cacheKey: string): Promise<AnalyticsDetailedChartsData> => {
@@ -122,12 +120,12 @@ const fetchDetailedCached = cache(
       rejectionAnalysis,
       doctorVolume,
     };
-  },
+  }
 );
 
 export async function fetchAnalyticsDashboardAction(
   range: AnalyticsTimeRange,
-  filters: AnalyticsFilters = {},
+  filters: AnalyticsFilters = {}
 ): Promise<AnalyticsDashboardData> {
   const payload: Payload = {
     range: normalizeRange(range),
@@ -138,7 +136,7 @@ export async function fetchAnalyticsDashboardAction(
 
 export async function fetchDetailedChartsAction(
   range: AnalyticsTimeRange,
-  filters: AnalyticsFilters = {},
+  filters: AnalyticsFilters = {}
 ): Promise<AnalyticsDetailedChartsData> {
   const payload: Payload = {
     range: normalizeRange(range),

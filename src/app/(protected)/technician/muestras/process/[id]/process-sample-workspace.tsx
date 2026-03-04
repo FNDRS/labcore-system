@@ -10,15 +10,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  ProcessWorkspaceProvider,
-  useProcessWorkspace,
-} from "../process-workspace-provider";
+import { ProcessWorkspaceProvider, useProcessWorkspace } from "../process-workspace-provider";
 import { ExamResultForm } from "../ExamResultForm";
-import {
-  useUnsavedGuard,
-  confirmNavigateIfDirty,
-} from "../use-unsaved-guard";
+import { useUnsavedGuard, confirmNavigateIfDirty } from "../use-unsaved-guard";
 import type { ProcessContext } from "@/lib/repositories/process-repository";
 
 type ProcessSampleWorkspaceProps = {
@@ -26,15 +20,9 @@ type ProcessSampleWorkspaceProps = {
   displayId: string;
 };
 
-export function ProcessSampleWorkspace({
-  context,
-  displayId,
-}: ProcessSampleWorkspaceProps) {
+export function ProcessSampleWorkspace({ context, displayId }: ProcessSampleWorkspaceProps) {
   return (
-    <ProcessWorkspaceProvider
-      initialContext={context}
-      displayId={displayId}
-    >
+    <ProcessWorkspaceProvider initialContext={context} displayId={displayId}>
       <div className="flex min-h-0 flex-1 flex-col bg-zinc-50">
         <ProcessWorkspaceHeader displayId={displayId} />
         <ProcessWorkspaceContent />
@@ -58,12 +46,7 @@ function ProcessWorkspaceHeader({ displayId }: { displayId: string }) {
         <span className="font-mono text-lg font-semibold text-amber-800">
           Procesando muestra {displayId}
         </span>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full"
-          onClick={handleBack}
-        >
+        <Button variant="outline" size="sm" className="rounded-full" onClick={handleBack}>
           <ArrowLeft className="size-3.5 mr-1.5" />
           Volver a cola
         </Button>
@@ -94,16 +77,18 @@ function ProcessWorkspaceContent() {
     persistDraft,
   } = useProcessWorkspace();
 
-  const [defaultResults, setDefaultResults] = useState<
-    Record<string, string | number | undefined>
-  >({});
+  const [defaultResults, setDefaultResults] = useState<Record<string, string | number | undefined>>(
+    {}
+  );
 
   useUnsavedGuard(isDirty);
 
   // Sync defaultResults from context when context loads
   useEffect(() => {
     if (context?.exam) {
-      setDefaultResults((context.exam.results ?? {}) as Record<string, string | number | undefined>);
+      setDefaultResults(
+        (context.exam.results ?? {}) as Record<string, string | number | undefined>
+      );
     }
   }, [context?.exam?.id, context?.exam?.results]);
 
@@ -119,9 +104,7 @@ function ProcessWorkspaceContent() {
   if (!context) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-zinc-50 p-8">
-        <p className="text-center text-muted-foreground">
-          Muestra no encontrada
-        </p>
+        <p className="text-center text-muted-foreground">Muestra no encontrada</p>
         <Button variant="outline" size="sm" className="rounded-full" asChild>
           <Link href="/technician/muestras">Volver a cola</Link>
         </Button>
@@ -204,9 +187,7 @@ function ProcessWorkspaceContent() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
           {examType.name}
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Muestra {sample.barcode ?? sample.id}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Muestra {sample.barcode ?? sample.id}</p>
         <ExamResultForm
           key={formKey}
           fieldSchema={examType.fieldSchema}
@@ -225,9 +206,7 @@ function ProcessWorkspaceContent() {
                 disabled={isSubmitting || !isDirty || formState.isSubmitting}
                 onClick={() => handleSaveDraft(getValues())}
               >
-                {isSubmitting ? (
-                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
-                ) : null}
+                {isSubmitting ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : null}
                 Guardar borrador
               </Button>
               <Button
@@ -236,9 +215,7 @@ function ProcessWorkspaceContent() {
                 className="rounded-full"
                 disabled={isSubmitting || formState.isSubmitting}
               >
-                {isSubmitting ? (
-                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
-                ) : null}
+                {isSubmitting ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : null}
                 Enviar a validación
               </Button>
               <Button

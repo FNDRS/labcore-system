@@ -29,9 +29,7 @@ interface RejectionReasonsChartProps {
 export function RejectionReasonsChart({ data }: RejectionReasonsChartProps) {
   if (!data.length) {
     return (
-      <p className="py-12 text-center text-sm text-zinc-400">
-        Sin datos de motivos de rechazo
-      </p>
+      <p className="py-12 text-center text-sm text-zinc-400">Sin datos de motivos de rechazo</p>
     );
   }
 
@@ -45,7 +43,7 @@ export function RejectionReasonsChart({ data }: RejectionReasonsChartProps) {
         count: entry.count,
         fill: CHART_COLORS[i % CHART_COLORS.length],
       })),
-    [sliced],
+    [sliced]
   );
 
   const chartConfig = React.useMemo(() => {
@@ -97,21 +95,14 @@ export function RejectionReasonsChart({ data }: RejectionReasonsChartProps) {
           content={
             <ChartTooltipContent
               labelFormatter={(_, payload) => {
-                const item = payload?.[0]?.payload as
-                  | { fullReason?: string }
-                  | undefined;
+                const item = payload?.[0]?.payload as { fullReason?: string } | undefined;
                 return item?.fullReason ?? "";
               }}
               indicator="dot"
             />
           }
         />
-        <Bar
-          dataKey="count"
-          radius={[0, 4, 4, 0]}
-          fill="var(--color-count)"
-          maxBarSize={24}
-        />
+        <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="var(--color-count)" maxBarSize={24} />
       </BarChart>
     </ChartContainer>
   );

@@ -76,9 +76,7 @@ export function TimelineEvent({ event, isFirst, isLast }: TimelineEventProps) {
       {/* Vertical connector line */}
       <div className="relative flex w-8 shrink-0 flex-col items-center">
         {/* Top line segment */}
-        {!isFirst ? (
-          <div className={cn("absolute top-0 h-3 w-px", styles.line)} />
-        ) : null}
+        {!isFirst ? <div className={cn("absolute top-0 h-3 w-px", styles.line)} /> : null}
 
         {/* Icon node */}
         <div
@@ -86,25 +84,18 @@ export function TimelineEvent({ event, isFirst, isLast }: TimelineEventProps) {
             "relative z-10 mt-3 flex size-8 items-center justify-center rounded-full",
             "ring-2 ring-offset-2 ring-offset-white transition-shadow",
             styles.dot,
-            styles.iconBg,
+            styles.iconBg
           )}
         >
           <Icon className="size-3.5" />
         </div>
 
         {/* Bottom line segment */}
-        {!isLast ? (
-          <div className={cn("mt-px w-px flex-1", styles.line)} />
-        ) : null}
+        {!isLast ? <div className={cn("mt-px w-px flex-1", styles.line)} /> : null}
       </div>
 
       {/* Event content */}
-      <div
-        className={cn(
-          "min-w-0 flex-1 pb-5",
-          isLast && "pb-0",
-        )}
-      >
+      <div className={cn("min-w-0 flex-1 pb-5", isLast && "pb-0")}>
         <div className="mt-2.5 rounded-lg border border-zinc-100 bg-zinc-50/60 px-3.5 py-2.5 transition-colors group-hover:border-zinc-200 group-hover:bg-zinc-50">
           {/* Header row: label + timestamp */}
           <div className="flex items-start justify-between gap-2">
@@ -119,9 +110,7 @@ export function TimelineEvent({ event, isFirst, isLast }: TimelineEventProps) {
 
           {/* Actor */}
           {event.actorId ? (
-            <p className="mt-1 text-[12px] text-zinc-500">
-              {event.actorName ?? event.actorId}
-            </p>
+            <p className="mt-1 text-[12px] text-zinc-500">{event.actorName ?? event.actorId}</p>
           ) : null}
 
           {/* Metadata details */}

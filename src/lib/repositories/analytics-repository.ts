@@ -124,7 +124,7 @@ function parseReason(metadata: Record<string, unknown> | null): string | null {
 
 function computeTatMinutes(
   start: string | null | undefined,
-  end: string | null | undefined,
+  end: string | null | undefined
 ): number | null {
   if (!start || !end) return null;
   const startMs = toMs(start);
@@ -238,17 +238,15 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   };
 }
 
-const fetchAnalyticsBaseDataCached = cache(
-  async (rangeKey: string): Promise<AnalyticsBaseData> => {
-    const range = JSON.parse(rangeKey) as AnalyticsTimeRange;
-    return fetchAnalyticsBaseData(range);
-  },
-);
+const fetchAnalyticsBaseDataCached = cache(async (rangeKey: string): Promise<AnalyticsBaseData> => {
+  const range = JSON.parse(rangeKey) as AnalyticsTimeRange;
+  return fetchAnalyticsBaseData(range);
+});
 
 function applyFilters(
   base: AnalyticsBaseData,
   range: AnalyticsTimeRange,
-  filters: AnalyticsFilters | undefined,
+  filters: AnalyticsFilters | undefined
 ): {
   workOrderIdsInRange: Set<string>;
   examIdsInRange: Set<string>;
@@ -256,19 +254,16 @@ function applyFilters(
   examTypeIdsAllowed: Set<string> | null;
   priorityAllowed: Set<string> | null;
 } {
-  const examTypeIdsAllowed: Set<string> | null =
-    filters?.examTypeCode?.trim()
-      ? new Set(
-          base.examTypes
-            .filter((t) => t.code?.toLowerCase() === filters.examTypeCode!.trim().toLowerCase())
-            .map((t) => t.id),
-        )
-      : null;
+  const examTypeIdsAllowed: Set<string> | null = filters?.examTypeCode?.trim()
+    ? new Set(
+        base.examTypes
+          .filter((t) => t.code?.toLowerCase() === filters.examTypeCode!.trim().toLowerCase())
+          .map((t) => t.id)
+      )
+    : null;
 
   const priorityAllowed: Set<string> | null =
-    filters?.priority && filters.priority !== "all"
-      ? new Set([filters.priority])
-      : null;
+    filters?.priority && filters.priority !== "all" ? new Set([filters.priority]) : null;
 
   const workOrderIdsInRange = new Set<string>();
   const examIdsInRange = new Set<string>();
@@ -307,7 +302,7 @@ function applyFilters(
 
 export async function getKPISummary(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<KPISummary> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { workOrderIdsInRange, examIdsInRange } = applyFilters(base, range, filters);
@@ -379,7 +374,7 @@ export async function getKPISummary(
 
 export async function getThroughputSeries(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<ThroughputDataPoint[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { examIdsInRange } = applyFilters(base, range, filters);
@@ -405,7 +400,7 @@ export async function getThroughputSeries(
 
 export async function getExamMixDistribution(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<ExamMixEntry[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { examIdsInRange } = applyFilters(base, range, filters);
@@ -435,7 +430,7 @@ export async function getExamMixDistribution(
 
 export async function getTATDistribution(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<TATBucket[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { examIdsInRange } = applyFilters(base, range, filters);
@@ -479,14 +474,20 @@ export async function getTATDistribution(
 
 export async function getTechnicianWorkload(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<TechnicianWorkloadEntry[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { examIdsInRange } = applyFilters(base, range, filters);
 
   const byTechnician = new Map<
     string,
-    { examCount: number; approvedCount: number; rejectedCount: number; tatSum: number; tatCount: number }
+    {
+      examCount: number;
+      approvedCount: number;
+      rejectedCount: number;
+      tatSum: number;
+      tatCount: number;
+    }
   >();
 
   for (const examId of examIdsInRange) {
@@ -523,15 +524,12 @@ export async function getTechnicianWorkload(
 
 export async function getRejectionAnalysis(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<RejectionAnalysisEntry[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { examTypeIdsAllowed, priorityAllowed } = applyFilters(base, range, filters);
 
-  const byExamType = new Map<
-    string,
-    { totalRejections: number; byReason: Map<string, number> }
-  >();
+  const byExamType = new Map<string, { totalRejections: number; byReason: Map<string, number> }>();
 
   for (const event of base.auditEvents) {
     if (event.action !== AUDIT_ACTIONS.EXAM_REJECTED) continue;
@@ -589,7 +587,7 @@ export async function getRejectionAnalysis(
 
 export async function getDoctorVolume(
   range: AnalyticsTimeRange,
-  filters?: AnalyticsFilters,
+  filters?: AnalyticsFilters
 ): Promise<DoctorVolumeEntry[]> {
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { workOrderIdsRequestedInRange } = applyFilters(base, range, filters);

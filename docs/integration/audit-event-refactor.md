@@ -10,15 +10,15 @@ How to eliminate the "irreducible" AuditEvent round trips identified in the [dat
 
 ### Impact by Query Site
 
-| Repository | Function | Extra AuditEvent Round Trips | Notes |
-|------------|----------|:----------------------------:|-------|
-| `technician` | `getSampleDetail` | 3+ (sample + WO + exam×N) | 2nd waterfall after main entity query |
-| `audit` | `getAuditTimelineForWorkOrder` | 1 + N_samples + M_exams | Worst case: 10+ parallel queries |
-| `audit` | `getRecentAuditActivity` | 1 full scan + 4 entity scans | In-memory join across all tables |
-| `technician` | `getCompletedTodayCount` | 1 | Action+timestamp filter; not entity-bound |
-| `supervisor` | `getDashboardStats` | 1 | Action filter (INCIDENCE_CREATED) |
-| `incidence` | `listAllIncidentAuditEvents` | 1 (paginated) | Action filter with timestamp range |
-| `analytics` | `fetchAnalyticsBaseData` | 1 full scan | Broad analytics aggregation |
+| Repository   | Function                       | Extra AuditEvent Round Trips | Notes                                     |
+| ------------ | ------------------------------ | :--------------------------: | ----------------------------------------- |
+| `technician` | `getSampleDetail`              |  3+ (sample + WO + exam×N)   | 2nd waterfall after main entity query     |
+| `audit`      | `getAuditTimelineForWorkOrder` |   1 + N_samples + M_exams    | Worst case: 10+ parallel queries          |
+| `audit`      | `getRecentAuditActivity`       | 1 full scan + 4 entity scans | In-memory join across all tables          |
+| `technician` | `getCompletedTodayCount`       |              1               | Action+timestamp filter; not entity-bound |
+| `supervisor` | `getDashboardStats`            |              1               | Action filter (INCIDENCE_CREATED)         |
+| `incidence`  | `listAllIncidentAuditEvents`   |        1 (paginated)         | Action filter with timestamp range        |
+| `analytics`  | `fetchAnalyticsBaseData`       |         1 full scan          | Broad analytics aggregation               |
 
 The first two (entity-bound queries) are directly solvable with schema relationships. The rest are action/timestamp-based queries that benefit from composite indexes.
 
@@ -28,22 +28,21 @@ The first two (entity-bound queries) are directly solvable with schema relations
 
 ```typescript
 // amplify/data/resource.ts (lines 101–116)
-AuditEvent: a
-  .model({
-    entityType: a.string().required(),  // "WorkOrder" | "Sample" | "Exam"
-    entityId: a.string().required(),    // ID of the referenced entity
-    action: a.string().required(),      // e.g., "ORDER_CREATED"
-    userId: a.string().required(),
-    timestamp: a.datetime().required(),
-    metadata: a.json(),
-  })
+AuditEvent: a.model({
+  entityType: a.string().required(), // "WorkOrder" | "Sample" | "Exam"
+  entityId: a.string().required(), // ID of the referenced entity
+  action: a.string().required(), // e.g., "ORDER_CREATED"
+  userId: a.string().required(),
+  timestamp: a.datetime().required(),
+  metadata: a.json(),
+})
   .secondaryIndexes((index) => [
-    index("entityType"),   // partition-key-only
-    index("entityId"),     // partition-key-only
-    index("userId"),       // partition-key-only
-    index("timestamp"),    // partition-key-only
+    index("entityType"), // partition-key-only
+    index("entityId"), // partition-key-only
+    index("userId"), // partition-key-only
+    index("timestamp"), // partition-key-only
   ])
-  .authorization((allow) => [allow.authenticated(), allow.guest()])
+  .authorization((allow) => [allow.authenticated(), allow.guest()]);
 ```
 
 ### Why This Design Falls Short
@@ -56,14 +55,14 @@ AuditEvent: a
 
 ### Current Write Sites
 
-| Service | entityType | Direct FK Available at Write Time |
-|---------|-----------|----------------------------------|
-| `specimen-generation-service` | `WorkOrder` | `workOrderId` ✓ |
-| `sample-status-service` | `Sample` | `sampleId` ✓, `sample.workOrderId` ✓ |
-| `exam-result-service` | `Exam` | `examId` ✓, `exam.sampleId` ✓ |
-| `validation-service` | `Exam` | `examId` ✓, `exam.sampleId` ✓ |
-| `validation-service` (terminal sync) | `Sample` | `sampleId` ✓ |
-| `seed.ts` / `seed-data/handler.ts` | All | All IDs available ✓ |
+| Service                              | entityType  | Direct FK Available at Write Time    |
+| ------------------------------------ | ----------- | ------------------------------------ |
+| `specimen-generation-service`        | `WorkOrder` | `workOrderId` ✓                      |
+| `sample-status-service`              | `Sample`    | `sampleId` ✓, `sample.workOrderId` ✓ |
+| `exam-result-service`                | `Exam`      | `examId` ✓, `exam.sampleId` ✓        |
+| `validation-service`                 | `Exam`      | `examId` ✓, `exam.sampleId` ✓        |
+| `validation-service` (terminal sync) | `Sample`    | `sampleId` ✓                         |
+| `seed.ts` / `seed-data/handler.ts`   | All         | All IDs available ✓                  |
 
 All write sites already have the entity IDs needed to populate FK fields.
 
@@ -74,24 +73,23 @@ All write sites already have the entity IDs needed to populate FK fields.
 ### 3.1 Add Optional FK Fields + Relationships
 
 ```typescript
-AuditEvent: a
-  .model({
-    // Existing fields (kept for backward compat + action-based queries)
-    entityType: a.string().required(),
-    entityId: a.string().required(),
-    action: a.string().required(),
-    userId: a.string().required(),
-    timestamp: a.datetime().required(),
-    metadata: a.json(),
+AuditEvent: a.model({
+  // Existing fields (kept for backward compat + action-based queries)
+  entityType: a.string().required(),
+  entityId: a.string().required(),
+  action: a.string().required(),
+  userId: a.string().required(),
+  timestamp: a.datetime().required(),
+  metadata: a.json(),
 
-    // NEW: optional relationship FKs
-    workOrderId: a.id(),
-    workOrder: a.belongsTo("WorkOrder", "workOrderId"),
-    sampleId: a.id(),
-    sample: a.belongsTo("Sample", "sampleId"),
-    examId: a.id(),
-    exam: a.belongsTo("Exam", "examId"),
-  })
+  // NEW: optional relationship FKs
+  workOrderId: a.id(),
+  workOrder: a.belongsTo("WorkOrder", "workOrderId"),
+  sampleId: a.id(),
+  sample: a.belongsTo("Sample", "sampleId"),
+  examId: a.id(),
+  exam: a.belongsTo("Exam", "examId"),
+})
   .secondaryIndexes((index) => [
     // UPGRADED: composite indexes for common query patterns
     index("entityType").sortKeys(["entityId"]),
@@ -103,7 +101,7 @@ AuditEvent: a
     // Keep userId for user-centric audit views
     index("userId").sortKeys(["timestamp"]),
   ])
-  .authorization((allow) => [allow.authenticated(), allow.guest()])
+  .authorization((allow) => [allow.authenticated(), allow.guest()]);
 ```
 
 ### 3.2 Add `hasMany` on Parent Models
@@ -112,28 +110,28 @@ AuditEvent: a
 WorkOrder: a.model({
   // ...existing fields...
   auditEvents: a.hasMany("AuditEvent", "workOrderId"),
-})
+});
 
 Sample: a.model({
   // ...existing fields...
   auditEvents: a.hasMany("AuditEvent", "sampleId"),
-})
+});
 
 Exam: a.model({
   // ...existing fields...
   auditEvents: a.hasMany("AuditEvent", "examId"),
-})
+});
 ```
 
 ### 3.3 FK Population Strategy
 
 Each AuditEvent gets **all applicable FKs** populated (denormalized), not just the direct entity FK. This enables "get all events for a work order" without resolving intermediate IDs.
 
-| entityType | `workOrderId` | `sampleId` | `examId` |
-|-----------|:-------------:|:----------:|:--------:|
-| WorkOrder | `entityId` | — | — |
-| Sample | `sample.workOrderId` | `entityId` | — |
-| Exam | resolve via chain | `exam.sampleId` | `entityId` |
+| entityType |    `workOrderId`     |   `sampleId`    |  `examId`  |
+| ---------- | :------------------: | :-------------: | :--------: |
+| WorkOrder  |      `entityId`      |        —        |     —      |
+| Sample     | `sample.workOrderId` |   `entityId`    |     —      |
+| Exam       |  resolve via chain   | `exam.sampleId` | `entityId` |
 
 For Exam events, the write site already has `exam.sampleId` available (it's passed in metadata today). The `workOrderId` requires one extra lookup — but the calling code (`exam-result-service`, `validation-service`) already fetches the exam, so we can chain to get the sample's `workOrderId` with one additional read. Alternatively, we can skip `workOrderId` on Exam events and accept that the `WorkOrder.auditEvents` relationship only returns WO-level and Sample-level events (Exam events are reachable via `WorkOrder → samples → exam → auditEvents`).
 
@@ -147,14 +145,14 @@ For Exam events, the write site already has `exam.sampleId` available (it's pass
 
 Replace the four single-key indexes with composite indexes optimized for actual query patterns:
 
-| Index | Partition Key | Sort Key | Query Pattern |
-|-------|-------------|----------|---------------|
-| `byEntityTypeAndId` | `entityType` | `entityId` | Entity-specific timeline (legacy queries) |
-| `byActionAndTimestamp` | `action` | `timestamp` | Action-based metrics (completed today, incidence list) |
-| `byWorkOrderId` | `workOrderId` | `timestamp` | All events for a work order (chronological) |
-| `bySampleId` | `sampleId` | `timestamp` | All events for a sample (chronological) |
-| `byExamId` | `examId` | `timestamp` | All events for an exam (chronological) |
-| `byUserId` | `userId` | `timestamp` | User activity audit |
+| Index                  | Partition Key | Sort Key    | Query Pattern                                          |
+| ---------------------- | ------------- | ----------- | ------------------------------------------------------ |
+| `byEntityTypeAndId`    | `entityType`  | `entityId`  | Entity-specific timeline (legacy queries)              |
+| `byActionAndTimestamp` | `action`      | `timestamp` | Action-based metrics (completed today, incidence list) |
+| `byWorkOrderId`        | `workOrderId` | `timestamp` | All events for a work order (chronological)            |
+| `bySampleId`           | `sampleId`    | `timestamp` | All events for a sample (chronological)                |
+| `byExamId`             | `examId`      | `timestamp` | All events for an exam (chronological)                 |
+| `byUserId`             | `userId`      | `timestamp` | User activity audit                                    |
 
 ### 4.2 Why Composite Indexes Matter
 
@@ -186,25 +184,43 @@ Sample.get(id)
 
 ```typescript
 const SAMPLE_DETAIL_SELECTION = [
-  "id", "barcode", "workOrderId", "examTypeId", "status",
-  "receivedAt", "collectedAt",
+  "id",
+  "barcode",
+  "workOrderId",
+  "examTypeId",
+  "status",
+  "receivedAt",
+  "collectedAt",
   // WorkOrder → Patient
-  "workOrder.id", "workOrder.priority", "workOrder.patientId",
-  "workOrder.patient.id", "workOrder.patient.firstName", "workOrder.patient.lastName",
+  "workOrder.id",
+  "workOrder.priority",
+  "workOrder.patientId",
+  "workOrder.patient.id",
+  "workOrder.patient.firstName",
+  "workOrder.patient.lastName",
   // ExamType
-  "examType.id", "examType.name", "examType.sampleType",
+  "examType.id",
+  "examType.name",
+  "examType.sampleType",
   // Exam
   "exam.id",
   // AuditEvents for this sample (NEW)
-  "auditEvents.id", "auditEvents.action", "auditEvents.timestamp",
-  "auditEvents.userId", "auditEvents.metadata",
+  "auditEvents.id",
+  "auditEvents.action",
+  "auditEvents.timestamp",
+  "auditEvents.userId",
+  "auditEvents.metadata",
   // WorkOrder audit events (NEW — via workOrder relationship)
-  "workOrder.auditEvents.id", "workOrder.auditEvents.action",
-  "workOrder.auditEvents.timestamp", "workOrder.auditEvents.userId",
+  "workOrder.auditEvents.id",
+  "workOrder.auditEvents.action",
+  "workOrder.auditEvents.timestamp",
+  "workOrder.auditEvents.userId",
   "workOrder.auditEvents.metadata",
   // Exam audit events (NEW)
-  "exam.auditEvents.id", "exam.auditEvents.action",
-  "exam.auditEvents.timestamp", "exam.auditEvents.userId",
+  "exam.auditEvents.id",
+  "exam.auditEvents.action",
+  "exam.auditEvents.timestamp",
+  "exam.auditEvents.userId",
   "exam.auditEvents.metadata",
 ] as const;
 
@@ -232,28 +248,51 @@ WorkOrder.get(id)
 
 ```typescript
 const WO_TIMELINE_SELECTION = [
-  "id", "accessionNumber", "requestedAt", "priority", "referringDoctor",
+  "id",
+  "accessionNumber",
+  "requestedAt",
+  "priority",
+  "referringDoctor",
   // Patient
-  "patient.id", "patient.firstName", "patient.lastName",
+  "patient.id",
+  "patient.firstName",
+  "patient.lastName",
   // WO-level audit events (NEW)
-  "auditEvents.id", "auditEvents.action", "auditEvents.entityType",
-  "auditEvents.entityId", "auditEvents.timestamp", "auditEvents.userId",
+  "auditEvents.id",
+  "auditEvents.action",
+  "auditEvents.entityType",
+  "auditEvents.entityId",
+  "auditEvents.timestamp",
+  "auditEvents.userId",
   "auditEvents.metadata",
   // Samples + their events
-  "samples.id", "samples.barcode", "samples.status", "samples.examTypeId",
-  "samples.auditEvents.id", "samples.auditEvents.action",
-  "samples.auditEvents.entityType", "samples.auditEvents.entityId",
-  "samples.auditEvents.timestamp", "samples.auditEvents.userId",
+  "samples.id",
+  "samples.barcode",
+  "samples.status",
+  "samples.examTypeId",
+  "samples.auditEvents.id",
+  "samples.auditEvents.action",
+  "samples.auditEvents.entityType",
+  "samples.auditEvents.entityId",
+  "samples.auditEvents.timestamp",
+  "samples.auditEvents.userId",
   "samples.auditEvents.metadata",
   // Sample → Exam + exam events
-  "samples.exam.id", "samples.exam.sampleId", "samples.exam.examTypeId",
+  "samples.exam.id",
+  "samples.exam.sampleId",
+  "samples.exam.examTypeId",
   "samples.exam.status",
-  "samples.exam.auditEvents.id", "samples.exam.auditEvents.action",
-  "samples.exam.auditEvents.entityType", "samples.exam.auditEvents.entityId",
-  "samples.exam.auditEvents.timestamp", "samples.exam.auditEvents.userId",
+  "samples.exam.auditEvents.id",
+  "samples.exam.auditEvents.action",
+  "samples.exam.auditEvents.entityType",
+  "samples.exam.auditEvents.entityId",
+  "samples.exam.auditEvents.timestamp",
+  "samples.exam.auditEvents.userId",
   "samples.exam.auditEvents.metadata",
   // ExamType for display
-  "samples.examType.id", "samples.examType.code", "samples.examType.name",
+  "samples.examType.id",
+  "samples.examType.code",
+  "samples.examType.name",
 ] as const;
 
 const { data: workOrder, errors } = await client.models.WorkOrder.get(
@@ -277,9 +316,14 @@ const { data: recentEvents } = await client.models.AuditEvent.list({
     timestamp: { ge: cutoffTimestamp },
   },
   selectionSet: [
-    "id", "action", "timestamp", "workOrderId",
-    "workOrder.id", "workOrder.accessionNumber",
-    "workOrder.patient.id", "workOrder.patient.firstName",
+    "id",
+    "action",
+    "timestamp",
+    "workOrderId",
+    "workOrder.id",
+    "workOrder.accessionNumber",
+    "workOrder.patient.id",
+    "workOrder.patient.firstName",
     "workOrder.patient.lastName",
   ],
 });
@@ -291,11 +335,11 @@ The `workOrder` relationship traversal eliminates the need to scan Sample, Exam,
 
 These queries filter by `action` and/or `timestamp`, not by entity relationships. They benefit from the **composite `(action, timestamp)` index**, not from FK relationships:
 
-| Function | Current Filter | Index Used |
-|----------|---------------|-----------|
-| `getCompletedTodayCount` | `action = SPECIMEN_COMPLETED AND entityType = SAMPLE AND timestamp BETWEEN` | `byActionAndTimestamp` (partition: action, range: timestamp) |
-| `getDashboardStats` | `action = INCIDENCE_CREATED` | `byActionAndTimestamp` |
-| `listAllIncidentAuditEvents` | `action IN (EXAM_REJECTED, SPECIMEN_REJECTED, INCIDENCE_CREATED) AND timestamp BETWEEN` | `byActionAndTimestamp` per action value |
+| Function                     | Current Filter                                                                          | Index Used                                                   |
+| ---------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `getCompletedTodayCount`     | `action = SPECIMEN_COMPLETED AND entityType = SAMPLE AND timestamp BETWEEN`             | `byActionAndTimestamp` (partition: action, range: timestamp) |
+| `getDashboardStats`          | `action = INCIDENCE_CREATED`                                                            | `byActionAndTimestamp`                                       |
+| `listAllIncidentAuditEvents` | `action IN (EXAM_REJECTED, SPECIMEN_REJECTED, INCIDENCE_CREATED) AND timestamp BETWEEN` | `byActionAndTimestamp` per action value                      |
 
 Note: DynamoDB's `or` filter doesn't use indexes — the incidence query filters by 3 action values, so it would need 3 parallel index queries or a single scan with filter. The composite index still helps by making each individual action query efficient.
 
@@ -324,8 +368,7 @@ type AuditEventInput = {
 
 export async function emitAudit(input: AuditEventInput): Promise<void> {
   const now = new Date().toISOString();
-  const serializedMetadata =
-    input.metadata == null ? undefined : JSON.stringify(input.metadata);
+  const serializedMetadata = input.metadata == null ? undefined : JSON.stringify(input.metadata);
 
   const { errors, data } = await cookieBasedClient.models.AuditEvent.create({
     entityType: input.entityType,
@@ -387,7 +430,7 @@ await emitAudit({
   entityId: sampleId,
   action,
   userId,
-  sampleId,                        // ← direct: entityId IS the sampleId
+  sampleId, // ← direct: entityId IS the sampleId
   workOrderId: sample.workOrderId, // ← from the Sample.get already performed
 });
 ```
@@ -412,9 +455,9 @@ await emitAudit({
   action,
   userId,
   metadata: { sampleId: exam.sampleId },
-  examId,                                   // ← direct
-  sampleId: exam.sampleId,                  // ← from exam
-  workOrderId: parentSample?.workOrderId,   // ← one extra read
+  examId, // ← direct
+  sampleId: exam.sampleId, // ← from exam
+  workOrderId: parentSample?.workOrderId, // ← one extra read
 });
 ```
 
@@ -531,21 +574,21 @@ The seed scripts already have all entity IDs available when creating audit event
 
 ### Round Trip Reduction
 
-| Function | Before | After (with data-fetching optimization) | After (+ this refactor) | Technique |
-|----------|:------:|:--------------------------------------:|:----------------------:|-----------|
-| `getSampleDetail` | 4+ | 2 (1 entity + 1 audit batch) | **1** | AuditEvents via `selectionSet` |
-| `getAuditTimelineForWorkOrder` | 4+ (up to 15 parallel) | same (audit is the bottleneck) | **1** | Deep `selectionSet` with all relationships |
-| `getRecentAuditActivity` | 5 full scans | same | **1** | `workOrder` traversal in selectionSet + timestamp index |
-| `getCompletedTodayCount` | 1 | 1 | **1** (faster) | `(action, timestamp)` composite index |
-| `listAllIncidentAuditEvents` | 1 (paginated, slow filter) | 1 | **1** (faster) | `(action, timestamp)` composite index |
+| Function                       |           Before           | After (with data-fetching optimization) | After (+ this refactor) | Technique                                               |
+| ------------------------------ | :------------------------: | :-------------------------------------: | :---------------------: | ------------------------------------------------------- |
+| `getSampleDetail`              |             4+             |      2 (1 entity + 1 audit batch)       |          **1**          | AuditEvents via `selectionSet`                          |
+| `getAuditTimelineForWorkOrder` |   4+ (up to 15 parallel)   |     same (audit is the bottleneck)      |          **1**          | Deep `selectionSet` with all relationships              |
+| `getRecentAuditActivity`       |        5 full scans        |                  same                   |          **1**          | `workOrder` traversal in selectionSet + timestamp index |
+| `getCompletedTodayCount`       |             1              |                    1                    |     **1** (faster)      | `(action, timestamp)` composite index                   |
+| `listAllIncidentAuditEvents`   | 1 (paginated, slow filter) |                    1                    |     **1** (faster)      | `(action, timestamp)` composite index                   |
 
 ### Estimated Latency Improvement
 
-| Function | Current Latency | After Refactor | Savings |
-|----------|:--------------:|:--------------:|:-------:|
-| `getSampleDetail` | ~900ms (3 sequential rounds @ 300ms) | ~300ms (1 round) | **67%** |
-| `getAuditTimelineForWorkOrder` | ~1200ms+ (4 sequential rounds) | ~400ms (1 round, larger payload) | **67%** |
-| `getRecentAuditActivity` | ~600ms (2 sequential rounds of parallel scans) | ~300ms (1 indexed query) | **50%** |
+| Function                       |                Current Latency                 |          After Refactor          | Savings |
+| ------------------------------ | :--------------------------------------------: | :------------------------------: | :-----: |
+| `getSampleDetail`              |      ~900ms (3 sequential rounds @ 300ms)      |         ~300ms (1 round)         | **67%** |
+| `getAuditTimelineForWorkOrder` |         ~1200ms+ (4 sequential rounds)         | ~400ms (1 round, larger payload) | **67%** |
+| `getRecentAuditActivity`       | ~600ms (2 sequential rounds of parallel scans) |     ~300ms (1 indexed query)     | **50%** |
 
 ---
 
@@ -563,7 +606,9 @@ Adding `auditEvents` to deep selection sets increases GraphQL response sizes. Mi
    // Technician detail: lightweight audit history
    const SAMPLE_DETAIL_SELECTION = [
      // ...entity fields...
-     "auditEvents.id", "auditEvents.action", "auditEvents.timestamp",
+     "auditEvents.id",
+     "auditEvents.action",
+     "auditEvents.timestamp",
    ] as const;
 
    // Supervisor audit timeline: full audit data
@@ -638,6 +683,7 @@ Pre-load Sample and Exam tables into maps before iterating to avoid N+1.
 ### Phase 5: Cleanup (optional)
 
 Once all reads use FK-based queries:
+
 - `entityType`/`entityId` fields can be marked as deprecated but kept for debugging.
 - The `byEntityTypeAndId` composite index can be removed if no queries use it.
 - Remove the old `listAuditEventsByEntity` function.
@@ -646,14 +692,14 @@ Once all reads use FK-based queries:
 
 ## 11. Risk Assessment
 
-| Risk | Severity | Mitigation |
-|------|----------|-----------|
-| **6 GSIs add write amplification** | Low | AuditEvent writes are low-frequency (1 per user action). DynamoDB replicates to each GSI, but at this volume it's negligible. |
-| **Deep selection sets return large payloads** | Medium | Use field-level selection (not `.*`). Apply Amplify's default `hasMany` limits. Separate audit-heavy views behind Suspense. |
-| **Backfill script for existing data** | Low | One-time operation. Can be run as a Lambda with batch processing. Failure is non-blocking — FK fields stay null for old events, and legacy `entityType`/`entityId` queries still work. |
-| **Write-side complexity (resolving workOrderId for Exam events)** | Low | Expand existing `Exam.get` selection set to include `"sample.workOrderId"` — zero extra round trips. |
-| **Amplify `hasMany` in subscriptions redacts relational data** | Low | Per Amplify docs, subscription results redact relational fields when authorization rules differ. Our authorization is uniform (`authenticated + guest`) across all models, so redaction should not apply. |
-| **Breaking change to AuditEvent model shape** | None | FK fields are additive (optional). No existing fields are removed or renamed. |
+| Risk                                                              | Severity | Mitigation                                                                                                                                                                                                |
+| ----------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **6 GSIs add write amplification**                                | Low      | AuditEvent writes are low-frequency (1 per user action). DynamoDB replicates to each GSI, but at this volume it's negligible.                                                                             |
+| **Deep selection sets return large payloads**                     | Medium   | Use field-level selection (not `.*`). Apply Amplify's default `hasMany` limits. Separate audit-heavy views behind Suspense.                                                                               |
+| **Backfill script for existing data**                             | Low      | One-time operation. Can be run as a Lambda with batch processing. Failure is non-blocking — FK fields stay null for old events, and legacy `entityType`/`entityId` queries still work.                    |
+| **Write-side complexity (resolving workOrderId for Exam events)** | Low      | Expand existing `Exam.get` selection set to include `"sample.workOrderId"` — zero extra round trips.                                                                                                      |
+| **Amplify `hasMany` in subscriptions redacts relational data**    | Low      | Per Amplify docs, subscription results redact relational fields when authorization rules differ. Our authorization is uniform (`authenticated + guest`) across all models, so redaction should not apply. |
+| **Breaking change to AuditEvent model shape**                     | None     | FK fields are additive (optional). No existing fields are removed or renamed.                                                                                                                             |
 
 ---
 
@@ -662,10 +708,12 @@ Once all reads use FK-based queries:
 Instead of adding FK relationships, we could add only the composite `(entityType, entityId)` index and keep AuditEvent as a standalone model.
 
 **Pros:**
+
 - Simpler schema change (no FK fields, no `belongsTo`/`hasMany`).
 - No write-side changes needed.
 
 **Cons:**
+
 - Cannot use `selectionSet` for eager loading — AuditEvent queries remain separate round trips.
 - `getSampleDetail` stays at 2 round trips (vs 1 with relationships).
 - `getAuditTimelineForWorkOrder` stays at 4+ rounds (vs 1 with relationships).
@@ -678,9 +726,11 @@ Instead of adding FK relationships, we could add only the composite `(entityType
 ## 13. Files Affected
 
 ### Schema
+
 - `amplify/data/resource.ts` — AuditEvent model + WorkOrder/Sample/Exam `hasMany`
 
 ### Services (write-side)
+
 - `src/lib/services/audit-helpers.ts` — **new** shared `emitAudit` helper
 - `src/lib/services/specimen-generation-service.ts` — pass `workOrderId` FK
 - `src/lib/services/sample-status-service.ts` — pass `sampleId` + `workOrderId` FKs
@@ -688,6 +738,7 @@ Instead of adding FK relationships, we could add only the composite `(entityType
 - `src/lib/services/validation-service.ts` — pass `examId` + `sampleId` + `workOrderId` FKs
 
 ### Repositories (read-side)
+
 - `src/lib/repositories/technician-repository.ts` — `getSampleDetail` selection set
 - `src/lib/repositories/audit-repository.ts` — `getAuditTimelineForWorkOrder`, `getRecentAuditActivity`
 - `src/lib/repositories/supervisor-repository.ts` — `getDashboardStats` (index optimization)
@@ -695,10 +746,12 @@ Instead of adding FK relationships, we could add only the composite `(entityType
 - `src/lib/repositories/analytics-repository.ts` — `fetchAnalyticsBaseData` (index optimization)
 
 ### Seed
+
 - `amplify/seed/seed.ts` — populate FK fields
 - `amplify/functions/seed-data/handler.ts` — populate FK fields
 
 ### Types (no changes needed)
+
 - `src/lib/contracts.ts` — `AUDIT_ENTITY_TYPES` unchanged
 - `src/lib/types/audit-timeline-types.ts` — interfaces unchanged
 
@@ -713,10 +766,10 @@ This refactor is **additive** to the [data-fetching-optimization-definitive](./d
 
 With this schema change, the AuditEvent queries **are** reducible. The optimization plan should be updated:
 
-| Function | Definitive Doc Target | With This Refactor |
-|----------|:--------------------:|:-----------------:|
-| `getSampleDetail` | 1+1 (entity + audit batch) | **1** (single selectionSet) |
-| `getAuditTimelineForWorkOrder` | Not in scope (audit-specific) | **1** (single selectionSet) |
-| `getRecentAuditActivity` | Not in scope (audit-specific) | **1** (indexed + relationship traversal) |
+| Function                       |     Definitive Doc Target     |            With This Refactor            |
+| ------------------------------ | :---------------------------: | :--------------------------------------: |
+| `getSampleDetail`              |  1+1 (entity + audit batch)   |       **1** (single selectionSet)        |
+| `getAuditTimelineForWorkOrder` | Not in scope (audit-specific) |       **1** (single selectionSet)        |
+| `getRecentAuditActivity`       | Not in scope (audit-specific) | **1** (indexed + relationship traversal) |
 
 This makes Phase 1 of the optimization plan fully complete — zero "irreducible" multi-round-trip functions remain.

@@ -38,10 +38,7 @@ export function ScanSampleDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-1">
-          <label
-            htmlFor="scan-modal-input"
-            className="text-muted-foreground text-sm"
-          >
+          <label htmlFor="scan-modal-input" className="text-muted-foreground text-sm">
             Código o ID de muestra
           </label>
           <Input
@@ -63,11 +60,7 @@ export function ScanSampleDialog({
           />
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button

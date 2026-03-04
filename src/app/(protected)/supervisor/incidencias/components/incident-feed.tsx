@@ -111,7 +111,7 @@ function IncidentFeedRow({
       className={cn(
         "group relative flex gap-4 border-l-4 bg-white px-5 py-4 transition-colors",
         severity.borderClass,
-        severity.bgClass,
+        severity.bgClass
       )}
     >
       {/* Icon */}
@@ -119,7 +119,7 @@ function IncidentFeedRow({
         <span
           className={cn(
             "inline-flex size-8 items-center justify-center rounded-full",
-            severity.badgeClass,
+            severity.badgeClass
           )}
           aria-hidden
         >
@@ -134,7 +134,7 @@ function IncidentFeedRow({
           <span
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-              severity.badgeClass,
+              severity.badgeClass
             )}
           >
             <span className={cn("size-1.5 rounded-full", severity.dotClass)} aria-hidden />
@@ -163,9 +163,7 @@ function IncidentFeedRow({
         <p className="text-sm leading-snug">
           <span className="font-semibold text-zinc-900">{item.patientName}</span>
           {item.accessionNumber && (
-            <span className="ml-2 font-mono text-xs text-zinc-400">
-              #{item.accessionNumber}
-            </span>
+            <span className="ml-2 font-mono text-xs text-zinc-400">#{item.accessionNumber}</span>
           )}
           {item.examTypeName && (
             <span className="text-zinc-500">
@@ -174,9 +172,7 @@ function IncidentFeedRow({
             </span>
           )}
           {item.sampleBarcode && (
-            <span className="ml-2 font-mono text-xs text-zinc-400">
-              [{item.sampleBarcode}]
-            </span>
+            <span className="ml-2 font-mono text-xs text-zinc-400">[{item.sampleBarcode}]</span>
           )}
         </p>
 
@@ -197,7 +193,7 @@ function IncidentFeedRow({
           aria-label={isPending ? "Cargando…" : `Ver detalle de ${item.patientName}`}
           className={cn(
             "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200 transition-all hover:bg-zinc-100 hover:text-zinc-900 hover:ring-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
-            isPending && "pointer-events-none opacity-80",
+            isPending && "pointer-events-none opacity-80"
           )}
         >
           {isPending ? (
@@ -236,7 +232,10 @@ function LoadMoreButton() {
       >
         {state.isLoadingMore ? (
           <span className="flex items-center gap-2">
-            <span className="size-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" aria-hidden />
+            <span
+              className="size-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"
+              aria-hidden
+            />
             Cargando más...
           </span>
         ) : (
@@ -282,7 +281,10 @@ export function IncidentFeed() {
     <div className="overflow-hidden rounded-b-xl">
       {state.isRefreshing && (
         <div className="flex items-center gap-2 border-b border-zinc-100 bg-zinc-50 px-5 py-2.5">
-          <span className="size-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" aria-hidden />
+          <span
+            className="size-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"
+            aria-hidden
+          />
           <span className="text-xs text-zinc-500">Actualizando...</span>
         </div>
       )}

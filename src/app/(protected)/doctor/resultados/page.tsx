@@ -8,7 +8,8 @@ export default function DoctorResultadosPage() {
           <CardHeader>
             <CardTitle>Resultados</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Valores, rangos normales, indicador visual (🟢 normal, 🟡 atención, 🟥 crítico), interpretación, descargar PDF.
+              Valores, rangos normales, indicador visual (🟢 normal, 🟡 atención, 🟥 crítico),
+              interpretación, descargar PDF.
             </p>
           </CardHeader>
           <CardContent>

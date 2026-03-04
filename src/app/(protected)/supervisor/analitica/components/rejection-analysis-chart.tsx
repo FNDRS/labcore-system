@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -65,7 +59,7 @@ export function RejectionAnalysisChart({ data }: RejectionAnalysisChartProps) {
         }
         return row;
       }),
-    [data, allReasons],
+    [data, allReasons]
   );
 
   const hasData = data.length > 0 && allReasons.length > 0;
@@ -73,9 +67,7 @@ export function RejectionAnalysisChart({ data }: RejectionAnalysisChartProps) {
   return (
     <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
       <CardHeader className="space-y-0.5 pb-2">
-        <CardTitle className="text-sm font-semibold text-zinc-900">
-          Análisis de rechazos
-        </CardTitle>
+        <CardTitle className="text-sm font-semibold text-zinc-900">Análisis de rechazos</CardTitle>
         <CardDescription className="text-xs text-zinc-500">
           Motivos de rechazo por tipo de examen
         </CardDescription>
@@ -106,11 +98,7 @@ export function RejectionAnalysisChart({ data }: RejectionAnalysisChartProps) {
                   dataKey={reason}
                   stackId="rejections"
                   fill={REASON_PALETTE[i % REASON_PALETTE.length]}
-                  radius={
-                    i === allReasons.length - 1
-                      ? [3, 3, 0, 0]
-                      : [0, 0, 0, 0]
-                  }
+                  radius={i === allReasons.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
                 />
               ))}
               <ChartLegend content={<ChartLegendContent />} />

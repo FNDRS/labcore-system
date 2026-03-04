@@ -1,13 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -34,9 +28,7 @@ export function TATDistributionChart({ data }: TATDistributionChartProps) {
   return (
     <Card className="rounded-xl border border-zinc-200 bg-white shadow-none">
       <CardHeader className="space-y-0.5 pb-2">
-        <CardTitle className="text-sm font-semibold text-zinc-900">
-          Distribución de TAT
-        </CardTitle>
+        <CardTitle className="text-sm font-semibold text-zinc-900">Distribución de TAT</CardTitle>
         <CardDescription className="text-xs text-zinc-500">
           Tiempo de respuesta por prioridad
         </CardDescription>
@@ -61,21 +53,9 @@ export function TATDistributionChart({ data }: TATDistributionChartProps) {
                 width={32}
               />
               <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-              <Bar
-                dataKey="routine"
-                fill="var(--color-routine)"
-                radius={[3, 3, 0, 0]}
-              />
-              <Bar
-                dataKey="urgent"
-                fill="var(--color-urgent)"
-                radius={[3, 3, 0, 0]}
-              />
-              <Bar
-                dataKey="stat"
-                fill="var(--color-stat)"
-                radius={[3, 3, 0, 0]}
-              />
+              <Bar dataKey="routine" fill="var(--color-routine)" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="urgent" fill="var(--color-urgent)" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="stat" fill="var(--color-stat)" radius={[3, 3, 0, 0]} />
               <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ChartContainer>

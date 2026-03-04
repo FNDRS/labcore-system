@@ -8,14 +8,15 @@ This design proposes a flexible, schema-on-read data model for a Laboratory Info
 
 ## Requirements (from docs/Reportes de laboratorio Claudio.pdf)
 
-| Exam Type | Sample Type | Key Characteristics |
-|-----------|-------------|---------------------|
-| **Uroanálisis** | Orina | Macroscópico (color, olor, opacidad), Químico (pH, proteínas, glucosa, etc.), Microscópico (leucocitos, eritrocitos, cristales, etc.) |
-| **Coproanálisis** | Heces | Macroscópico (consistencia, color, aspecto), Microscópico (huevos, parásitos), optional Química fecal |
-| **Hemograma** | Sangre con EDTA | Serie roja, serie blanca, serie plaquetaria — numeric values with reference ranges |
-| **Química Sanguínea** | Suero | Numeric results with units (e.g., glucosa 22 mg/dL) |
+| Exam Type             | Sample Type     | Key Characteristics                                                                                                                   |
+| --------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Uroanálisis**       | Orina           | Macroscópico (color, olor, opacidad), Químico (pH, proteínas, glucosa, etc.), Microscópico (leucocitos, eritrocitos, cristales, etc.) |
+| **Coproanálisis**     | Heces           | Macroscópico (consistencia, color, aspecto), Microscópico (huevos, parásitos), optional Química fecal                                 |
+| **Hemograma**         | Sangre con EDTA | Serie roja, serie blanca, serie plaquetaria — numeric values with reference ranges                                                    |
+| **Química Sanguínea** | Suero           | Numeric results with units (e.g., glucosa 22 mg/dL)                                                                                   |
 
 All exam types have:
+
 - Variable field sets per type
 - Reference ranges and units
 - Qualitative scales (negativo, trazas, +, ++, +++)
@@ -74,7 +75,9 @@ All exam types have:
 ## Model Definitions
 
 ### 1. Patient
-*Unchanged from current schema.*
+
+_Unchanged from current schema._
+
 ```typescript
 Patient: a.model({
   firstName: a.string(),
@@ -85,10 +88,11 @@ Patient: a.model({
   email: a.email(),
   extraData: a.json(),
   workOrders: a.hasMany("WorkOrder", "patientId"),
-})
+});
 ```
 
 ### 2. WorkOrder (Orden de Trabajo)
+
 ```typescript
 WorkOrder: a.model({
   status: a.enum(["pending", "in-progress", "completed"]),
@@ -98,22 +102,23 @@ WorkOrder: a.model({
   // Optional: metadata, requested date, priority, etc.
   requestedAt: a.datetime(),
   notes: a.string(),
-})
+});
 ```
 
 ### 3. TipoExamen (Exam Type — Metadata Catalog)
+
 **Purpose:** Defines exam types and their field schemas. One record per exam type (Uroanálisis, Coproanálisis, Hemograma, etc.).
 
 ```typescript
 TipoExamen: a.model({
-  codigo: a.string().required(),        // e.g. "URO", "COP", "HEM", "QS"
-  nombre: a.string().required(),        // e.g. "Uroanálisis"
+  codigo: a.string().required(), // e.g. "URO", "COP", "HEM", "QS"
+  nombre: a.string().required(), // e.g. "Uroanálisis"
   tipoMuestra: a.enum(["orina", "heces", "sangre_edta", "suero", "otro"]),
-  fieldSchema: a.json().required(),      // Dynamic field definition — see below
-  unidadesDefault: a.string(),          // Optional default unit (e.g. "mg/dL")
+  fieldSchema: a.json().required(), // Dynamic field definition — see below
+  unidadesDefault: a.string(), // Optional default unit (e.g. "mg/dL")
   activo: a.boolean().default(true),
   examenes: a.hasMany("Examen", "tipoExamenId"),
-})
+});
 ```
 
 **`fieldSchema` JSON structure** (flexible, validated at app layer):
@@ -135,16 +140,38 @@ TipoExamen: a.model({
       "label": "Examen Químico",
       "fields": [
         { "key": "ph", "label": "pH", "type": "numeric", "unit": "", "referenceRange": "5-6" },
-        { "key": "proteinas", "label": "Proteínas", "type": "enum", "options": ["negativo", "trazas", "+", "++", "+++"], "referenceRange": "negativo" },
-        { "key": "glucosa", "label": "Glucosa", "type": "enum", "options": ["negativo", "trazas", "+", "++", "+++"], "referenceRange": "negativo" }
+        {
+          "key": "proteinas",
+          "label": "Proteínas",
+          "type": "enum",
+          "options": ["negativo", "trazas", "+", "++", "+++"],
+          "referenceRange": "negativo"
+        },
+        {
+          "key": "glucosa",
+          "label": "Glucosa",
+          "type": "enum",
+          "options": ["negativo", "trazas", "+", "++", "+++"],
+          "referenceRange": "negativo"
+        }
       ]
     },
     {
       "id": "microscopico",
       "label": "Examen Microscópico",
       "fields": [
-        { "key": "leucocitos", "label": "Leucocitos", "type": "string", "referenceRange": "0-4 por campo" },
-        { "key": "eritrocitos", "label": "Eritrocitos", "type": "string", "referenceRange": "0-4 por campo" }
+        {
+          "key": "leucocitos",
+          "label": "Leucocitos",
+          "type": "string",
+          "referenceRange": "0-4 por campo"
+        },
+        {
+          "key": "eritrocitos",
+          "label": "Eritrocitos",
+          "type": "string",
+          "referenceRange": "0-4 por campo"
+        }
       ]
     }
   ]
@@ -152,6 +179,7 @@ TipoExamen: a.model({
 ```
 
 **Supported field types in `fieldSchema`:**
+
 - `string` — Free text
 - `numeric` — Number with optional unit
 - `enum` — Dropdown from `options`
@@ -160,6 +188,7 @@ TipoExamen: a.model({
 ---
 
 ### 4. Muestra (Sample)
+
 **Purpose:** Physical sample collected from a patient, linked to a work order. References the type of exam requested.
 
 ```typescript
@@ -168,16 +197,12 @@ Muestra: a.model({
   workOrder: a.belongsTo("WorkOrder", "workOrderId"),
   tipoExamenId: a.id().required(),
   tipoExamen: a.belongsTo("TipoExamen", "tipoExamenId"),
-  codigoMuestra: a.string(),            // Lab barcode / tracking ID
+  codigoMuestra: a.string(), // Lab barcode / tracking ID
   fechaRecoleccion: a.datetime(),
   estado: a.enum(["pendiente", "recibida", "en-proceso", "completada"]),
   observaciones: a.string(),
   examenes: a.hasMany("Examen", "muestraId"),
-})
-.secondaryIndexes((index) => [
-  index("workOrderId"),
-  index("tipoExamenId"),
-])
+}).secondaryIndexes((index) => [index("workOrderId"), index("tipoExamenId")]);
 ```
 
 **Note:** A single physical sample can sometimes require multiple exam types (e.g., Coproanálisis + Química Fecal). In that case, create multiple `Muestra` records with the same `workOrderId` but different `tipoExamenId`, or introduce a `MuestraExamen` join model if you prefer one Muestra → many Examen types. The current design uses **one Muestra per exam type** for simplicity.
@@ -185,6 +210,7 @@ Muestra: a.model({
 ---
 
 ### 5. Examen (Exam — Actual Results)
+
 **Purpose:** The analysis performed on a sample. Results stored dynamically in `resultados` JSON, keyed by field keys from `TipoExamen.fieldSchema`.
 
 ```typescript
@@ -194,17 +220,12 @@ Examen: a.model({
   tipoExamenId: a.id().required(),
   tipoExamen: a.belongsTo("TipoExamen", "tipoExamenId"),
   status: a.enum(["pendiente", "en-proceso", "completado", "revision"]),
-  resultados: a.json(),                  // Dynamic results — see below
+  resultados: a.json(), // Dynamic results — see below
   fechaInicio: a.datetime(),
   fechaResultado: a.datetime(),
-  realizadoPor: a.string(),              // Technician/user ID
+  realizadoPor: a.string(), // Technician/user ID
   observaciones: a.string(),
-})
-.secondaryIndexes((index) => [
-  index("muestraId"),
-  index("tipoExamenId"),
-  index("status"),
-])
+}).secondaryIndexes((index) => [index("muestraId"), index("tipoExamenId"), index("status")]);
 ```
 
 **`resultados` JSON structure** (matches field keys from `fieldSchema`):
@@ -223,6 +244,7 @@ Examen: a.model({
 ```
 
 The frontend:
+
 1. Loads `TipoExamen` by `tipoExamenId` to get `fieldSchema`.
 2. Renders form/UI from `fieldSchema.sections[].fields`.
 3. Saves user input as `resultados` with matching keys.
@@ -231,12 +253,12 @@ The frontend:
 
 ## DynamoDB & NoSQL Considerations
 
-| Aspect | Approach |
-|--------|----------|
+| Aspect              | Approach                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | **Flexible schema** | `a.json()` for `fieldSchema` and `resultados` — DynamoDB stores as Map/List types, no schema change needed for new exam types. |
-| **Single table** | One `Examen` table for all exam types; differentiation via `tipoExamenId` and `resultados` structure. |
-| **Query patterns** | Secondary indexes on `workOrderId`, `muestraId`, `tipoExamenId`, `status` for efficient filtering. |
-| **Item size** | DynamoDB item limit 400KB — `resultados` for typical exams (≈50–100 fields) stays well under limit. |
+| **Single table**    | One `Examen` table for all exam types; differentiation via `tipoExamenId` and `resultados` structure.                          |
+| **Query patterns**  | Secondary indexes on `workOrderId`, `muestraId`, `tipoExamenId`, `status` for efficient filtering.                             |
+| **Item size**       | DynamoDB item limit 400KB — `resultados` for typical exams (≈50–100 fields) stays well under limit.                            |
 
 ---
 
@@ -288,12 +310,12 @@ Examen: a.model({
 
 ## Summary
 
-| Model | Role |
-|-------|------|
-| **Patient** | Subject of the work order |
-| **WorkOrder** | Orders one or many samples for a patient |
-| **Muestra** | Sample linked to work order and exam type |
+| Model          | Role                                        |
+| -------------- | ------------------------------------------- |
+| **Patient**    | Subject of the work order                   |
+| **WorkOrder**  | Orders one or many samples for a patient    |
+| **Muestra**    | Sample linked to work order and exam type   |
 | **TipoExamen** | Exam type catalog with `fieldSchema` (JSON) |
-| **Examen** | Actual exam with `resultados` (JSON) |
+| **Examen**     | Actual exam with `resultados` (JSON)        |
 
 This design uses Amplify’s relational model for navigation and DynamoDB’s JSON support for exam metadata and results, keeping the schema stable while allowing new exam types to be added via data only.

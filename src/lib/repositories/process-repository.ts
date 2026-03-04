@@ -4,27 +4,7 @@ import { cookieBasedClient } from "@/utils/amplifyServerUtils";
 import type { FieldSchema } from "@/lib/process/field-schema-types";
 import { parseFieldSchema } from "@/lib/process/field-schema-types";
 import type { ExamStatus } from "@/lib/contracts";
-
-function parseResults(
-	value: unknown,
-): Record<string, unknown> | null {
-	if (value == null) return null;
-	if (typeof value === "string") {
-		try {
-			const parsed = JSON.parse(value) as unknown;
-			if (parsed && typeof parsed === "object") {
-				return parsed as Record<string, unknown>;
-			}
-		} catch {
-			return null;
-		}
-		return null;
-	}
-	if (typeof value === "object") {
-		return value as Record<string, unknown>;
-	}
-	return null;
-}
+import { parseResults } from "@/lib/repositories/shared";
 
 /** Process workspace context: Sample + Exam + ExamType with parsed fieldSchema. */
 export interface ProcessContext {
@@ -61,6 +41,33 @@ export interface ProcessContext {
   };
 }
 
+const PROCESS_CONTEXT_SELECTION = [
+  "id",
+  "barcode",
+  "workOrderId",
+  "examTypeId",
+  "status",
+  "collectedAt",
+  "receivedAt",
+  "exam.id",
+  "exam.sampleId",
+  "exam.examTypeId",
+  "exam.status",
+  "exam.results",
+  "exam.startedAt",
+  "exam.resultedAt",
+  "exam.performedBy",
+  "exam.notes",
+  "exam.validatedBy",
+  "exam.validatedAt",
+  "exam.updatedAt",
+  "examType.id",
+  "examType.code",
+  "examType.name",
+  "examType.sampleType",
+  "examType.fieldSchema",
+] as const;
+
 /**
  * Fetch full process context for the technician workspace.
  * Returns Sample, Exam, ExamType (with parsed fieldSchema), or null if not found.
@@ -70,20 +77,23 @@ export interface ProcessContext {
 export async function getProcessContext(sampleId: string): Promise<ProcessContext | null> {
   if (!sampleId.trim()) return null;
 
-  const { data: sample } = await cookieBasedClient.models.Sample.get({
-    id: sampleId,
-  });
+  const { data: sample, errors } = await cookieBasedClient.models.Sample.get(
+    {
+      id: sampleId,
+    },
+    {
+      selectionSet: PROCESS_CONTEXT_SELECTION,
+    }
+  );
+
+  if (errors?.length) {
+    console.error("[getProcessContext] Amplify errors:", errors);
+    return null;
+  }
+
   if (!sample?.id || !sample.workOrderId || !sample.examTypeId) return null;
-
-  const [examResult, examTypeResult] = await Promise.all([
-    cookieBasedClient.models.Exam.list({
-      filter: { sampleId: { eq: sampleId } },
-    }),
-    cookieBasedClient.models.ExamType.get({ id: sample.examTypeId }),
-  ]);
-
-  const exam = examResult.data?.[0];
-  const examType = examTypeResult.data;
+  const exam = sample.exam;
+  const examType = sample.examType;
   if (!exam?.id || !examType?.id) return null;
 
   const fieldSchema = parseFieldSchema(examType.fieldSchema);
@@ -111,8 +121,7 @@ export async function getProcessContext(sampleId: string): Promise<ProcessContex
       notes: exam.notes ?? null,
       validatedBy: exam.validatedBy ?? null,
       validatedAt: exam.validatedAt ?? null,
-      updatedAt:
-        (exam as { updatedAt?: string | null }).updatedAt ?? null,
+      updatedAt: exam.updatedAt ?? null,
     },
     examType: {
       id: examType.id,

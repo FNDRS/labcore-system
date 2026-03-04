@@ -33,6 +33,7 @@ flowchart TD
 ## A) Origen del trabajo (pre-técnico)
 
 ### A1. Crear orden
+
 - **Rol:** Recepción o Supervisor.
 - **Vista:** `Nueva Orden` (Order Intake).
 - **Datos capturados:** paciente, médico (opcional), prioridad, exámenes, notas.
@@ -40,6 +41,7 @@ flowchart TD
 - **Audit:** `ORDER_CREATED`, `ORDER_TESTS_ADDED`.
 
 ### A2. Escanear orden de trabajo
+
 - **Rol:** Recepción.
 - **Vista:** `Scan Orden de Trabajo`.
 - **Entrada:** código de orden / work order.
@@ -47,6 +49,7 @@ flowchart TD
 - **Audit:** `WORK_ORDER_SCANNED`.
 
 ### A3. Generar muestras e imprimir stickers
+
 - **Rol:** Recepción.
 - **Vista:** `Preparación de Muestras`.
 - **Regla clave:** agrupar exámenes compatibles por tipo de tubo/contenedor.
@@ -54,6 +57,7 @@ flowchart TD
 - **Audit:** `SPECIMENS_GENERATED`, `LABELS_PRINTED`, `ORDER_TEST_ASSIGNED_TO_SPECIMEN`.
 
 ### A4. Recolección física
+
 - **Rol:** Recepción / toma de muestra.
 - **Acción física:** pegar sticker en tubo/contenedor y completar recolección.
 - **DB:** `specimens.status = READY_FOR_LAB`.
@@ -66,16 +70,19 @@ flowchart TD
 ## B) Flujo del Técnico (operación)
 
 ### B1. Login
+
 - **Rol:** Técnico.
 - **Vista:** `Login`.
 - **Audit:** `AUTH_LOGIN`.
 
 ### B2. Dashboard técnico
+
 - **Vista:** `Dashboard Técnico`.
 - **Muestra:** pendientes, urgentes, prioridades.
 - **Audit:** `VIEW_DASHBOARD`.
 
 ### B3. Escaneo de sticker en laboratorio
+
 - **Vista:** `Muestras` (scan) o modal de escaneo.
 - **Entrada:** `specimen_code` (sticker del tubo/contenedor).
 - **Resultado:** el sistema indica qué análisis hacer para esa muestra y habilita el formulario.
@@ -83,21 +90,25 @@ flowchart TD
 - **Audit:** `SPECIMEN_SCANNED`, `SPECIMEN_RECEIVED`.
 
 ### B4. Selección de análisis y formulario
+
 - **Vista:** `Detalle de muestra`.
 - **Acción:** abrir el/los análisis asociados y capturar valores del formulario.
 - **Audit:** `SPECIMEN_VIEWED`, `ORDER_TEST_OPENED`.
 
 ### B5. Workbench y captura de resultados
+
 - **Vista:** `Procesar Examen`.
 - **DB:** upsert en `results`; `order_tests.status = IN_PROGRESS`.
 - **Audit:** `RESULT_UPDATED`, `ORDER_TEST_IN_PROGRESS`.
 
 ### B6. Enviar a validación
+
 - **Vista:** confirmación de finalización.
 - **DB:** `order_tests.status = READY_FOR_VALIDATION`, opcional `completed_at`.
 - **Audit:** `ORDER_TEST_READY_FOR_VALIDATION`.
 
 ### B7. Completar muestra (automático)
+
 - **Condición:** todos los `order_tests` del `specimen` en estado listo/aprobado.
 - **DB:** `specimens.status = COMPLETED` (o `READY_FOR_VALIDATION` según modelo).
 - **Audit:** `SPECIMEN_COMPLETED`.
@@ -107,6 +118,7 @@ flowchart TD
 ## C) Post-técnico (cierre de ciclo)
 
 ### C1. Validación
+
 - **Rol:** Supervisor.
 - **Vista:** `Validación`.
 - **Acciones:** aprobar, rechazar, comentar, devolver.
@@ -114,6 +126,7 @@ flowchart TD
 - **Audit:** `ORDER_TEST_APPROVED`, `ORDER_TEST_REJECTED`.
 
 ### C2. Reporte y entrega
+
 - **Rol:** Recepción o Supervisor.
 - **Vista:** `Reportes`.
 - **Salida:** PDF de orden con branding del laboratorio.
@@ -158,8 +171,12 @@ En `src/utils/logging.ts` existe esta protección para inicializar App Insights 
 
 ```ts
 // In standalone mode instrumentation does not run; ensure App Insights is inited on first server log (e.g. API routes).
-if (!options?.request && process.env.APPLICATIONINSIGHTS_CONNECTION_STRING?.trim() && !appInsightsEnsureStarted) {
-  appInsightsEnsureStarted = import("@/lib/ensure-appinsights").then(() => {})
+if (
+  !options?.request &&
+  process.env.APPLICATIONINSIGHTS_CONNECTION_STRING?.trim() &&
+  !appInsightsEnsureStarted
+) {
+  appInsightsEnsureStarted = import("@/lib/ensure-appinsights").then(() => {});
 }
 ```
 

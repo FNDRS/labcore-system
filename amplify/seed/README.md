@@ -5,6 +5,7 @@ Populates the Amplify sandbox with LIS test data (ExamTypes, Patients, WorkOrder
 ## Setup (one-time)
 
 1. **Install** (already in devDependencies):
+
    ```bash
    pnpm add -D @aws-amplify/seed
    ```

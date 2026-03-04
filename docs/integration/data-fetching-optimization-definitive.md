@@ -22,11 +22,11 @@ This document is the single source of truth for how data flows from Amplify/AppS
 
 The current implementation suffers from three systemic issues:
 
-| Issue | Impact | Where |
-|-------|--------|-------|
-| **Sequential waterfalls** | 2–4 round trips per page load | Every repository except `listTechnicianSamples` |
-| **Inconsistent hydration patterns** | Recepción is client-only; Technician is mixed; Supervisor is mostly RSC | Route-level architecture |
-| **Missing error handling** | `errors` from Amplify responses are silently discarded | All repositories |
+| Issue                               | Impact                                                                  | Where                                           |
+| ----------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------- |
+| **Sequential waterfalls**           | 2–4 round trips per page load                                           | Every repository except `listTechnicianSamples` |
+| **Inconsistent hydration patterns** | Recepción is client-only; Technician is mixed; Supervisor is mostly RSC | Route-level architecture                        |
+| **Missing error handling**          | `errors` from Amplify responses are silently discarded                  | All repositories                                |
 
 **The single highest-impact fix** is adopting Amplify's `selectionSet` for relational eager loading — collapsing N+1 query chains into single GraphQL round trips. The technician repository's `listTechnicianSamples` already demonstrates this pattern successfully.
 
@@ -53,11 +53,11 @@ WorkOrder ──belongsTo──▶ Patient
 
 This means any model can eagerly traverse its relationships via `selectionSet`:
 
-| Root Model | Reachable via Selection Set |
-|------------|---------------------------|
-| `WorkOrder` | `patient.*`, `samples.*`, `samples.exam.*`, `samples.examType.*` |
-| `Sample` | `workOrder.*`, `workOrder.patient.*`, `examType.*`, `exam.*` |
-| `Exam` | `sample.*`, `sample.workOrder.*`, `sample.workOrder.patient.*`, `examType.*` |
+| Root Model  | Reachable via Selection Set                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| `WorkOrder` | `patient.*`, `samples.*`, `samples.exam.*`, `samples.examType.*`             |
+| `Sample`    | `workOrder.*`, `workOrder.patient.*`, `examType.*`, `exam.*`                 |
+| `Exam`      | `sample.*`, `sample.workOrder.*`, `sample.workOrder.patient.*`, `examType.*` |
 
 `AuditEvent` is **not** relationally linked — it uses `entityType`/`entityId` and always requires a separate query.
 
@@ -68,11 +68,12 @@ Amplify Gen 2 supports eager loading through custom selection sets using dot not
 ```typescript
 const { data } = await client.models.Team.get(
   { id: "MY_TEAM_ID" },
-  { selectionSet: ["id", "members.*"] },
+  { selectionSet: ["id", "members.*"] }
 );
 ```
 
 Key behaviors:
+
 - `"relation.*"` fetches all scalar fields of the related model.
 - `"relation.fieldName"` fetches only the specified field.
 - `hasMany` relations return arrays; `hasOne`/`belongsTo` return single objects.
@@ -105,6 +106,7 @@ page.tsx (Server Component, sync)
 5. **Start data promises early in RSC**, await as low as possible behind Suspense boundaries. Do not block the entire page for secondary/expensive panels (analytics, history, audit timelines).
 
 This aligns with:
+
 - **Vercel/async-suspense-boundaries**: Use Suspense to stream content instead of blocking the page.
 - **Vercel/server-parallel-fetching**: Restructure components to parallelize fetches.
 - **Vercel/async-parallel**: Use `Promise.all()` for independent operations.
@@ -118,11 +120,11 @@ This aligns with:
 
 Use three loading layers at every route:
 
-| Layer | Mechanism | Purpose |
-|-------|-----------|---------|
-| **Route-level skeleton** | `loading.tsx` per major segment | Instant navigation feedback; shell renders while RSC tree resolves. |
-| **Section-level Suspense** | `<Suspense>` in page layout | Independent streaming for KPI cards, main table/list, detail panel. |
-| **Action-level pending UI** | `useTransition` + inline spinners | Non-blocking feedback during filter/tab changes and mutations. |
+| Layer                       | Mechanism                         | Purpose                                                             |
+| --------------------------- | --------------------------------- | ------------------------------------------------------------------- |
+| **Route-level skeleton**    | `loading.tsx` per major segment   | Instant navigation feedback; shell renders while RSC tree resolves. |
+| **Section-level Suspense**  | `<Suspense>` in page layout       | Independent streaming for KPI cards, main table/list, detail panel. |
+| **Action-level pending UI** | `useTransition` + inline spinners | Non-blocking feedback during filter/tab changes and mutations.      |
 
 ### 5.2 Loading UX Blueprint (Per Route Family)
 
@@ -173,6 +175,7 @@ Both fetches start simultaneously. Stats and pending list stream in independentl
 ### 5.4 When NOT to Use Suspense Boundaries
 
 Per Vercel guidance:
+
 - **SEO-critical content** above the fold that must be in the initial HTML.
 - **Layout-affecting data** where a loading → content transition would cause layout shift.
 - **Small, fast queries** where the Suspense overhead isn't justified.
@@ -201,11 +204,11 @@ type ActionResult<T> =
 
 `cookieBasedClient` returns GraphQL errors with `GraphQLFormattedError` shape (`message`, `errorType`, `errorInfo`, optional `path`, optional `extensions`). Standardize the mapping:
 
-| ActionResult field | Source |
-|-------------------|--------|
-| `error.code` | `errorType` (fallback: `UNKNOWN_GRAPHQL_ERROR`) |
-| `error.message` | Safe normalized message |
-| `error.details` | `{ path, errorInfo, extensions }` (server logs + optional client diagnostics) |
+| ActionResult field | Source                                                                        |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `error.code`       | `errorType` (fallback: `UNKNOWN_GRAPHQL_ERROR`)                               |
+| `error.message`    | Safe normalized message                                                       |
+| `error.details`    | `{ path, errorInfo, extensions }` (server logs + optional client diagnostics) |
 
 ### 6.3 Rules
 
@@ -226,10 +229,7 @@ type GraphQLErrorLike = {
   extensions?: Record<string, unknown>;
 };
 
-function toRepositoryError(
-  fallbackCode: string,
-  errors: readonly GraphQLErrorLike[] | undefined,
-) {
+function toRepositoryError(fallbackCode: string, errors: readonly GraphQLErrorLike[] | undefined) {
   const first = errors?.[0];
   return {
     ok: false as const,
@@ -251,13 +251,13 @@ function toRepositoryError(
 
 ### 6.5 Action Responsibility Matrix
 
-| Responsibility | Implementation |
-|---------------|----------------|
-| **Initial page data** | RSC async component → repository function |
-| **Filter/pagination refetch** | URL searchParams change → RSC re-render |
-| **User interaction queries** (scan, search, detail panel) | Server action → repository function |
-| **Mutations** (approve, reject, save draft) | Server action with auth check |
-| **Post-mutation refresh** | `router.refresh()` to re-run RSC tree |
+| Responsibility                                            | Implementation                            |
+| --------------------------------------------------------- | ----------------------------------------- |
+| **Initial page data**                                     | RSC async component → repository function |
+| **Filter/pagination refetch**                             | URL searchParams change → RSC re-render   |
+| **User interaction queries** (scan, search, detail panel) | Server action → repository function       |
+| **Mutations** (approve, reject, save draft)               | Server action with auth check             |
+| **Post-mutation refresh**                                 | `router.refresh()` to re-run RSC tree     |
 
 ### 6.6 Auth Standard
 
@@ -292,9 +292,7 @@ function SomeForm() {
 
   return (
     <form action={handleSubmit}>
-      <button disabled={isPending}>
-        {isPending ? "Guardando..." : "Guardar"}
-      </button>
+      <button disabled={isPending}>{isPending ? "Guardando..." : "Guardar"}</button>
     </form>
   );
 }
@@ -316,13 +314,13 @@ Each domain repository exposes:
 
 ### 7.2 Responsibilities
 
-| Do | Don't |
-|----|-------|
-| Build optimized Amplify query with minimal `selectionSet` | Fetch in client components for initial render data |
-| Parse/validate response + map to domain DTO | Scatter relationship resolution across server actions and components |
-| Handle nullability and relation safety | Call `list` then N `get` if relation can be eager-loaded |
-| Return typed errors or null; no UI formatting logic | Return raw Amplify response shapes to consumers |
-| Define per-use-case `*_SELECTION` constants | Use broad `*` selection in performance-sensitive lists |
+| Do                                                        | Don't                                                                |
+| --------------------------------------------------------- | -------------------------------------------------------------------- |
+| Build optimized Amplify query with minimal `selectionSet` | Fetch in client components for initial render data                   |
+| Parse/validate response + map to domain DTO               | Scatter relationship resolution across server actions and components |
+| Handle nullability and relation safety                    | Call `list` then N `get` if relation can be eager-loaded             |
+| Return typed errors or null; no UI formatting logic       | Return raw Amplify response shapes to consumers                      |
+| Define per-use-case `*_SELECTION` constants               | Use broad `*` selection in performance-sensitive lists               |
 
 ### 7.3 Selection Set Rules
 
@@ -346,6 +344,7 @@ if (errors?.length) {
 ```
 
 **Rules:**
+
 1. Always destructure `errors` alongside `data`.
 2. Log errors with the function name for traceability.
 3. For queries (reads): log + return null/empty. Let the UI handle empty states.
@@ -366,17 +365,17 @@ function toRepositoryError(code: string, amplifyErrors: GraphQLErrorLike[]): Act
 
 ### 8.1 Optimization Summary
 
-| Repository | Function | Current Round Trips | Optimized | Technique |
-|------------|----------|:-------------------:|:---------:|-----------|
-| `reception` | `listReceptionOrders` | 3 | **1+1** | WO → patient + samples via selectionSet; ExamType as static cache |
-| `reception` | `lookupOrderByCode` | 3 | **1+1** | Same pattern after WO lookup |
-| `technician` | `listTechnicianSamples` | 1 | **1** | Already optimized |
-| `technician` | `getSampleDetail` | 4+ | **1+1** | Sample → deep selectionSet; AuditEvent separate |
-| `process` | `getProcessContext` | 2 | **1** | Sample → exam + examType via selectionSet |
-| `supervisor` | `listPendingValidation` | 4 | **1** | Exam → sample.workOrder.patient + examType |
-| `supervisor` | `getValidationDetail` | 4 | **1** | Exam → deep selectionSet |
-| `results` | `listCompletedWorkOrders` | 4 full scans | **1** | WO → patient + samples.exam via selectionSet |
-| `results` | `getWorkOrderConsolidatedResults` | 3 | **1** | WO → deep selectionSet |
+| Repository   | Function                          | Current Round Trips | Optimized | Technique                                                         |
+| ------------ | --------------------------------- | :-----------------: | :-------: | ----------------------------------------------------------------- |
+| `reception`  | `listReceptionOrders`             |          3          |  **1+1**  | WO → patient + samples via selectionSet; ExamType as static cache |
+| `reception`  | `lookupOrderByCode`               |          3          |  **1+1**  | Same pattern after WO lookup                                      |
+| `technician` | `listTechnicianSamples`           |          1          |   **1**   | Already optimized                                                 |
+| `technician` | `getSampleDetail`                 |         4+          |  **1+1**  | Sample → deep selectionSet; AuditEvent separate                   |
+| `process`    | `getProcessContext`               |          2          |   **1**   | Sample → exam + examType via selectionSet                         |
+| `supervisor` | `listPendingValidation`           |          4          |   **1**   | Exam → sample.workOrder.patient + examType                        |
+| `supervisor` | `getValidationDetail`             |          4          |   **1**   | Exam → deep selectionSet                                          |
+| `results`    | `listCompletedWorkOrders`         |    4 full scans     |   **1**   | WO → patient + samples.exam via selectionSet                      |
+| `results`    | `getWorkOrderConsolidatedResults` |          3          |   **1**   | WO → deep selectionSet                                            |
 
 ### 8.2 Concrete Selection Sets
 
@@ -667,19 +666,18 @@ if (errors?.length || !sample?.id) return null;
 
 const examIds = sample.exam?.id ? [sample.exam.id] : [];
 const [sampleAudits, woAudits, ...examAudits] = await Promise.all([
-  client.models.AuditEvent.list({ filter: { and: [
-    { entityType: { eq: "SAMPLE" } },
-    { entityId: { eq: sampleId } },
-  ]}}),
-  client.models.AuditEvent.list({ filter: { and: [
-    { entityType: { eq: "WORK_ORDER" } },
-    { entityId: { eq: sample.workOrder.id } },
-  ]}}),
+  client.models.AuditEvent.list({
+    filter: { and: [{ entityType: { eq: "SAMPLE" } }, { entityId: { eq: sampleId } }] },
+  }),
+  client.models.AuditEvent.list({
+    filter: {
+      and: [{ entityType: { eq: "WORK_ORDER" } }, { entityId: { eq: sample.workOrder.id } }],
+    },
+  }),
   ...examIds.map((id) =>
-    client.models.AuditEvent.list({ filter: { and: [
-      { entityType: { eq: "EXAM" } },
-      { entityId: { eq: id } },
-    ]}})
+    client.models.AuditEvent.list({
+      filter: { and: [{ entityType: { eq: "EXAM" } }, { entityId: { eq: id } }] },
+    })
   ),
 ]);
 ```
@@ -714,13 +712,13 @@ page.tsx (RSC, sync layout)
 
 This follows the **Vercel composition pattern**: the RSC async component owns data fetching, the client component owns interaction state. State is dependency-injected via a provider — the client shell doesn't know or care how data was fetched.
 
-| Route | Current | Target |
-|-------|---------|--------|
-| `/recepcion` | Client-only (`useEffect`) | RSC with Suspense → client shell |
-| `/technician` | RSC (dashboard), client (muestras) | All RSC with Suspense |
-| `/technician/muestras` | Client `useEffect` → server action | RSC with Suspense; URL-driven filters |
-| `/technician/muestras/process/[id]` | RSC | Already correct — refine selectionSet |
-| `/supervisor/*` | RSC | Already correct — refine queries |
+| Route                               | Current                            | Target                                |
+| ----------------------------------- | ---------------------------------- | ------------------------------------- |
+| `/recepcion`                        | Client-only (`useEffect`)          | RSC with Suspense → client shell      |
+| `/technician`                       | RSC (dashboard), client (muestras) | All RSC with Suspense                 |
+| `/technician/muestras`              | Client `useEffect` → server action | RSC with Suspense; URL-driven filters |
+| `/technician/muestras/process/[id]` | RSC                                | Already correct — refine selectionSet |
+| `/supervisor/*`                     | RSC                                | Already correct — refine queries      |
 
 ### 9.2 Recepción Conversion to RSC
 
@@ -778,7 +776,7 @@ async function ReceptionDataLoader({ searchParams }) {
   const orders = await listReceptionOrders(parseFilters(searchParams));
   return (
     <ReceptionInboxClient
-      orders={orders.map(o => ({
+      orders={orders.map((o) => ({
         id: o.id,
         accessionNumber: o.accessionNumber,
         patientName: o.patientName,
@@ -815,19 +813,20 @@ function ReceptionProvider({
   const [filters, setFilters] = useState(initialFilters);
   const router = useRouter();
 
-  const actions = useMemo(() => ({
-    updateFilter: (key: string, value: string) => {
-      const params = new URLSearchParams(window.location.search);
-      params.set(key, value);
-      router.push(`?${params.toString()}`);
-    },
-    refreshOrders: () => router.refresh(),
-  }), [router]);
+  const actions = useMemo(
+    () => ({
+      updateFilter: (key: string, value: string) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set(key, value);
+        router.push(`?${params.toString()}`);
+      },
+      refreshOrders: () => router.refresh(),
+    }),
+    [router]
+  );
 
   return (
-    <ReceptionContext value={{ state: { orders, filters }, actions }}>
-      {children}
-    </ReceptionContext>
+    <ReceptionContext value={{ state: { orders, filters }, actions }}>{children}</ReceptionContext>
   );
 }
 ```
@@ -860,9 +859,15 @@ Instead of one component with `isThread`, `isEditing`, `isDMThread` booleans, cr
 
 ```tsx
 // Explicit variants for different reception views
-function ReceptionInboxView() { /* queue list */ }
-function ReceptionScanView() { /* barcode scanner */ }
-function ReceptionDetailView({ orderId }: { orderId: string }) { /* order detail */ }
+function ReceptionInboxView() {
+  /* queue list */
+}
+function ReceptionScanView() {
+  /* barcode scanner */
+}
+function ReceptionDetailView({ orderId }: { orderId: string }) {
+  /* order detail */
+}
 ```
 
 ---
@@ -876,17 +881,13 @@ Wrap repository functions called multiple times within a single RSC render:
 ```typescript
 import { cache } from "react";
 
-export const getProcessContext = cache(
-  async (sampleId: string): Promise<ProcessContext | null> => {
-    // ... implementation
-  }
-);
+export const getProcessContext = cache(async (sampleId: string): Promise<ProcessContext | null> => {
+  // ... implementation
+});
 
-export const getDashboardStats = cache(
-  async (): Promise<SupervisorDashboardStats> => {
-    // ... implementation
-  }
-);
+export const getDashboardStats = cache(async (): Promise<SupervisorDashboardStats> => {
+  // ... implementation
+});
 ```
 
 This ensures that if `getDashboardStats` is called from both a stats component and a notification badge in the same render, only one Amplify query executes.
@@ -924,13 +925,13 @@ const examTypeCache = new LRUCache<string, Map<string, string>>({
 
 ### 11.4 Revalidation Rules
 
-| Trigger | Strategy |
-|---------|----------|
-| Mutation completes | `router.refresh()` from client (re-runs RSC tree) |
-| Broad invalidation needed | `revalidatePath(route)` in server action |
-| Cache keys | Must include normalized filter input |
-| Mutation actions | Never cache |
-| Rapidly changing operational views | Request-level dedupe only (no long TTL) |
+| Trigger                            | Strategy                                          |
+| ---------------------------------- | ------------------------------------------------- |
+| Mutation completes                 | `router.refresh()` from client (re-runs RSC tree) |
+| Broad invalidation needed          | `revalidatePath(route)` in server action          |
+| Cache keys                         | Must include normalized filter input              |
+| Mutation actions                   | Never cache                                       |
+| Rapidly changing operational views | Request-level dedupe only (no long TTL)           |
 
 ---
 
@@ -948,7 +949,9 @@ export function parseResults(value: unknown): Record<string, unknown> | null {
     try {
       const parsed = JSON.parse(value);
       if (parsed && typeof parsed === "object") return parsed as Record<string, unknown>;
-    } catch { /* invalid JSON */ }
+    } catch {
+      /* invalid JSON */
+    }
     return null;
   }
   if (typeof value === "object") return value as Record<string, unknown>;
@@ -961,7 +964,7 @@ export function parseResults(value: unknown): Record<string, unknown> | null {
 ```typescript
 export function buildPatientFullName(
   firstName: string | null | undefined,
-  lastName: string | null | undefined,
+  lastName: string | null | undefined
 ): string {
   return `${firstName ?? ""} ${lastName ?? ""}`.trim() || "Desconocido";
 }
@@ -986,12 +989,11 @@ When using `selectionSet`, Amplify narrows the return type. Use the `SelectionSe
 import type { SelectionSet } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
 
-const PROCESS_CONTEXT_SELECTION = [/* ... */] as const;
+const PROCESS_CONTEXT_SELECTION = [
+  /* ... */
+] as const;
 
-type ProcessSampleData = SelectionSet<
-  Schema["Sample"]["type"],
-  typeof PROCESS_CONTEXT_SELECTION
->;
+type ProcessSampleData = SelectionSet<Schema["Sample"]["type"], typeof PROCESS_CONTEXT_SELECTION>;
 ```
 
 This gives full type safety on the returned object — `sample.exam.status` is typed, `sample.exam.nonexistent` is a compile error. Combined with `as const` on the selection array, the TypeScript compiler can validate that every field access in your mapping code corresponds to a field in the selection set.
@@ -1003,12 +1005,14 @@ This gives full type safety on the returned object — `sample.exam.status` is t
 ### 14.1 `/recepcion`
 
 **Target state:**
+
 - Move initial list fetch to RSC page loader (`page.tsx` async + Suspense).
 - Client provider receives `initialOrders` + `initialNextToken`.
 - Scanning and mutations remain server actions, using standardized action result contract.
 - Filters driven by URL searchParams.
 
 **Query improvements:**
+
 - 1 main query with `RECEPTION_WO_SELECTION` (WO + patient + samples).
 - ExamType cached via `React.cache()`.
 - Eliminate per-order `Sample.list` fan-out.
@@ -1016,11 +1020,13 @@ This gives full type safety on the returned object — `sample.exam.status` is t
 ### 14.2 `/technician`
 
 **Target state:**
+
 - `/technician` dashboard already close to desired model (RSC + Suspense + cache).
 - `/technician/muestras` moves from client-on-mount to SSR initial hydration.
 - Client provider handles only interactive workstation state.
 
 **Query improvements:**
+
 - Preserve optimized `listTechnicianSamples` selection strategy.
 - Refactor `getSampleDetail` using `SAMPLE_DETAIL_SELECTION` + parallel AuditEvent queries.
 - Refactor `getProcessContext` to one `Sample.get` with relationship selection.
@@ -1028,11 +1034,13 @@ This gives full type safety on the returned object — `sample.exam.status` is t
 ### 14.3 `/supervisor`
 
 **Target state:**
+
 - Maintain RSC-first baseline across dashboard, validaciones, resultados, analitica, incidencias, auditoria.
 - Enforce shared filter parser + cache key normalization for all URL-driven lists.
 - Parallel Suspense boundaries for dashboard sections.
 
 **Query improvements:**
+
 - `listPendingValidation`: single query with `VALIDATION_EXAM_SELECTION`.
 - `getValidationDetail`: single query via `Exam.get` with same selection.
 - `listCompletedWorkOrders`: single query with `RESULTS_WO_SELECTION`.
@@ -1047,62 +1055,62 @@ This gives full type safety on the returned object — `sample.exam.status` is t
 
 Refactor repository files only. No changes to components, actions, or page structure.
 
-| Task | File | Impact |
-|------|------|--------|
-| 1a. Extract shared utilities | New `shared.ts`, `clinical-flags.ts` | Deduplication |
-| 1b. Fix `getProcessContext` | `process-repository.ts` | 2 → 1 round trip |
-| 1c. Optimize `getSampleDetail` | `technician-repository.ts` | 4+ → 2 round trips |
-| 1d. Optimize `listReceptionOrders` | `reception-repository.ts` | 3 → 1+1 round trips |
-| 1e. Optimize `lookupOrderByCode` | `reception-repository.ts` | 3 → 1+1 round trips |
-| 1f. Optimize `listPendingValidation` | `supervisor-repository.ts` | 4 → 1 round trip |
-| 1g. Optimize `getValidationDetail` | `supervisor-repository.ts` | 4 → 1 round trip |
-| 1h. Optimize `listCompletedWorkOrders` | `results-repository.ts` | 4 scans → 1 query |
-| 1i. Optimize `getWorkOrderConsolidatedResults` | `results-repository.ts` | 3 → 1 round trip |
-| 1j. Add error handling to all queries | All repositories | Observability |
+| Task                                           | File                                 | Impact              |
+| ---------------------------------------------- | ------------------------------------ | ------------------- |
+| 1a. Extract shared utilities                   | New `shared.ts`, `clinical-flags.ts` | Deduplication       |
+| 1b. Fix `getProcessContext`                    | `process-repository.ts`              | 2 → 1 round trip    |
+| 1c. Optimize `getSampleDetail`                 | `technician-repository.ts`           | 4+ → 2 round trips  |
+| 1d. Optimize `listReceptionOrders`             | `reception-repository.ts`            | 3 → 1+1 round trips |
+| 1e. Optimize `lookupOrderByCode`               | `reception-repository.ts`            | 3 → 1+1 round trips |
+| 1f. Optimize `listPendingValidation`           | `supervisor-repository.ts`           | 4 → 1 round trip    |
+| 1g. Optimize `getValidationDetail`             | `supervisor-repository.ts`           | 4 → 1 round trip    |
+| 1h. Optimize `listCompletedWorkOrders`         | `results-repository.ts`              | 4 scans → 1 query   |
+| 1i. Optimize `getWorkOrderConsolidatedResults` | `results-repository.ts`              | 3 → 1 round trip    |
+| 1j. Add error handling to all queries          | All repositories                     | Observability       |
 
 **Validation**: Run existing pages. Since repositories return the same shapes, UI should be unchanged. Compare response times before/after.
 
 ### Phase 2: SSR Conversion (Recepción)
 
-| Task | File | Impact |
-|------|------|--------|
-| 2a. Create `ReceptionDataLoader` async RSC | New component | SSR initial data |
-| 2b. Convert `page.tsx` to use Suspense + loader | `recepcion/page.tsx` | Server-rendered list |
-| 2c. Adapt `ReceptionInboxClient` to accept `initialOrders` prop | Existing component | Hydrate from RSC |
-| 2d. Convert filter changes to `router.push` with searchParams | Client component | URL-driven refetch |
-| 2e. Remove `useEffect` data fetching from `useReceptionInbox` | Hook | Eliminate client fetch |
+| Task                                                            | File                 | Impact                 |
+| --------------------------------------------------------------- | -------------------- | ---------------------- |
+| 2a. Create `ReceptionDataLoader` async RSC                      | New component        | SSR initial data       |
+| 2b. Convert `page.tsx` to use Suspense + loader                 | `recepcion/page.tsx` | Server-rendered list   |
+| 2c. Adapt `ReceptionInboxClient` to accept `initialOrders` prop | Existing component   | Hydrate from RSC       |
+| 2d. Convert filter changes to `router.push` with searchParams   | Client component     | URL-driven refetch     |
+| 2e. Remove `useEffect` data fetching from `useReceptionInbox`   | Hook                 | Eliminate client fetch |
 
 ### Phase 3: SSR Conversion (Technician Muestras)
 
-| Task | File | Impact |
-|------|------|--------|
-| 3a. Create `MuestrasDataLoader` async RSC | New component | SSR initial data |
-| 3b. Convert `page.tsx` to use Suspense + loader | `muestras/page.tsx` | Server-rendered list |
-| 3c. Adapt `TechnicianWorkstationProvider` to accept `initialSamples` | Provider | Hydrate from RSC |
-| 3d. Keep `getSampleDetail` as server action for panel | Action | Interaction-triggered |
+| Task                                                                 | File                | Impact                |
+| -------------------------------------------------------------------- | ------------------- | --------------------- |
+| 3a. Create `MuestrasDataLoader` async RSC                            | New component       | SSR initial data      |
+| 3b. Convert `page.tsx` to use Suspense + loader                      | `muestras/page.tsx` | Server-rendered list  |
+| 3c. Adapt `TechnicianWorkstationProvider` to accept `initialSamples` | Provider            | Hydrate from RSC      |
+| 3d. Keep `getSampleDetail` as server action for panel                | Action              | Interaction-triggered |
 
 ### Phase 4: Suspense Boundary Refinement (All Routes)
 
-| Task | Impact |
-|------|--------|
-| 4a. Add parallel Suspense boundaries to supervisor dashboard | Independent streaming |
-| 4b. Add Suspense boundary for technician detail panel | Non-blocking detail load |
-| 4c. Add Suspense boundary for analytics detailed charts | Progressive loading |
-| 4d. Create domain-specific skeleton components | Polished loading states |
-| 4e. Add `loading.tsx` to all major route segments | Route-level instant feedback |
+| Task                                                         | Impact                       |
+| ------------------------------------------------------------ | ---------------------------- |
+| 4a. Add parallel Suspense boundaries to supervisor dashboard | Independent streaming        |
+| 4b. Add Suspense boundary for technician detail panel        | Non-blocking detail load     |
+| 4c. Add Suspense boundary for analytics detailed charts      | Progressive loading          |
+| 4d. Create domain-specific skeleton components               | Polished loading states      |
+| 4e. Add `loading.tsx` to all major route segments            | Route-level instant feedback |
 
 ---
 
 ## 16. Performance Expectations
 
-| Metric | Current (worst case) | After Phase 1 | After Phase 2–4 |
-|--------|---------------------|---------------|-----------------|
-| `getProcessContext` latency | ~600ms (2 sequential calls) | ~300ms (1 call) | ~300ms |
-| `listPendingValidation` latency | ~1200ms (4 sequential rounds) | ~300ms (1 call) | ~300ms |
-| `listReceptionOrders` latency | ~900ms (3 rounds, N+1) | ~400ms (1+1 calls) | TTFB ~400ms, streams via Suspense |
-| `listCompletedWorkOrders` | ~800ms (4 full scans) | ~400ms (1 scan) | ~400ms, streams via Suspense |
-| Recepción Time to Interactive | ~1.5s (client fetch after hydration) | ~1.5s (unchanged) | ~600ms (SSR, no client fetch) |
-| Technician Muestras TTI | ~1.2s (client fetch after hydration) | ~1.2s (unchanged) | ~500ms (SSR) |
+| Metric                          | Current (worst case)                 | After Phase 1      | After Phase 2–4                   |
+| ------------------------------- | ------------------------------------ | ------------------ | --------------------------------- |
+| `getProcessContext` latency     | ~600ms (2 sequential calls)          | ~300ms (1 call)    | ~300ms                            |
+| `listPendingValidation` latency | ~1200ms (4 sequential rounds)        | ~300ms (1 call)    | ~300ms                            |
+| `listReceptionOrders` latency   | ~900ms (3 rounds, N+1)               | ~400ms (1+1 calls) | TTFB ~400ms, streams via Suspense |
+| `listCompletedWorkOrders`       | ~800ms (4 full scans)                | ~400ms (1 scan)    | ~400ms, streams via Suspense      |
+| Recepción Time to Interactive   | ~1.5s (client fetch after hydration) | ~1.5s (unchanged)  | ~600ms (SSR, no client fetch)     |
+| Technician Muestras TTI         | ~1.2s (client fetch after hydration) | ~1.2s (unchanged)  | ~500ms (SSR)                      |
 
 Latency estimates assume ~300ms per Amplify/AppSync round trip. Actual gains depend on payload size and DynamoDB read units.
 
@@ -1110,15 +1118,15 @@ Latency estimates assume ~300ms per Amplify/AppSync round trip. Actual gains dep
 
 ## 17. Risks and Mitigations
 
-| Risk | Mitigation |
-|------|-----------|
-| Deep selection sets may return large payloads | Use field-level selection (`"patient.firstName"`) instead of `"patient.*"` where possible |
-| `hasMany` in selection sets returns unbounded lists | Amplify's GraphQL resolvers apply default limits; monitor payload sizes |
-| Recepción SSR conversion is a significant refactor | Phase 2 is isolated — the `ReceptionInboxClient` interface stays the same, only the data source changes |
-| `React.cache()` only deduplicates within a single request | Sufficient for SSR; for cross-request caching, consider LRU on ExamType |
-| AuditEvent queries remain multi-round-trip | No schema relationship exists; consider adding a `sampleId` index on AuditEvent or a dedicated audit relationship in a future schema revision |
-| RSC boundary serialization overhead on large datasets | Map to minimal DTOs before passing to client components; use pagination to bound result sets |
-| Filter-driven URL navigation causes full RSC re-render | This is intentional — it ensures data consistency. Use `useTransition` to keep the UI responsive during the re-render |
+| Risk                                                      | Mitigation                                                                                                                                    |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deep selection sets may return large payloads             | Use field-level selection (`"patient.firstName"`) instead of `"patient.*"` where possible                                                     |
+| `hasMany` in selection sets returns unbounded lists       | Amplify's GraphQL resolvers apply default limits; monitor payload sizes                                                                       |
+| Recepción SSR conversion is a significant refactor        | Phase 2 is isolated — the `ReceptionInboxClient` interface stays the same, only the data source changes                                       |
+| `React.cache()` only deduplicates within a single request | Sufficient for SSR; for cross-request caching, consider LRU on ExamType                                                                       |
+| AuditEvent queries remain multi-round-trip                | No schema relationship exists; consider adding a `sampleId` index on AuditEvent or a dedicated audit relationship in a future schema revision |
+| RSC boundary serialization overhead on large datasets     | Map to minimal DTOs before passing to client components; use pagination to bound result sets                                                  |
+| Filter-driven URL navigation causes full RSC re-render    | This is intentional — it ensures data consistency. Use `useTransition` to keep the UI responsive during the re-render                         |
 
 ---
 
@@ -1140,10 +1148,12 @@ Latency estimates assume ~300ms per Amplify/AppSync round trip. Actual gains dep
 ## 19. References
 
 ### Amplify
+
 - [Custom Selection Sets](https://docs.amplify.aws/nextjs/build-a-backend/data/query-data/#fetch-only-the-data-you-need-with-custom-selection-set)
 - [Relationship Modeling](https://docs.amplify.aws/nextjs/build-a-backend/data/data-modeling/relationships/)
 
 ### Next.js / React
+
 - [Next.js Data Patterns](https://nextjs.org/docs/app/building-your-application/data-fetching)
 - [Server Actions Authentication](https://nextjs.org/docs/app/guides/authentication)
 - [React.cache()](https://react.dev/reference/react/cache)
@@ -1151,6 +1161,7 @@ Latency estimates assume ~300ms per Amplify/AppSync round trip. Actual gains dep
 - [React `use()` API](https://react.dev/reference/react/use)
 
 ### Vercel Engineering Guidelines
+
 - **Eliminating Waterfalls**: `async-parallel`, `async-suspense-boundaries`, `async-defer-await`
 - **Server Performance**: `server-cache-react`, `server-parallel-fetching`, `server-serialization`, `server-dedup-props`, `server-auth-actions`
 - **Bundle Optimization**: `bundle-dynamic-imports`, `bundle-defer-third-party`

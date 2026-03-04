@@ -11,14 +11,14 @@ Results and notes from executing [test-cases.md](./test-cases.md).
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Page loads | Pass — "Órdenes entrantes" header visible |
-| Table | Pass — List of orders with patient name, priority, tests, status |
-| Order status | Pass — All statuses show "Sin muestras" |
-| Filters | Pass — Quick filters work |
-| Search | Pass — Search works |
-| Badge | Pass — "X pendientes" shows correct count |
+| Check        | Result                                                           |
+| ------------ | ---------------------------------------------------------------- |
+| Page loads   | Pass — "Órdenes entrantes" header visible                        |
+| Table        | Pass — List of orders with patient name, priority, tests, status |
+| Order status | Pass — All statuses show "Sin muestras"                          |
+| Filters      | Pass — Quick filters work                                        |
+| Search       | Pass — Search works                                              |
+| Badge        | Pass — "X pendientes" shows correct count                        |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -40,13 +40,13 @@ Results and notes from executing [test-cases.md](./test-cases.md).
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| "Generar muestras" enabled for "Sin muestras" | Pass |
-| During generate: loading state, modal opens | Pass |
+| Check                                              | Result                                                                 |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| "Generar muestras" enabled for "Sin muestras"      | Pass                                                                   |
+| During generate: loading state, modal opens        | Pass                                                                   |
 | After success: modal shows specimens with barcodes | Pass — note: it takes a while to render the muestra codes in the modal |
-| No error | Pass |
-| Download PDF | Pass — download succeeds with correct codes |
+| No error                                           | Pass                                                                   |
+| Download PDF                                       | Pass — download succeeds with correct codes                            |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -65,14 +65,14 @@ Results and notes from executing [test-cases.md](./test-cases.md).
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Before PDF download: "Listo" disabled, "Descargar PDF" enabled | Pass |
-| After PDF download: "Listo" becomes enabled | Pass — note: if "Descargar" is clicked before labels are rendered in the modal, the PDF prints nothing |
-| After "Listo": dialog closes; order status updates; table refreshes | Pass |
-| Samples appear in technician muestras queue | Pass — samples and work order show properly |
-| Reimprimir | Pass — works properly |
-| DB: All samples for WorkOrder `status` = `ready_for_lab` | Pass |
+| Check                                                               | Result                                                                                                 |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Before PDF download: "Listo" disabled, "Descargar PDF" enabled      | Pass                                                                                                   |
+| After PDF download: "Listo" becomes enabled                         | Pass — note: if "Descargar" is clicked before labels are rendered in the modal, the PDF prints nothing |
+| After "Listo": dialog closes; order status updates; table refreshes | Pass                                                                                                   |
+| Samples appear in technician muestras queue                         | Pass — samples and work order show properly                                                            |
+| Reimprimir                                                          | Pass — works properly                                                                                  |
+| DB: All samples for WorkOrder `status` = `ready_for_lab`            | Pass                                                                                                   |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -94,14 +94,14 @@ Results and notes from executing [test-cases.md](./test-cases.md).
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Login as technician → navigates to technician dashboard | Pass |
-| Dashboard metrics reflect real data | Pass — 0 Completadas, 8 Recibidas, 0 Pendientes, 0 Urgentes (at time of test) |
-| Muestras table | Pass — samples listed; for this run only "Received" estado shown in UI |
-| Row content | Pass — patient name, test type, priority, status, wait time set up properly |
-| Filters | Pass — work properly |
-| Search bar | Pass — works properly |
+| Check                                                   | Result                                                                        |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Login as technician → navigates to technician dashboard | Pass                                                                          |
+| Dashboard metrics reflect real data                     | Pass — 0 Completadas, 8 Recibidas, 0 Pendientes, 0 Urgentes (at time of test) |
+| Muestras table                                          | Pass — samples listed; for this run only "Received" estado shown in UI        |
+| Row content                                             | Pass — patient name, test type, priority, status, wait time set up properly   |
+| Filters                                                 | Pass — work properly                                                          |
+| Search bar                                              | Pass — works properly                                                         |
 
 **Context:** Samples that exist in DB with only `labeled` status (e.g. from flows where the reception modal was closed without "Listo") do not appear in the technician queue, which is expected — the queue shows only `ready_for_lab`, `received`, `inprogress`, `completed`, `rejected`.
 
@@ -118,13 +118,13 @@ None. State management for dashboard and muestras queue appears to be handled pr
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Scan success: sample is located | Pass — detail panel opens or sample is highlighted |
-| Scan failure: invalid/unknown barcode | Pass — random input (e.g. "ASDFA") shows error message |
-| No duplicate | Pass — (meaning: scanning the same barcode again does not create duplicate Sample/Exam records; scan is lookup-only, no extra DB writes) |
-| DB: No status change from scan alone | Pass — scan does not change Sample status |
-| Audit event for scan | **Fail** — no audit event is written when a sample is scanned |
+| Check                                 | Result                                                                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Scan success: sample is located       | Pass — detail panel opens or sample is highlighted                                                                                       |
+| Scan failure: invalid/unknown barcode | Pass — random input (e.g. "ASDFA") shows error message                                                                                   |
+| No duplicate                          | Pass — (meaning: scanning the same barcode again does not create duplicate Sample/Exam records; scan is lookup-only, no extra DB writes) |
+| DB: No status change from scan alone  | Pass — scan does not change Sample status                                                                                                |
+| Audit event for scan                  | **Fail** — no audit event is written when a sample is scanned                                                                            |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -143,14 +143,14 @@ None. State management for dashboard and muestras queue appears to be handled pr
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Samples in DB with `ready_for_lab` show in queue | Pass |
-| "Recibir" visible for samples in ready_for_lab state | Pass |
-| After success: DB status changes to `received` | Pass |
-| UI state after "Recibir" | Pass — UI label stays "Received" (same before and after; consider checking if a visible transition is needed) |
-| Error case: already-received sample | Pass — clicking "Recibir" again shows "Solo muestras listas para lab pueden marcarse recibidas" |
-| Audit event `SPECIMEN_RECEIVED` in DB | Pass — shows properly in the database |
+| Check                                                | Result                                                                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Samples in DB with `ready_for_lab` show in queue     | Pass                                                                                                          |
+| "Recibir" visible for samples in ready_for_lab state | Pass                                                                                                          |
+| After success: DB status changes to `received`       | Pass                                                                                                          |
+| UI state after "Recibir"                             | Pass — UI label stays "Received" (same before and after; consider checking if a visible transition is needed) |
+| Error case: already-received sample                  | Pass — clicking "Recibir" again shows "Solo muestras listas para lab pueden marcarse recibidas"               |
+| Audit event `SPECIMEN_RECEIVED` in DB                | Pass — shows properly in the database                                                                         |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -166,17 +166,17 @@ None. State management for dashboard and muestras queue appears to be handled pr
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| "Procesar" visible for received samples | Pass |
-| "Procesar" shown only for received | **Fail** — "Procesar" is also available for samples not yet received; should be changed so only received samples can be processed |
-| Error when "Procesar" on non-received sample | Pass — "Solo muestras recibidas pueden marcarse en proceso" shown |
-| Navigates to `/technician/muestras/process/[sampleId]` | Pass |
-| Process page: header, exam type name, form sections from fieldSchema | Pass |
-| Form fields: string, numeric, enum render properly | Pass |
-| DB: Sample `status` = `inprogress` | Pass |
-| DB: Exam `status` = `inprogress`, `performedBy` set | Pass |
-| Audit: `SPECIMEN_IN_PROGRESS` for sample | Pass |
+| Check                                                                | Result                                                                                                                            |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| "Procesar" visible for received samples                              | Pass                                                                                                                              |
+| "Procesar" shown only for received                                   | **Fail** — "Procesar" is also available for samples not yet received; should be changed so only received samples can be processed |
+| Error when "Procesar" on non-received sample                         | Pass — "Solo muestras recibidas pueden marcarse en proceso" shown                                                                 |
+| Navigates to `/technician/muestras/process/[sampleId]`               | Pass                                                                                                                              |
+| Process page: header, exam type name, form sections from fieldSchema | Pass                                                                                                                              |
+| Form fields: string, numeric, enum render properly                   | Pass                                                                                                                              |
+| DB: Sample `status` = `inprogress`                                   | Pass                                                                                                                              |
+| DB: Exam `status` = `inprogress`, `performedBy` set                  | Pass                                                                                                                              |
+| Audit: `SPECIMEN_IN_PROGRESS` for sample                             | Pass                                                                                                                              |
 
 **Exam types opened during test:** Hemograma (SMP-ORD-2025-001-02), Uroanálisis (SMP-ORD-2025-001-01), Coproanálisis (SMP-ORD-2025-003-02 — Macroscópico). Everything rendered and behaved as expected.
 
@@ -196,15 +196,15 @@ Tests run on three exam types: **Coproanálisis** (SMP-ORD-2025-003-02), **Uroan
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Dirty state: "Guardar borrador" enabled when form has changes | Pass |
-| During save: loading; both "Enviar a validación" and "Guardar borrador" disabled | Pass |
-| Form remains editable after save | Pass |
-| After success: toast "Borrador guardado"; dirty clears; button re-enables | **Inconsistent** — Coproanálisis: no toast, unclear if saved, button stayed disabled; Uroanálisis & Hemograma: button re-enabled after load, clearer |
-| Local storage / autosave | Pass — values persist to localStorage; editing updates localStorage; autosave works |
-| DB: Exam `results` JSON updated | **Fail** — no JSON updated in DB for the entered values across all three tests |
-| Audit: `EXAM_RESULTS_SAVED` (draft) | **Fail** — audit shows nothing new for any of the three draft-save attempts |
+| Check                                                                            | Result                                                                                                                                               |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dirty state: "Guardar borrador" enabled when form has changes                    | Pass                                                                                                                                                 |
+| During save: loading; both "Enviar a validación" and "Guardar borrador" disabled | Pass                                                                                                                                                 |
+| Form remains editable after save                                                 | Pass                                                                                                                                                 |
+| After success: toast "Borrador guardado"; dirty clears; button re-enables        | **Inconsistent** — Coproanálisis: no toast, unclear if saved, button stayed disabled; Uroanálisis & Hemograma: button re-enabled after load, clearer |
+| Local storage / autosave                                                         | Pass — values persist to localStorage; editing updates localStorage; autosave works                                                                  |
+| DB: Exam `results` JSON updated                                                  | **Fail** — no JSON updated in DB for the entered values across all three tests                                                                       |
+| Audit: `EXAM_RESULTS_SAVED` (draft)                                              | **Fail** — audit shows nothing new for any of the three draft-save attempts                                                                          |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -229,17 +229,17 @@ Tests run on three exam types: **Coproanálisis** (SMP-ORD-2025-003-02), **Uroan
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Form has required values filled | Pass (precondition) |
-| "Enviar a validación" submits; loading state during request | Pass |
-| Success: toast "Enviado a validación"; redirect to `/technician/muestras` | **Fail** — no toast, no redirect at all |
-| Error feedback | **Fail** — no error on dev server, no error state in UI; silent failure |
-| DB: Exam `status` = `ready_for_validation` | **Fail** — still in progress |
-| DB: Exam `results` = submitted values | **Fail** — results do not show submitted values |
-| DB: Exam `resultedAt` set | **Fail** — not set (performedBy was already set from earlier steps) |
-| DB: Sample `status` = `completed` (when all exams sent) | **Fail** — Sample still inprogress |
-| Audit: EXAM_RESULTS_SAVED (finalized), EXAM_SENT_TO_VALIDATION, SPECIMEN_COMPLETED | **Fail** — no audit events |
+| Check                                                                              | Result                                                                  |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Form has required values filled                                                    | Pass (precondition)                                                     |
+| "Enviar a validación" submits; loading state during request                        | Pass                                                                    |
+| Success: toast "Enviado a validación"; redirect to `/technician/muestras`          | **Fail** — no toast, no redirect at all                                 |
+| Error feedback                                                                     | **Fail** — no error on dev server, no error state in UI; silent failure |
+| DB: Exam `status` = `ready_for_validation`                                         | **Fail** — still in progress                                            |
+| DB: Exam `results` = submitted values                                              | **Fail** — results do not show submitted values                         |
+| DB: Exam `resultedAt` set                                                          | **Fail** — not set (performedBy was already set from earlier steps)     |
+| DB: Sample `status` = `completed` (when all exams sent)                            | **Fail** — Sample still inprogress                                      |
+| Audit: EXAM_RESULTS_SAVED (finalized), EXAM_SENT_TO_VALIDATION, SPECIMEN_COMPLETED | **Fail** — no audit events                                              |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -257,11 +257,11 @@ Submit shows loading then nothing: no success toast, no redirect to muestras, no
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Navigate with dirty: confirmation dialog shows | Pass |
-| Confirm leave (accept): redirects away from page | Pass |
-| Cancel: stays on page; form state preserved | Pass |
+| Check                                            | Result |
+| ------------------------------------------------ | ------ |
+| Navigate with dirty: confirmation dialog shows   | Pass   |
+| Confirm leave (accept): redirects away from page | Pass   |
+| Cancel: stays on page; form state preserved      | Pass   |
 
 ### Notes / Findings
 
@@ -276,12 +276,12 @@ None.
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
-| Banner: "Hay un borrador guardado localmente" with Recuperar / Descartar | Pass |
-| Recuperar: restores draft into form; banner dismisses; form dirty | Pass |
-| Descartar: clears draft; banner dismisses; form uses server values | Pass |
-| Navigating back to in-progress exam from `/technician/muestras` | **Fail** — see notes below |
+| Check                                                                    | Result                     |
+| ------------------------------------------------------------------------ | -------------------------- |
+| Banner: "Hay un borrador guardado localmente" with Recuperar / Descartar | Pass                       |
+| Recuperar: restores draft into form; banner dismisses; form dirty        | Pass                       |
+| Descartar: clears draft; banner dismisses; form uses server values       | Pass                       |
+| Navigating back to in-progress exam from `/technician/muestras`          | **Fail** — see notes below |
 
 ### Notes / Findings (do not fix in this pass — document only)
 
@@ -297,10 +297,10 @@ None.
 
 ### Verification
 
-| Check | Result |
-|-------|--------|
+| Check                                                                   | Result           |
+| ----------------------------------------------------------------------- | ---------------- |
 | Tab B submit shows conflict message "Otro usuario modificó este examen" | **Not testable** |
-| Conflict banner: Recargar / Cerrar | **Not testable** |
+| Conflict banner: Recargar / Cerrar                                      | **Not testable** |
 
 ### Notes / Findings (do not fix in this pass — document only)
 

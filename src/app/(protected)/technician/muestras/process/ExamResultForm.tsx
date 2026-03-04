@@ -36,7 +36,7 @@ const ExamResultFields = dynamic(
       </div>
     ),
     ssr: false,
-  },
+  }
 );
 
 type ResultsFormValues = ResultsRecord;
@@ -89,7 +89,7 @@ export function ExamResultForm({
   const helpers = {
     getValues: form.getValues as () => ResultsFormValues,
     handleSubmit: form.handleSubmit as (
-      fn: (values: ResultsFormValues) => void,
+      fn: (values: ResultsFormValues) => void
     ) => (e?: React.BaseSyntheticEvent) => void,
     formState: {
       isDirty: form.formState.isDirty,

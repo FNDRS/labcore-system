@@ -44,13 +44,11 @@ function normalizeFeedFilters(filters: IncidentFeedFilters): IncidentFeedFilters
 }
 
 function normalizePagination(
-  pagination: IncidentFeedPagination | undefined,
+  pagination: IncidentFeedPagination | undefined
 ): IncidentFeedPagination {
   const rawLimit = pagination?.limit ?? 20;
   const limit =
-    Number.isFinite(rawLimit) && rawLimit > 0
-      ? Math.min(Math.floor(rawLimit), 100)
-      : 20;
+    Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 100) : 20;
   return {
     limit,
     cursor: pagination?.cursor?.trim() || null,
@@ -89,7 +87,7 @@ const fetchIncidentFeedCached = cache(
     await requireSupervisorAuth();
     const { filters, pagination } = parseFeedRequestCacheKey(requestCacheKey);
     return listIncidentFeed(filters, pagination);
-  },
+  }
 );
 
 const fetchIncidentSummaryCached = cache(
@@ -97,7 +95,7 @@ const fetchIncidentSummaryCached = cache(
     await requireSupervisorAuth();
     const range = parseRangeCacheKey(rangeCacheKey);
     return getIncidentSummaryCards(range);
-  },
+  }
 );
 
 const fetchIncidentPatternsCached = cache(
@@ -105,12 +103,12 @@ const fetchIncidentPatternsCached = cache(
     await requireSupervisorAuth();
     const range = parseRangeCacheKey(rangeCacheKey);
     return getIncidentPatterns(range);
-  },
+  }
 );
 
 export async function fetchIncidentFeedAction(
   filters: IncidentFeedFilters,
-  pagination?: IncidentFeedPagination,
+  pagination?: IncidentFeedPagination
 ): Promise<IncidentFeedPage> {
   const normalizedFilters = normalizeFeedFilters(filters);
   const normalizedPagination = normalizePagination(pagination);
@@ -122,14 +120,14 @@ export async function fetchIncidentFeedAction(
 }
 
 export async function fetchIncidentSummaryAction(
-  range: AnalyticsTimeRange,
+  range: AnalyticsTimeRange
 ): Promise<IncidentSummaryCards> {
   const normalizedRange = normalizeRange(range);
   return fetchIncidentSummaryCached(JSON.stringify(normalizedRange));
 }
 
 export async function fetchIncidentPatternsAction(
-  range: AnalyticsTimeRange,
+  range: AnalyticsTimeRange
 ): Promise<IncidentPattern> {
   const normalizedRange = normalizeRange(range);
   return fetchIncidentPatternsCached(JSON.stringify(normalizedRange));

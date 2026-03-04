@@ -1,13 +1,7 @@
 "use client";
 
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -62,20 +56,8 @@ export function DoctorVolumeChart({ data }: DoctorVolumeChartProps) {
                 width={120}
                 className="text-[11px]"
               />
-              <XAxis
-                type="number"
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    hideLabel
-                    indicator="dot"
-                  />
-                }
-              />
+              <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent hideLabel indicator="dot" />} />
               <Bar
                 dataKey="workOrderCount"
                 fill="var(--color-workOrderCount)"

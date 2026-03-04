@@ -375,7 +375,9 @@ export function AppSidebar() {
                 href="/support"
                 onClick={() => setPendingHref("/support")}
                 aria-busy={pendingHref === "/support"}
-                className={pendingHref === "/support" ? "pointer-events-none opacity-90" : undefined}
+                className={
+                  pendingHref === "/support" ? "pointer-events-none opacity-90" : undefined
+                }
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center text-zinc-500">
                   {pendingHref === "/support" ? (

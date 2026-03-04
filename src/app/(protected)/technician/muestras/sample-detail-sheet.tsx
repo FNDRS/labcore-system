@@ -24,7 +24,9 @@ function getExamsFromSample(sample: SampleWorkstationRow): SampleExam[] {
   ];
 }
 
-function getHistory(sample: SampleWorkstationRow | SampleWorkstationDetail): { at: string; event: string }[] {
+function getHistory(
+  sample: SampleWorkstationRow | SampleWorkstationDetail
+): { at: string; event: string }[] {
   return "history" in sample && Array.isArray(sample.history) ? sample.history : [];
 }
 
@@ -122,8 +124,7 @@ export function SampleDetailSheet({
                     <span className="font-medium">{exam.name}</span>
                     <ExamStatusBadge status={exam.status} />
                   </div>
-                  {(exam.backendStatus === "received" ||
-                    exam.backendStatus === "inprogress") && (
+                  {(exam.backendStatus === "received" || exam.backendStatus === "inprogress") && (
                     <Button
                       size="sm"
                       className="shrink-0 rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
@@ -152,17 +153,13 @@ export function SampleDetailSheet({
               <ul className="space-y-1.5 text-sm">
                 {history.map((h, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-muted-foreground shrink-0 font-mono text-xs">
-                      {h.at}
-                    </span>
+                    <span className="text-muted-foreground shrink-0 font-mono text-xs">{h.at}</span>
                     <span>{h.event}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground py-2 text-sm">
-                Sin eventos registrados.
-              </p>
+              <p className="text-muted-foreground py-2 text-sm">Sin eventos registrados.</p>
             )}
           </div>
         </div>

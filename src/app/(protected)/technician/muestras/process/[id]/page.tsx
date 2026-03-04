@@ -14,11 +14,6 @@ export default async function ProcessSamplePage({ params, searchParams }: Props)
   const { id } = await params;
   const { sampleId: displayBarcode } = await searchParams;
   const context = await getProcessContext(id);
-  const displayId = displayBarcode ?? (context?.sample?.barcode ?? `#${id.slice(0, 8)}`);
-  return (
-    <ProcessSampleWorkspace
-      context={context}
-      displayId={displayId}
-    />
-  );
+  const displayId = displayBarcode ?? context?.sample?.barcode ?? `#${id.slice(0, 8)}`;
+  return <ProcessSampleWorkspace context={context} displayId={displayId} />;
 }

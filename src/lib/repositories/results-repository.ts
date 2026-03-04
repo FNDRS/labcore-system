@@ -1,8 +1,10 @@
 "use server";
 
 import type { ExamStatus } from "@/lib/contracts";
+import { deriveClinicalFlag, hasReferenceRangeViolation } from "@/lib/clinical-flags";
 import { parseFieldSchema } from "@/lib/process/field-schema-types";
 import type { FieldSchema } from "@/lib/process/field-schema-types";
+import { buildPatientFullName, parseResults } from "@/lib/repositories/shared";
 import type {
   ConsolidatedExamResult,
   ConsolidatedWorkOrderResult,
@@ -13,107 +15,55 @@ import { cookieBasedClient } from "@/utils/amplifyServerUtils";
 
 const TERMINAL_EXAM_STATUSES = new Set<ExamStatus>(["approved", "rejected"]);
 const EMPTY_FIELD_SCHEMA: FieldSchema = { sections: [] };
-
-function parseResults(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value) as unknown;
-      if (parsed && typeof parsed === "object") {
-        return parsed as Record<string, unknown>;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-  if (typeof value === "object") {
-    return value as Record<string, unknown>;
-  }
-  return null;
-}
-
-function parseReferenceRange(
-  range: string | undefined,
-): { min: number; max: number } | null {
-  if (!range || typeof range !== "string") return null;
-  const match = range.match(/(\d+(?:\.\d+)?)\s*(?:-|\u2013)\s*(\d+(?:\.\d+)?)/);
-  if (!match) return null;
-  const min = Number.parseFloat(match[1]);
-  const max = Number.parseFloat(match[2]);
-  if (Number.isNaN(min) || Number.isNaN(max) || min > max) return null;
-  return { min, max };
-}
-
-function hasReferenceRangeViolation(
-  results: Record<string, unknown> | null,
-  fieldSchema: FieldSchema,
-): boolean {
-  if (!results) return false;
-  for (const section of fieldSchema.sections) {
-    for (const field of section.fields) {
-      if (field.type !== "numeric" || !field.referenceRange) continue;
-      const range = parseReferenceRange(field.referenceRange);
-      if (!range) continue;
-
-      const rawValue = results[field.key];
-      const value =
-        typeof rawValue === "number"
-          ? rawValue
-          : typeof rawValue === "string"
-            ? Number.parseFloat(rawValue)
-            : Number.NaN;
-
-      if (Number.isNaN(value)) continue;
-      if (value < range.min || value > range.max) return true;
-    }
-  }
-  return false;
-}
-
-function deriveClinicalFlag(
-  results: Record<string, unknown> | null,
-  fieldSchema: FieldSchema,
-): "normal" | "atencion" | "critico" {
-  if (!results) return "normal";
-
-  let isAttention = false;
-  for (const [key, rawValue] of Object.entries(results)) {
-    if (typeof rawValue !== "string") continue;
-    const normalized = rawValue.trim().toLowerCase();
-    if (!normalized) continue;
-
-    if (
-      normalized.includes("critico") ||
-      normalized.includes("critical") ||
-      normalized === "high" ||
-      normalized === "low"
-    ) {
-      return "critico";
-    }
-
-    if (
-      normalized.includes("atencion") ||
-      normalized.includes("attention") ||
-      (key.toLowerCase().includes("flag") && normalized !== "normal")
-    ) {
-      isAttention = true;
-    }
-  }
-
-  if (isAttention || hasReferenceRangeViolation(results, fieldSchema)) {
-    return "atencion";
-  }
-
-  return "normal";
-}
-
-function buildPatientFullName(
-  firstName: string | null | undefined,
-  lastName: string | null | undefined,
-): string {
-  return `${firstName ?? ""} ${lastName ?? ""}`.trim() || "Desconocido";
-}
+const RESULTS_WO_SELECTION = [
+  "id",
+  "accessionNumber",
+  "patientId",
+  "requestedAt",
+  "priority",
+  "status",
+  "referringDoctor",
+  "patient.id",
+  "patient.firstName",
+  "patient.lastName",
+  "samples.id",
+  "samples.examTypeId",
+  "samples.exam.id",
+  "samples.exam.status",
+  "samples.exam.validatedAt",
+] as const;
+const CONSOLIDATED_WO_SELECTION = [
+  "id",
+  "accessionNumber",
+  "status",
+  "requestedAt",
+  "priority",
+  "referringDoctor",
+  "patient.id",
+  "patient.firstName",
+  "patient.lastName",
+  "patient.dateOfBirth",
+  "patient.gender",
+  "samples.id",
+  "samples.barcode",
+  "samples.examTypeId",
+  "samples.exam.id",
+  "samples.exam.sampleId",
+  "samples.exam.examTypeId",
+  "samples.exam.status",
+  "samples.exam.results",
+  "samples.exam.startedAt",
+  "samples.exam.resultedAt",
+  "samples.exam.performedBy",
+  "samples.exam.notes",
+  "samples.exam.validatedBy",
+  "samples.exam.validatedAt",
+  "samples.examType.id",
+  "samples.examType.code",
+  "samples.examType.name",
+  "samples.examType.sampleType",
+  "samples.examType.fieldSchema",
+] as const;
 
 function toTime(value: string | null | undefined): number {
   if (!value) return 0;
@@ -123,7 +73,7 @@ function toTime(value: string | null | undefined): number {
 
 function matchesDateRange(
   requestedAt: string | null | undefined,
-  filters: Pick<ResultsListFilters, "from" | "to">,
+  filters: Pick<ResultsListFilters, "from" | "to">
 ): boolean {
   const requestedTime = toTime(requestedAt);
   if (!requestedTime) return !filters.from && !filters.to;
@@ -136,78 +86,46 @@ function matchesDateRange(
 }
 
 export async function listCompletedWorkOrders(
-  filters: ResultsListFilters = {},
+  filters: ResultsListFilters = {}
 ): Promise<ResultsListItem[]> {
-  const [workOrderResult, patientResult, sampleResult, examResult] =
-    await Promise.all([
-      cookieBasedClient.models.WorkOrder.list(),
-      cookieBasedClient.models.Patient.list(),
-      cookieBasedClient.models.Sample.list(),
-      cookieBasedClient.models.Exam.list(),
-    ]);
-
-  const workOrders = (workOrderResult.data ?? []).filter(
-    (workOrder): workOrder is NonNullable<typeof workOrder> =>
-      workOrder != null &&
-      typeof workOrder.id === "string" &&
-      typeof workOrder.patientId === "string",
-  );
-  const patientsById = new Map(
-    (patientResult.data ?? [])
-      .filter(
-        (patient): patient is NonNullable<typeof patient> =>
-          patient != null && typeof patient.id === "string",
-      )
-      .map((patient) => [patient.id, patient]),
-  );
-  const samplesByWorkOrderId = new Map<string, Array<NonNullable<(typeof sampleResult.data)[number]>>>();
-  for (const sample of sampleResult.data ?? []) {
-    if (!sample?.workOrderId) continue;
-    const existing = samplesByWorkOrderId.get(sample.workOrderId) ?? [];
-    existing.push(sample);
-    samplesByWorkOrderId.set(sample.workOrderId, existing);
-  }
-
-  const examsBySampleId = new Map<string, Array<NonNullable<(typeof examResult.data)[number]>>>();
-  for (const exam of examResult.data ?? []) {
-    if (!exam?.sampleId) continue;
-    const existing = examsBySampleId.get(exam.sampleId) ?? [];
-    existing.push(exam);
-    examsBySampleId.set(exam.sampleId, existing);
+  const { data: workOrders, errors } = await cookieBasedClient.models.WorkOrder.list({
+    selectionSet: RESULTS_WO_SELECTION,
+  });
+  if (errors?.length) {
+    console.error("[listCompletedWorkOrders] Amplify errors:", errors);
   }
 
   const items: ResultsListItem[] = [];
-  for (const workOrder of workOrders) {
-    const samples = samplesByWorkOrderId.get(workOrder.id) ?? [];
-    const exams = samples.flatMap((sample) => (sample.id ? examsBySampleId.get(sample.id) ?? [] : []));
+  for (const wo of workOrders ?? []) {
+    if (!wo?.id || !wo.patientId) continue;
+
+    const exams = (wo.samples ?? []).flatMap((sample) => (sample?.exam ? [sample.exam] : []));
     if (!exams.length) continue;
 
     const terminalExams = exams.filter(
-      (exam) =>
-        exam.status != null &&
-        TERMINAL_EXAM_STATUSES.has(exam.status as ExamStatus),
+      (exam) => exam.status != null && TERMINAL_EXAM_STATUSES.has(exam.status as ExamStatus)
     );
     if (!terminalExams.length) continue;
 
     const status: ResultsListItem["status"] =
       terminalExams.length === exams.length ? "completa" : "parcial";
-    const lastValidatedAt = terminalExams
-      .map((exam) => exam.validatedAt)
-      .filter((value): value is string => typeof value === "string")
-      .toSorted((a, b) => toTime(b) - toTime(a))[0] ?? null;
+    const lastValidatedAt =
+      terminalExams
+        .map((exam) => exam.validatedAt)
+        .filter((value): value is string => typeof value === "string")
+        .toSorted((a, b) => toTime(b) - toTime(a))[0] ?? null;
 
-    const patient = patientsById.get(workOrder.patientId);
-    const patientName = buildPatientFullName(patient?.firstName, patient?.lastName);
+    const patientName = buildPatientFullName(wo.patient?.firstName, wo.patient?.lastName);
 
     const row: ResultsListItem = {
-      workOrderId: workOrder.id,
-      accessionNumber: workOrder.accessionNumber ?? null,
-      patientId: workOrder.patientId,
+      workOrderId: wo.id,
+      accessionNumber: wo.accessionNumber ?? null,
+      patientId: wo.patientId,
       patientName,
-      requestedAt: workOrder.requestedAt ?? null,
-      priority: workOrder.priority ?? null,
-      workOrderStatus: workOrder.status ?? null,
-      referringDoctor: workOrder.referringDoctor ?? null,
+      requestedAt: wo.requestedAt ?? null,
+      priority: wo.priority ?? null,
+      workOrderStatus: wo.status ?? null,
+      referringDoctor: wo.referringDoctor ?? null,
       examCount: exams.length,
       terminalExamCount: terminalExams.length,
       status,
@@ -215,11 +133,7 @@ export async function listCompletedWorkOrders(
     };
 
     if (!matchesDateRange(row.requestedAt, filters)) continue;
-    if (
-      filters.status &&
-      filters.status !== "todas" &&
-      row.status !== filters.status
-    ) {
+    if (filters.status && filters.status !== "todas" && row.status !== filters.status) {
       continue;
     }
     if (filters.referringDoctor?.trim()) {
@@ -241,105 +155,85 @@ export async function listCompletedWorkOrders(
 }
 
 export async function getWorkOrderConsolidatedResults(
-  workOrderId: string,
+  workOrderId: string
 ): Promise<ConsolidatedWorkOrderResult | null> {
   const normalizedId = workOrderId.trim();
   if (!normalizedId) return null;
 
-  const { data: workOrder } = await cookieBasedClient.models.WorkOrder.get({
-    id: normalizedId,
-  });
-  if (!workOrder?.id || !workOrder.patientId) return null;
+  const { data: workOrder, errors } = await cookieBasedClient.models.WorkOrder.get(
+    { id: normalizedId },
+    { selectionSet: CONSOLIDATED_WO_SELECTION }
+  );
+  if (errors?.length) {
+    console.error("[getWorkOrderConsolidatedResults] Amplify errors:", errors);
+    return null;
+  }
+  if (!workOrder?.id) return null;
 
-  const [{ data: patient }, { data: samples }] = await Promise.all([
-    cookieBasedClient.models.Patient.get({ id: workOrder.patientId }),
-    cookieBasedClient.models.Sample.list({
-      filter: { workOrderId: { eq: workOrder.id } },
-    }),
-  ]);
+  const patient = workOrder.patient;
   if (!patient?.id) return null;
 
-  const safeSamples = (samples ?? []).filter(
+  const safeSamples = (workOrder.samples ?? []).filter(
     (sample): sample is NonNullable<typeof sample> =>
-      sample != null && typeof sample.id === "string" && typeof sample.examTypeId === "string",
+      sample != null && typeof sample.id === "string" && typeof sample.examTypeId === "string"
   );
-  const [examListResults, examTypeResults] = await Promise.all([
-    Promise.all(
-      safeSamples.map((sample) =>
-        cookieBasedClient.models.Exam.list({
-          filter: { sampleId: { eq: sample.id } },
-        }),
-      ),
-    ),
-    Promise.all(
-      [...new Set(safeSamples.map((sample) => sample.examTypeId))].map((examTypeId) =>
-        cookieBasedClient.models.ExamType.get({ id: examTypeId }),
-      ),
-    ),
-  ]);
-
   const examTypesById = new Map(
-    examTypeResults
-      .map((result) => result.data)
+    safeSamples
+      .map((sample) => [sample.examTypeId, sample.examType] as const)
       .filter(
-        (examType): examType is NonNullable<typeof examType> =>
-          examType != null && typeof examType.id === "string",
+        (
+          entry
+        ): entry is readonly [string, NonNullable<(typeof safeSamples)[number]["examType"]>] =>
+          entry[1] != null && typeof entry[1].id === "string"
       )
-      .map((examType) => [examType.id, examType]),
-  );
-  const sampleById = new Map(safeSamples.map((sample) => [sample.id, sample]));
-  const exams = examListResults.flatMap((result) => result.data ?? []).filter(
-    (exam): exam is NonNullable<typeof exam> =>
-      exam != null &&
-      typeof exam.id === "string" &&
-      typeof exam.sampleId === "string" &&
-      typeof exam.examTypeId === "string",
   );
 
-  const consolidatedExamCandidates = exams.map((exam) => {
-      const sample = sampleById.get(exam.sampleId);
-      const examType = examTypesById.get(exam.examTypeId);
-      if (!sample || !examType) return null;
+  const consolidatedExams: ConsolidatedExamResult[] = [];
+  for (const sample of safeSamples) {
+    const exam = sample.exam;
+    if (!exam?.id || !exam.sampleId || !exam.examTypeId) continue;
 
-      const fieldSchema = parseFieldSchema(examType.fieldSchema) ?? EMPTY_FIELD_SCHEMA;
-      const results = parseResults(exam.results);
-      const hasViolation = hasReferenceRangeViolation(results, fieldSchema);
+    const examType = examTypesById.get(sample.examTypeId) ?? sample.examType;
+    if (!examType?.id) continue;
 
-      return {
-        examId: exam.id,
-        sampleId: exam.sampleId,
-        examTypeId: exam.examTypeId,
-        examTypeCode: examType.code ?? "N/A",
-        examTypeName: examType.name ?? "Examen",
-        sampleType: examType.sampleType ?? null,
-        sampleBarcode: sample.barcode ?? null,
-        examStatus: (exam.status as ExamStatus | null) ?? null,
-        results,
-        fieldSchema,
-        hasReferenceRangeViolation: hasViolation,
-        clinicalFlag: deriveClinicalFlag(results, fieldSchema),
-        startedAt: exam.startedAt ?? null,
-        resultedAt: exam.resultedAt ?? null,
-        performedBy: exam.performedBy ?? null,
-        validatedBy: exam.validatedBy ?? null,
-        validatedAt: exam.validatedAt ?? null,
-        validatorComments: exam.notes ?? null,
-      } satisfies ConsolidatedExamResult;
+    const fieldSchema = parseFieldSchema(examType.fieldSchema) ?? EMPTY_FIELD_SCHEMA;
+    const results = parseResults(exam.results);
+    const hasViolation = hasReferenceRangeViolation(results, fieldSchema);
+
+    consolidatedExams.push({
+      examId: exam.id,
+      sampleId: exam.sampleId,
+      examTypeId: exam.examTypeId,
+      examTypeCode: examType.code ?? "N/A",
+      examTypeName: examType.name ?? "Examen",
+      sampleType: examType.sampleType ?? null,
+      sampleBarcode: sample.barcode ?? null,
+      examStatus: (exam.status as ExamStatus | null) ?? null,
+      results,
+      fieldSchema,
+      hasReferenceRangeViolation: hasViolation,
+      clinicalFlag: deriveClinicalFlag(results, fieldSchema),
+      startedAt: exam.startedAt ?? null,
+      resultedAt: exam.resultedAt ?? null,
+      performedBy: exam.performedBy ?? null,
+      validatedBy: exam.validatedBy ?? null,
+      validatedAt: exam.validatedAt ?? null,
+      validatorComments: exam.notes ?? null,
     });
+  }
+  const sortedConsolidatedExams = consolidatedExams.toSorted((a, b) =>
+    a.examTypeName.localeCompare(b.examTypeName, "es-CL")
+  );
 
-  const consolidatedExams: ConsolidatedExamResult[] = consolidatedExamCandidates
-    .filter((exam): exam is NonNullable<typeof exam> => exam != null)
-    .toSorted((a, b) => a.examTypeName.localeCompare(b.examTypeName, "es-CL"));
-
-  const approvedExams = consolidatedExams.filter(
-    (exam) => exam.examStatus === "approved",
+  const approvedExams = sortedConsolidatedExams.filter(
+    (exam) => exam.examStatus === "approved"
   ).length;
-  const rejectedExams = consolidatedExams.filter(
-    (exam) => exam.examStatus === "rejected",
+  const rejectedExams = sortedConsolidatedExams.filter(
+    (exam) => exam.examStatus === "rejected"
   ).length;
-  const pendingExams = consolidatedExams.length - approvedExams - rejectedExams;
+  const pendingExams = sortedConsolidatedExams.length - approvedExams - rejectedExams;
   const lastValidatedAt =
-    consolidatedExams
+    sortedConsolidatedExams
       .map((exam) => exam.validatedAt)
       .filter((value): value is string => typeof value === "string")
       .toSorted((a, b) => toTime(b) - toTime(a))[0] ?? null;
@@ -361,9 +255,9 @@ export async function getWorkOrderConsolidatedResults(
       dateOfBirth: patient.dateOfBirth ?? null,
       gender: patient.gender ?? null,
     },
-    exams: consolidatedExams,
+    exams: sortedConsolidatedExams,
     summary: {
-      totalExams: consolidatedExams.length,
+      totalExams: sortedConsolidatedExams.length,
       approvedExams,
       rejectedExams,
       pendingExams,

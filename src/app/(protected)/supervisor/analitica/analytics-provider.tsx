@@ -10,10 +10,7 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import {
-  fetchAnalyticsDashboardAction,
-  fetchDetailedChartsAction,
-} from "./actions";
+import { fetchAnalyticsDashboardAction, fetchDetailedChartsAction } from "./actions";
 import type {
   AnalyticsDashboardData,
   AnalyticsDetailedChartsData,
@@ -72,8 +69,7 @@ export function AnalyticsProvider({
     throughput: initialData.throughput,
     examMix: initialData.examMix,
   });
-  const [detailedCharts, setDetailedCharts] =
-    useState<AnalyticsDetailedChartsData | null>(null);
+  const [detailedCharts, setDetailedCharts] = useState<AnalyticsDetailedChartsData | null>(null);
 
   const setFilters = useCallback((next: Partial<AnalyticsFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...next }));
@@ -100,7 +96,7 @@ export function AnalyticsProvider({
         })();
       });
     },
-    [filters],
+    [filters]
   );
 
   const loadDetailedCharts = useCallback(
@@ -118,7 +114,7 @@ export function AnalyticsProvider({
         })();
       });
     },
-    [detailedCharts, range, filters],
+    [detailedCharts, range, filters]
   );
 
   const clearDetailedCharts = useCallback(() => {
@@ -155,12 +151,10 @@ export function AnalyticsProvider({
       setFilters,
       loadDetailedCharts,
       clearDetailedCharts,
-    ],
+    ]
   );
 
-  return (
-    <AnalyticsContext.Provider value={value}>{children}</AnalyticsContext.Provider>
-  );
+  return <AnalyticsContext.Provider value={value}>{children}</AnalyticsContext.Provider>;
 }
 
 export function useAnalyticsProvider(): AnalyticsProviderValue {

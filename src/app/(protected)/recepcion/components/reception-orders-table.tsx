@@ -38,7 +38,10 @@ export function ReceptionOrdersTable({
         <TableBody>
           {orders.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground py-10 text-center text-sm sm:text-base">
+              <TableCell
+                colSpan={4}
+                className="text-muted-foreground py-10 text-center text-sm sm:text-base"
+              >
                 No hay órdenes para los filtros actuales.
               </TableCell>
             </TableRow>
@@ -47,11 +50,15 @@ export function ReceptionOrdersTable({
               <TableRow
                 key={order.id}
                 className={
-                  highlightedNewIds.includes(order.id) ? "bg-emerald-50/60 dark:bg-emerald-950/20" : undefined
+                  highlightedNewIds.includes(order.id)
+                    ? "bg-emerald-50/60 dark:bg-emerald-950/20"
+                    : undefined
                 }
                 onClick={() => onSelectOrder(order.id)}
               >
-                <TableCell className="font-medium text-sm sm:text-base">{order.displayId}</TableCell>
+                <TableCell className="font-medium text-sm sm:text-base">
+                  {order.displayId}
+                </TableCell>
                 <TableCell className="text-sm sm:text-base">
                   <div className="flex flex-wrap items-center gap-2">
                     <span>{order.patientName}</span>

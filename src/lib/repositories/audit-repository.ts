@@ -25,14 +25,20 @@ function toMs(value: string | null | undefined): number {
   return Number.isNaN(parsed) ? Number.NaN : parsed;
 }
 
-function toMinutes(start: string | null | undefined, end: string | null | undefined): number | null {
+function toMinutes(
+  start: string | null | undefined,
+  end: string | null | undefined
+): number | null {
   const startMs = toMs(start);
   const endMs = toMs(end);
   if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) return null;
   return Math.round((endMs - startMs) / 60_000);
 }
 
-function toPatientName(firstName: string | null | undefined, lastName: string | null | undefined): string {
+function toPatientName(
+  firstName: string | null | undefined,
+  lastName: string | null | undefined
+): string {
   return `${firstName ?? ""} ${lastName ?? ""}`.trim() || "Desconocido";
 }
 
@@ -81,10 +87,7 @@ function normalizeAuditEvent(raw: unknown): AuditTimelineEvent | null {
 async function listAuditEventsByEntity(entity: EntityQuery): Promise<AuditTimelineEvent[]> {
   const { data } = await cookieBasedClient.models.AuditEvent.list({
     filter: {
-      and: [
-        { entityType: { eq: entity.entityType } },
-        { entityId: { eq: entity.entityId } },
-      ],
+      and: [{ entityType: { eq: entity.entityType } }, { entityId: { eq: entity.entityId } }],
     },
   });
   return (data ?? [])
@@ -94,20 +97,22 @@ async function listAuditEventsByEntity(entity: EntityQuery): Promise<AuditTimeli
 
 function buildSampleDurations(
   orderEvents: AuditTimelineEvent[],
-  sampleEvents: AuditTimelineEvent[],
+  sampleEvents: AuditTimelineEvent[]
 ): TimelineDurations {
   const firstOrderCreated =
     orderEvents.find((event) => event.action === AUDIT_ACTIONS.ORDER_CREATED)?.timestamp ?? null;
   const firstSampleReceived =
-    sampleEvents.find((event) => event.action === AUDIT_ACTIONS.SPECIMEN_RECEIVED)?.timestamp ?? null;
+    sampleEvents.find((event) => event.action === AUDIT_ACTIONS.SPECIMEN_RECEIVED)?.timestamp ??
+    null;
   const examStarted =
     sampleEvents.find((event) => event.action === AUDIT_ACTIONS.EXAM_STARTED)?.timestamp ?? null;
   const examSentToValidation =
-    sampleEvents.find((event) => event.action === AUDIT_ACTIONS.EXAM_SENT_TO_VALIDATION)?.timestamp ?? null;
+    sampleEvents.find((event) => event.action === AUDIT_ACTIONS.EXAM_SENT_TO_VALIDATION)
+      ?.timestamp ?? null;
   const firstValidationOutcome =
     sampleEvents.find(
       (event) =>
-        event.action === AUDIT_ACTIONS.EXAM_APPROVED || event.action === AUDIT_ACTIONS.EXAM_REJECTED,
+        event.action === AUDIT_ACTIONS.EXAM_APPROVED || event.action === AUDIT_ACTIONS.EXAM_REJECTED
     )?.timestamp ?? null;
 
   const firstEvent = sampleEvents[0]?.timestamp ?? null;
@@ -122,7 +127,7 @@ function buildSampleDurations(
 }
 
 export async function getAuditTimelineForWorkOrder(
-  workOrderId: string,
+  workOrderId: string
 ): Promise<WorkOrderTimeline | null> {
   const normalizedWorkOrderId = workOrderId.trim();
   if (!normalizedWorkOrderId) return null;
@@ -142,7 +147,7 @@ export async function getAuditTimelineForWorkOrder(
 
   const safeSamples = (samples ?? []).filter(
     (sample): sample is NonNullable<typeof sample> =>
-      sample != null && typeof sample.id === "string",
+      sample != null && typeof sample.id === "string"
   );
 
   const [examListResults, examTypeResults] = await Promise.all([
@@ -150,22 +155,22 @@ export async function getAuditTimelineForWorkOrder(
       safeSamples.map((sample) =>
         cookieBasedClient.models.Exam.list({
           filter: { sampleId: { eq: sample.id } },
-        }),
-      ),
+        })
+      )
     ),
     Promise.all(
-      [...new Set(safeSamples.map((sample) => sample.examTypeId).filter(Boolean))].map((examTypeId) =>
-        cookieBasedClient.models.ExamType.get({ id: examTypeId }),
-      ),
+      [...new Set(safeSamples.map((sample) => sample.examTypeId).filter(Boolean))].map(
+        (examTypeId) => cookieBasedClient.models.ExamType.get({ id: examTypeId })
+      )
     ),
   ]);
 
-  const exams = examListResults.flatMap((result) => result.data ?? []).filter(
-    (exam): exam is NonNullable<typeof exam> =>
-      exam != null &&
-      typeof exam.id === "string" &&
-      typeof exam.sampleId === "string",
-  );
+  const exams = examListResults
+    .flatMap((result) => result.data ?? [])
+    .filter(
+      (exam): exam is NonNullable<typeof exam> =>
+        exam != null && typeof exam.id === "string" && typeof exam.sampleId === "string"
+    );
   const examBySampleId = new Map<string, NonNullable<(typeof exams)[number]>>();
   for (const exam of exams) {
     if (!examBySampleId.has(exam.sampleId)) {
@@ -177,9 +182,9 @@ export async function getAuditTimelineForWorkOrder(
       .map((result) => result.data)
       .filter(
         (examType): examType is NonNullable<typeof examType> =>
-          examType != null && typeof examType.id === "string",
+          examType != null && typeof examType.id === "string"
       )
-      .map((examType) => [examType.id, examType]),
+      .map((examType) => [examType.id, examType])
   );
 
   const entityQueries: EntityQuery[] = [
@@ -195,10 +200,10 @@ export async function getAuditTimelineForWorkOrder(
   ];
 
   // DynamoDB has no native IN query; fetch each entityId in parallel and merge.
-  const groupedEvents = await Promise.all(entityQueries.map((query) => listAuditEventsByEntity(query)));
-  const allEvents = groupedEvents
-    .flat()
-    .toSorted((a, b) => toMs(a.timestamp) - toMs(b.timestamp));
+  const groupedEvents = await Promise.all(
+    entityQueries.map((query) => listAuditEventsByEntity(query))
+  );
+  const allEvents = groupedEvents.flat().toSorted((a, b) => toMs(a.timestamp) - toMs(b.timestamp));
   const eventsByEntityId = new Map<string, AuditTimelineEvent[]>();
   for (const event of allEvents) {
     const existing = eventsByEntityId.get(event.entityId) ?? [];
@@ -207,7 +212,8 @@ export async function getAuditTimelineForWorkOrder(
   }
 
   const orderEvents =
-    eventsByEntityId.get(workOrder.id)?.toSorted((a, b) => toMs(a.timestamp) - toMs(b.timestamp)) ?? [];
+    eventsByEntityId.get(workOrder.id)?.toSorted((a, b) => toMs(a.timestamp) - toMs(b.timestamp)) ??
+    [];
 
   const sampleTimelines: SampleTimeline[] = safeSamples
     .map((sample) => {
@@ -215,19 +221,19 @@ export async function getAuditTimelineForWorkOrder(
       const exam = examBySampleId.get(sample.id) ?? null;
       const examEvents = exam?.id ? (eventsByEntityId.get(exam.id) ?? []) : [];
       const mergedEvents = [...sampleEvents, ...examEvents].toSorted(
-        (a, b) => toMs(a.timestamp) - toMs(b.timestamp),
+        (a, b) => toMs(a.timestamp) - toMs(b.timestamp)
       );
       const examType =
         (sample.examTypeId ? examTypeById.get(sample.examTypeId) : undefined) ??
         (exam?.examTypeId ? examTypeById.get(exam.examTypeId) : undefined);
 
       const incidenceCount = mergedEvents.filter(
-        (event) => event.action === AUDIT_ACTIONS.INCIDENCE_CREATED,
+        (event) => event.action === AUDIT_ACTIONS.INCIDENCE_CREATED
       ).length;
       const rejectionCount = mergedEvents.filter(
         (event) =>
           event.action === AUDIT_ACTIONS.EXAM_REJECTED ||
-          event.action === AUDIT_ACTIONS.SPECIMEN_REJECTED,
+          event.action === AUDIT_ACTIONS.SPECIMEN_REJECTED
       ).length;
 
       return {
@@ -261,8 +267,10 @@ export async function getAuditTimelineForWorkOrder(
     summary: {
       totalEvents: allEvents.length,
       totalSamples: sampleTimelines.length,
-      samplesWithIncidence: sampleTimelines.filter((timeline) => timeline.incidenceCount > 0).length,
-      samplesWithRejection: sampleTimelines.filter((timeline) => timeline.rejectionCount > 0).length,
+      samplesWithIncidence: sampleTimelines.filter((timeline) => timeline.incidenceCount > 0)
+        .length,
+      samplesWithRejection: sampleTimelines.filter((timeline) => timeline.rejectionCount > 0)
+        .length,
       firstEventAt: allEvents[0]?.timestamp ?? null,
       lastEventAt: allEvents[allEvents.length - 1]?.timestamp ?? null,
     },
@@ -289,13 +297,15 @@ export async function searchAudit(query: string): Promise<AuditSearchResult | nu
   const normalizedQuery = query.trim();
   if (!normalizedQuery) return null;
 
-  const [{ data: workOrderById }, barcodeMatch, { data: workOrderByAccession }] = await Promise.all([
-    cookieBasedClient.models.WorkOrder.get({ id: normalizedQuery }),
-    searchAuditByBarcode(normalizedQuery),
-    cookieBasedClient.models.WorkOrder.list({
-      filter: { accessionNumber: { eq: normalizedQuery } },
-    }),
-  ]);
+  const [{ data: workOrderById }, barcodeMatch, { data: workOrderByAccession }] = await Promise.all(
+    [
+      cookieBasedClient.models.WorkOrder.get({ id: normalizedQuery }),
+      searchAuditByBarcode(normalizedQuery),
+      cookieBasedClient.models.WorkOrder.list({
+        filter: { accessionNumber: { eq: normalizedQuery } },
+      }),
+    ]
+  );
 
   if (workOrderById?.id) {
     return { workOrderId: workOrderById.id, matchedBy: "workOrderId" };
@@ -307,7 +317,7 @@ export async function searchAudit(query: string): Promise<AuditSearchResult | nu
   const accessionMatch = (workOrderByAccession ?? [])
     .filter(
       (workOrder): workOrder is NonNullable<typeof workOrder> =>
-        workOrder != null && typeof workOrder.id === "string",
+        workOrder != null && typeof workOrder.id === "string"
     )
     .toSorted((a, b) => toMs(b.requestedAt) - toMs(a.requestedAt))[0];
   if (accessionMatch?.id) {
@@ -322,14 +332,14 @@ export async function searchAudit(query: string): Promise<AuditSearchResult | nu
     (patientResult.data ?? [])
       .filter(
         (patient): patient is NonNullable<typeof patient> =>
-          patient != null && typeof patient.id === "string",
+          patient != null && typeof patient.id === "string"
       )
       .filter((patient) =>
         toPatientName(patient.firstName, patient.lastName)
           .toLocaleLowerCase("es-CL")
-          .includes(normalizedQuery.toLocaleLowerCase("es-CL")),
+          .includes(normalizedQuery.toLocaleLowerCase("es-CL"))
       )
-      .map((patient) => patient.id),
+      .map((patient) => patient.id)
   );
   if (!matchingPatientIds.size) return null;
 
@@ -339,7 +349,7 @@ export async function searchAudit(query: string): Promise<AuditSearchResult | nu
         workOrder != null &&
         typeof workOrder.id === "string" &&
         typeof workOrder.patientId === "string" &&
-        matchingPatientIds.has(workOrder.patientId),
+        matchingPatientIds.has(workOrder.patientId)
     )
     .toSorted((a, b) => toMs(b.requestedAt) - toMs(a.requestedAt))[0];
   if (!patientWorkOrder?.id) return null;
@@ -350,38 +360,33 @@ export async function searchAudit(query: string): Promise<AuditSearchResult | nu
   };
 }
 
-export async function getRecentAuditActivity(
-  limit = 10,
-): Promise<RecentAuditActivityItem[]> {
+export async function getRecentAuditActivity(limit = 10): Promise<RecentAuditActivityItem[]> {
   const safeLimit = Math.max(1, Math.min(50, Math.trunc(limit)));
-  const [auditResult, sampleResult, examResult, workOrderResult, patientResult] =
-    await Promise.all([
+  const [auditResult, sampleResult, examResult, workOrderResult, patientResult] = await Promise.all(
+    [
       cookieBasedClient.models.AuditEvent.list(),
       cookieBasedClient.models.Sample.list(),
       cookieBasedClient.models.Exam.list(),
       cookieBasedClient.models.WorkOrder.list(),
       cookieBasedClient.models.Patient.list(),
-    ]);
+    ]
+  );
 
   const sampleById = new Map(
     (sampleResult.data ?? [])
       .filter(
         (sample): sample is NonNullable<typeof sample> =>
-          sample != null &&
-          typeof sample.id === "string" &&
-          typeof sample.workOrderId === "string",
+          sample != null && typeof sample.id === "string" && typeof sample.workOrderId === "string"
       )
-      .map((sample) => [sample.id, sample]),
+      .map((sample) => [sample.id, sample])
   );
   const examById = new Map(
     (examResult.data ?? [])
       .filter(
         (exam): exam is NonNullable<typeof exam> =>
-          exam != null &&
-          typeof exam.id === "string" &&
-          typeof exam.sampleId === "string",
+          exam != null && typeof exam.id === "string" && typeof exam.sampleId === "string"
       )
-      .map((exam) => [exam.id, exam]),
+      .map((exam) => [exam.id, exam])
   );
   const workOrderById = new Map(
     (workOrderResult.data ?? [])
@@ -389,17 +394,17 @@ export async function getRecentAuditActivity(
         (workOrder): workOrder is NonNullable<typeof workOrder> =>
           workOrder != null &&
           typeof workOrder.id === "string" &&
-          typeof workOrder.patientId === "string",
+          typeof workOrder.patientId === "string"
       )
-      .map((workOrder) => [workOrder.id, workOrder]),
+      .map((workOrder) => [workOrder.id, workOrder])
   );
   const patientById = new Map(
     (patientResult.data ?? [])
       .filter(
         (patient): patient is NonNullable<typeof patient> =>
-          patient != null && typeof patient.id === "string",
+          patient != null && typeof patient.id === "string"
       )
-      .map((patient) => [patient.id, patient]),
+      .map((patient) => [patient.id, patient])
   );
 
   const events = (auditResult.data ?? [])

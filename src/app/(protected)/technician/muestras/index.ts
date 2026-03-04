@@ -2,13 +2,13 @@ export type { Filter } from "./constants";
 export { FILTERS } from "./constants";
 export { filterRows } from "./filter-utils";
 export {
-	AllQueueView,
-	FilteredQueueView,
-	FlaggedQueueView,
-	MineQueueView,
-	ProcessingQueueView,
-	ReceivedQueueView,
-	UrgentQueueView,
+  AllQueueView,
+  FilteredQueueView,
+  FlaggedQueueView,
+  MineQueueView,
+  ProcessingQueueView,
+  ReceivedQueueView,
+  UrgentQueueView,
 } from "./queue-views";
 export { MuestrasFilters } from "./muestras-filters";
 export { MuestrasTable } from "./muestras-table";

@@ -10,16 +10,16 @@
 
 Before executing these tests, ensure the following records exist in the database:
 
-| Entity | Requirements |
-|--------|-------------|
-| **Patient** | At least 2 patients with distinct `firstName`/`lastName` |
-| **WorkOrder** | At least 2 work orders, one with `priority: "urgent"`, one with `priority: "routine"`. Each with a valid `accessionNumber` |
-| **Sample** | At least 3 samples across the work orders. At least one sample with 2+ exams (to test sample cascade). Status should be `completed` or `inprogress` |
-| **ExamType** | At least 2 exam types with `fieldSchema` containing numeric fields with `referenceRange` defined (e.g., `"70–110"`) |
-| **Exam (A)** | Status `ready_for_validation`, with `results` containing values **within** reference ranges (normal case) |
-| **Exam (B)** | Status `ready_for_validation`, with `results` containing values **outside** reference ranges (to trigger clinical flag) |
-| **Exam (C)** | Status `ready_for_validation`, on the same sample as Exam A or B (to test sample cascade) |
-| **Exam (D)** | Status `approved` (already validated — to verify "all" filter) |
+| Entity        | Requirements                                                                                                                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Patient**   | At least 2 patients with distinct `firstName`/`lastName`                                                                                            |
+| **WorkOrder** | At least 2 work orders, one with `priority: "urgent"`, one with `priority: "routine"`. Each with a valid `accessionNumber`                          |
+| **Sample**    | At least 3 samples across the work orders. At least one sample with 2+ exams (to test sample cascade). Status should be `completed` or `inprogress` |
+| **ExamType**  | At least 2 exam types with `fieldSchema` containing numeric fields with `referenceRange` defined (e.g., `"70–110"`)                                 |
+| **Exam (A)**  | Status `ready_for_validation`, with `results` containing values **within** reference ranges (normal case)                                           |
+| **Exam (B)**  | Status `ready_for_validation`, with `results` containing values **outside** reference ranges (to trigger clinical flag)                             |
+| **Exam (C)**  | Status `ready_for_validation`, on the same sample as Exam A or B (to test sample cascade)                                                           |
+| **Exam (D)**  | Status `approved` (already validated — to verify "all" filter)                                                                                      |
 
 ---
 
@@ -34,12 +34,12 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — UI:**
 
-| Card | Label | Value source |
-|------|-------|-------------|
-| 1 | "Pendientes validar" | Count of exams with `status = ready_for_validation` |
-| 2 | "Críticos" (red border card) | Count of pending exams where `clinicalFlag !== "normal"` OR `hasReferenceRangeViolation === true` |
-| 3 | "Incidencias" (amber border card) | Count of distinct pending exam IDs that have at least one `AuditEvent` with `action = INCIDENCE_CREATED` |
-| 4 | "Tiempo prom. (min)" | Average of `(validatedAt - resultedAt)` in minutes across all `approved`/`rejected` exams. `0` if none exist |
+| Card | Label                             | Value source                                                                                                 |
+| ---- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1    | "Pendientes validar"              | Count of exams with `status = ready_for_validation`                                                          |
+| 2    | "Críticos" (red border card)      | Count of pending exams where `clinicalFlag !== "normal"` OR `hasReferenceRangeViolation === true`            |
+| 3    | "Incidencias" (amber border card) | Count of distinct pending exam IDs that have at least one `AuditEvent` with `action = INCIDENCE_CREATED`     |
+| 4    | "Tiempo prom. (min)"              | Average of `(validatedAt - resultedAt)` in minutes across all `approved`/`rejected` exams. `0` if none exist |
 
 **Expected — DB verification:**
 
@@ -128,15 +128,15 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — Per row:**
 
-| Column | Source | Format |
-|--------|--------|--------|
-| Paciente | `Patient.firstName + " " + Patient.lastName` via Sample → WorkOrder → Patient. Followed by `(accessionNumber)` in muted text if present | `"Juan Pérez (ACC-001)"` |
-| Examen | `ExamType.name` | Text |
-| Técnico | `Exam.performedBy` or "—" | Text |
-| Procesado | `Exam.resultedAt` | `DD/MM/YYYY, HH:MM` in es-CL locale, or "—" |
-| Flag clínico | Derived from results vs `ExamType.fieldSchema` reference ranges | Badge: "Normal"(zinc), "Atención"(amber), "Crítico"(red) |
-| Estado | `Exam.status` mapped to label | Badge: "Pendiente"(amber), "Aprobado"(green), "Rechazado"(red), "Revisión"(zinc) |
-| Acción | "Revisar" button if `ready_for_validation`; "Ver" button otherwise | Outlined button / Ghost button |
+| Column       | Source                                                                                                                                  | Format                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Paciente     | `Patient.firstName + " " + Patient.lastName` via Sample → WorkOrder → Patient. Followed by `(accessionNumber)` in muted text if present | `"Juan Pérez (ACC-001)"`                                                         |
+| Examen       | `ExamType.name`                                                                                                                         | Text                                                                             |
+| Técnico      | `Exam.performedBy` or "—"                                                                                                               | Text                                                                             |
+| Procesado    | `Exam.resultedAt`                                                                                                                       | `DD/MM/YYYY, HH:MM` in es-CL locale, or "—"                                      |
+| Flag clínico | Derived from results vs `ExamType.fieldSchema` reference ranges                                                                         | Badge: "Normal"(zinc), "Atención"(amber), "Crítico"(red)                         |
+| Estado       | `Exam.status` mapped to label                                                                                                           | Badge: "Pendiente"(amber), "Aprobado"(green), "Rechazado"(red), "Revisión"(zinc) |
+| Acción       | "Revisar" button if `ready_for_validation`; "Ver" button otherwise                                                                      | Outlined button / Ghost button                                                   |
 
 ---
 
@@ -312,15 +312,15 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — Field mapping:**
 
-| UI Label | DB Source | Format |
-|----------|----------|--------|
-| Paciente | `Patient.firstName + " " + Patient.lastName` | Text |
-| N° acceso | `WorkOrder.accessionNumber` | Text or "—" |
-| Tipo examen | `ExamType.name` | Text |
-| Técnico | `Exam.performedBy` | Text or "—" |
-| Procesado | `Exam.resultedAt` | `DD/MM/YYYY, HH:MM` es-CL or "—" |
-| Muestra | `Sample.barcode` (or `Sample.id` fallback) | Text |
-| Recibida | `Sample.receivedAt` | `DD/MM/YYYY, HH:MM` es-CL or "—" |
+| UI Label    | DB Source                                    | Format                           |
+| ----------- | -------------------------------------------- | -------------------------------- |
+| Paciente    | `Patient.firstName + " " + Patient.lastName` | Text                             |
+| N° acceso   | `WorkOrder.accessionNumber`                  | Text or "—"                      |
+| Tipo examen | `ExamType.name`                              | Text                             |
+| Técnico     | `Exam.performedBy`                           | Text or "—"                      |
+| Procesado   | `Exam.resultedAt`                            | `DD/MM/YYYY, HH:MM` es-CL or "—" |
+| Muestra     | `Sample.barcode` (or `Sample.id` fallback)   | Text                             |
+| Recibida    | `Sample.receivedAt`                          | `DD/MM/YYYY, HH:MM` es-CL or "—" |
 
 ---
 
@@ -376,12 +376,12 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — DB changes:**
 
-| Field | Before | After |
-|-------|--------|-------|
-| `Exam.status` | `ready_for_validation` | `approved` |
-| `Exam.validatedBy` | `null` | Supervisor's Cognito `userId` |
-| `Exam.validatedAt` | `null` | ISO timestamp of approval |
-| `AuditEvent` (new) | — | `entityType: "Exam"`, `entityId: {examId}`, `action: "EXAM_APPROVED"`, `userId: {supervisorId}`, `metadata: { sampleId, comments? }` |
+| Field              | Before                 | After                                                                                                                                |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Exam.status`      | `ready_for_validation` | `approved`                                                                                                                           |
+| `Exam.validatedBy` | `null`                 | Supervisor's Cognito `userId`                                                                                                        |
+| `Exam.validatedAt` | `null`                 | ISO timestamp of approval                                                                                                            |
+| `AuditEvent` (new) | —                      | `entityType: "Exam"`, `entityId: {examId}`, `action: "EXAM_APPROVED"`, `userId: {supervisorId}`, `metadata: { sampleId, comments? }` |
 
 ---
 
@@ -430,12 +430,12 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — DB changes:**
 
-| Field | Before | After |
-|-------|--------|-------|
-| `Exam.status` | `ready_for_validation` | `rejected` |
-| `Exam.validatedBy` | `null` | Supervisor's Cognito `userId` |
-| `Exam.validatedAt` | `null` | ISO timestamp of rejection |
-| `AuditEvent` (new) | — | `entityType: "Exam"`, `entityId: {examId}`, `action: "EXAM_REJECTED"`, `userId: {supervisorId}`, `metadata: { sampleId, reason, comments? }` |
+| Field              | Before                 | After                                                                                                                                        |
+| ------------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Exam.status`      | `ready_for_validation` | `rejected`                                                                                                                                   |
+| `Exam.validatedBy` | `null`                 | Supervisor's Cognito `userId`                                                                                                                |
+| `Exam.validatedAt` | `null`                 | ISO timestamp of rejection                                                                                                                   |
+| `AuditEvent` (new) | —                      | `entityType: "Exam"`, `entityId: {examId}`, `action: "EXAM_REJECTED"`, `userId: {supervisorId}`, `metadata: { sampleId, reason, comments? }` |
 
 ---
 
@@ -502,10 +502,10 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — DB changes:**
 
-| Field | Before | After |
-|-------|--------|-------|
-| `Exam.status` | `ready_for_validation` | `ready_for_validation` (unchanged — `sample_issue` does NOT trigger review) |
-| `AuditEvent` (new) | — | `entityType: "Exam"`, `entityId: {examId}`, `action: "INCIDENCE_CREATED"`, `userId: {supervisorId}`, `metadata: { sampleId, type: "sample_issue", description }` |
+| Field              | Before                 | After                                                                                                                                                            |
+| ------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Exam.status`      | `ready_for_validation` | `ready_for_validation` (unchanged — `sample_issue` does NOT trigger review)                                                                                      |
+| `AuditEvent` (new) | —                      | `entityType: "Exam"`, `entityId: {examId}`, `action: "INCIDENCE_CREATED"`, `userId: {supervisorId}`, `metadata: { sampleId, type: "sample_issue", description }` |
 
 ---
 
@@ -524,10 +524,10 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — DB changes:**
 
-| Field | Before | After |
-|-------|--------|-------|
-| `Exam.status` | `ready_for_validation` | `review` |
-| `AuditEvent` (new) | — | `action: "INCIDENCE_CREATED"`, `metadata: { sampleId, type: "rework", description }` |
+| Field              | Before                 | After                                                                                |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
+| `Exam.status`      | `ready_for_validation` | `review`                                                                             |
+| `AuditEvent` (new) | —                      | `action: "INCIDENCE_CREATED"`, `metadata: { sampleId, type: "rework", description }` |
 
 **Expected — UI after page refresh:**
 
@@ -565,13 +565,13 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — Options available:**
 
-| Value | Label |
-|-------|-------|
-| `critical_value` | Valor crítico |
-| `sample_issue` | Problema de muestra |
-| `instrument_issue` | Problema de equipo |
-| `rework` | Retrabajo |
-| `other` | Otro |
+| Value              | Label               |
+| ------------------ | ------------------- |
+| `critical_value`   | Valor crítico       |
+| `sample_issue`     | Problema de muestra |
+| `instrument_issue` | Problema de equipo  |
+| `rework`           | Retrabajo           |
+| `other`            | Otro                |
 
 ---
 
@@ -711,10 +711,10 @@ Before executing these tests, ensure the following records exist in the database
 
 **Expected — DB after step 3:**
 
-| Field | Before | After |
-|-------|--------|-------|
-| `Sample.status` | Previous status (e.g., `inprogress` or `completed`) | `completed` |
-| `AuditEvent` (new) | — | `entityType: "Sample"`, `entityId: {sampleId}`, `action: "SPECIMEN_COMPLETED"`, `metadata: { trigger: "validation_terminal_states" }` |
+| Field              | Before                                              | After                                                                                                                                 |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sample.status`    | Previous status (e.g., `inprogress` or `completed`) | `completed`                                                                                                                           |
+| `AuditEvent` (new) | —                                                   | `entityType: "Sample"`, `entityId: {sampleId}`, `action: "SPECIMEN_COMPLETED"`, `metadata: { trigger: "validation_terminal_states" }` |
 
 ---
 
@@ -919,16 +919,16 @@ Before executing these tests, ensure the following records exist in the database
 
 Verify the clinical flag derivation for different result scenarios:
 
-| Scenario | Result Value Content | Expected Flag |
-|----------|---------------------|---------------|
-| All numeric values within reference range, no text flags | `{ glucose: 90 }` (range 70–110) | `normal` |
-| Numeric value below reference range | `{ glucose: 50 }` (range 70–110) | `atencion` |
-| Numeric value above reference range | `{ glucose: 250 }` (range 70–110) | `atencion` |
-| Result contains string value with "critico" | `{ flagField: "Valor critico" }` | `critico` |
-| Result contains string value "high" | `{ someField: "high" }` | `critico` |
-| Result contains string value "low" | `{ someField: "low" }` | `critico` |
-| Result contains string with "atencion" | `{ someField: "atencion" }` | `atencion` |
-| No results (null) | `null` | `normal` |
+| Scenario                                                 | Result Value Content              | Expected Flag |
+| -------------------------------------------------------- | --------------------------------- | ------------- |
+| All numeric values within reference range, no text flags | `{ glucose: 90 }` (range 70–110)  | `normal`      |
+| Numeric value below reference range                      | `{ glucose: 50 }` (range 70–110)  | `atencion`    |
+| Numeric value above reference range                      | `{ glucose: 250 }` (range 70–110) | `atencion`    |
+| Result contains string value with "critico"              | `{ flagField: "Valor critico" }`  | `critico`     |
+| Result contains string value "high"                      | `{ someField: "high" }`           | `critico`     |
+| Result contains string value "low"                       | `{ someField: "low" }`            | `critico`     |
+| Result contains string with "atencion"                   | `{ someField: "atencion" }`       | `atencion`    |
+| No results (null)                                        | `null`                            | `normal`      |
 
 ---
 
@@ -999,14 +999,14 @@ Verify the clinical flag derivation for different result scenarios:
 
 **Expected audit events (in chronological order for a fully validated exam):**
 
-| # | Action | Entity Type | Metadata |
-|---|--------|-------------|----------|
-| 1 | `EXAM_STARTED` | Exam | `{ sampleId }` |
-| 2 | `EXAM_RESULTS_SAVED` | Exam | `{ sampleId, draft: true }` (if draft was saved) |
-| 3 | `EXAM_RESULTS_SAVED` | Exam | `{ sampleId, finalized: true }` |
-| 4 | `EXAM_SENT_TO_VALIDATION` | Exam | `{ sampleId }` |
-| 5 | `EXAM_APPROVED` or `EXAM_REJECTED` | Exam | `{ sampleId, comments? }` or `{ sampleId, reason, comments? }` |
-| 6 | `SPECIMEN_COMPLETED` (conditional) | Sample | `{ trigger: "validation_terminal_states" }` |
+| #   | Action                             | Entity Type | Metadata                                                       |
+| --- | ---------------------------------- | ----------- | -------------------------------------------------------------- |
+| 1   | `EXAM_STARTED`                     | Exam        | `{ sampleId }`                                                 |
+| 2   | `EXAM_RESULTS_SAVED`               | Exam        | `{ sampleId, draft: true }` (if draft was saved)               |
+| 3   | `EXAM_RESULTS_SAVED`               | Exam        | `{ sampleId, finalized: true }`                                |
+| 4   | `EXAM_SENT_TO_VALIDATION`          | Exam        | `{ sampleId }`                                                 |
+| 5   | `EXAM_APPROVED` or `EXAM_REJECTED` | Exam        | `{ sampleId, comments? }` or `{ sampleId, reason, comments? }` |
+| 6   | `SPECIMEN_COMPLETED` (conditional) | Sample      | `{ trigger: "validation_terminal_states" }`                    |
 
 Each event should have: `userId`, `timestamp` (ISO format), `entityId` matching the exam/sample ID.
 
@@ -1045,55 +1045,55 @@ Each event should have: `userId`, `timestamp` (ISO format), `entityId` matching 
 
 ## Summary Checklist
 
-| # | Area | Test | Status |
-|---|------|------|--------|
-| 4.01 | Dashboard | Stats cards values | ☐ |
-| 4.02 | Dashboard | Pending table content | ☐ |
-| 4.03 | Dashboard | "Revisar" navigation | ☐ |
-| 4.04 | Queue | Default view | ☐ |
-| 4.05 | Queue | Row content details | ☐ |
-| 4.06 | Queue | Status filter "Todos" | ☐ |
-| 4.07 | Queue | Clinical flag filter | ☐ |
-| 4.08 | Queue | Search filter | ☐ |
-| 4.09 | Queue | Date range filter | ☐ |
-| 4.10 | Queue | Clear filters | ☐ |
-| 4.11 | Queue | Empty state | ☐ |
-| 4.12 | Queue | Navigate to detail | ☐ |
-| 4.13 | Detail | Page layout and context | ☐ |
-| 4.14 | Detail | Exam context card | ☐ |
-| 4.15 | Detail | Read-only results display | ☐ |
-| 4.16 | Approval | Happy path | ☐ |
-| 4.17 | Approval | Without comments | ☐ |
-| 4.18 | Rejection | Happy path | ☐ |
-| 4.19 | Rejection | Reason required | ☐ |
-| 4.20 | Rejection | Whitespace-only reason | ☐ |
-| 4.21 | Incidence | Non-rework type | ☐ |
-| 4.22 | Incidence | Rework → review status | ☐ |
-| 4.23 | Incidence | Required description | ☐ |
-| 4.24 | Incidence | Type options | ☐ |
-| 4.25 | Navigation | Post-action feedback | ☐ |
-| 4.26 | Detail | Buttons disabled after approval | ☐ |
-| 4.27 | Detail | Buttons disabled after rejection | ☐ |
-| 4.28 | Concurrency | Conflict detection | ☐ |
-| 4.29 | Confirmation | Approve cancel | ☐ |
-| 4.30 | Confirmation | Reject cancel | ☐ |
-| 4.31 | Cascade | All exams terminal (approve+approve) | ☐ |
-| 4.32 | Cascade | Mixed terminal (approve+reject) | ☐ |
-| 4.33 | Cascade | Non-terminal blocks cascade | ☐ |
-| 4.34 | Auth | Non-supervisor detail page | ☐ |
-| 4.35 | Auth | Non-supervisor server action | ☐ |
-| 4.36 | Detail | Exam not found | ☐ |
-| 4.37 | Dashboard | Loading skeleton | ☐ |
-| 4.38 | Detail | Loading skeleton | ☐ |
-| 4.39 | Navigation | Back button preserves filters | ☐ |
-| 4.40 | Navigation | Return path sanitization | ☐ |
-| 4.41 | Dashboard | Incidence count update | ☐ |
-| 4.42 | Dashboard | Turnaround time calculation | ☐ |
-| 4.43 | Queue | Critical row highlighting | ☐ |
-| 4.44 | Data | Clinical flag derivation logic | ☐ |
-| 4.45 | Detail | Concurrent submit prevention | ☐ |
-| 4.46 | Error | Server action failure | ☐ |
-| 4.47 | Error | Non-OK server response | ☐ |
-| 4.48 | Audit | Audit trail completeness | ☐ |
-| 4.49 | Dashboard | Revisar links correct exam ID | ☐ |
-| 4.50 | Queue | Sort order | ☐ |
+| #    | Area         | Test                                 | Status |
+| ---- | ------------ | ------------------------------------ | ------ |
+| 4.01 | Dashboard    | Stats cards values                   | ☐      |
+| 4.02 | Dashboard    | Pending table content                | ☐      |
+| 4.03 | Dashboard    | "Revisar" navigation                 | ☐      |
+| 4.04 | Queue        | Default view                         | ☐      |
+| 4.05 | Queue        | Row content details                  | ☐      |
+| 4.06 | Queue        | Status filter "Todos"                | ☐      |
+| 4.07 | Queue        | Clinical flag filter                 | ☐      |
+| 4.08 | Queue        | Search filter                        | ☐      |
+| 4.09 | Queue        | Date range filter                    | ☐      |
+| 4.10 | Queue        | Clear filters                        | ☐      |
+| 4.11 | Queue        | Empty state                          | ☐      |
+| 4.12 | Queue        | Navigate to detail                   | ☐      |
+| 4.13 | Detail       | Page layout and context              | ☐      |
+| 4.14 | Detail       | Exam context card                    | ☐      |
+| 4.15 | Detail       | Read-only results display            | ☐      |
+| 4.16 | Approval     | Happy path                           | ☐      |
+| 4.17 | Approval     | Without comments                     | ☐      |
+| 4.18 | Rejection    | Happy path                           | ☐      |
+| 4.19 | Rejection    | Reason required                      | ☐      |
+| 4.20 | Rejection    | Whitespace-only reason               | ☐      |
+| 4.21 | Incidence    | Non-rework type                      | ☐      |
+| 4.22 | Incidence    | Rework → review status               | ☐      |
+| 4.23 | Incidence    | Required description                 | ☐      |
+| 4.24 | Incidence    | Type options                         | ☐      |
+| 4.25 | Navigation   | Post-action feedback                 | ☐      |
+| 4.26 | Detail       | Buttons disabled after approval      | ☐      |
+| 4.27 | Detail       | Buttons disabled after rejection     | ☐      |
+| 4.28 | Concurrency  | Conflict detection                   | ☐      |
+| 4.29 | Confirmation | Approve cancel                       | ☐      |
+| 4.30 | Confirmation | Reject cancel                        | ☐      |
+| 4.31 | Cascade      | All exams terminal (approve+approve) | ☐      |
+| 4.32 | Cascade      | Mixed terminal (approve+reject)      | ☐      |
+| 4.33 | Cascade      | Non-terminal blocks cascade          | ☐      |
+| 4.34 | Auth         | Non-supervisor detail page           | ☐      |
+| 4.35 | Auth         | Non-supervisor server action         | ☐      |
+| 4.36 | Detail       | Exam not found                       | ☐      |
+| 4.37 | Dashboard    | Loading skeleton                     | ☐      |
+| 4.38 | Detail       | Loading skeleton                     | ☐      |
+| 4.39 | Navigation   | Back button preserves filters        | ☐      |
+| 4.40 | Navigation   | Return path sanitization             | ☐      |
+| 4.41 | Dashboard    | Incidence count update               | ☐      |
+| 4.42 | Dashboard    | Turnaround time calculation          | ☐      |
+| 4.43 | Queue        | Critical row highlighting            | ☐      |
+| 4.44 | Data         | Clinical flag derivation logic       | ☐      |
+| 4.45 | Detail       | Concurrent submit prevention         | ☐      |
+| 4.46 | Error        | Server action failure                | ☐      |
+| 4.47 | Error        | Non-OK server response               | ☐      |
+| 4.48 | Audit        | Audit trail completeness             | ☐      |
+| 4.49 | Dashboard    | Revisar links correct exam ID        | ☐      |
+| 4.50 | Queue        | Sort order                           | ☐      |

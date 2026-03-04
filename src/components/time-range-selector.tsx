@@ -9,17 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-} from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import type {
-  AnalyticsTimeRange,
-  AnalyticsRangePreset,
-} from "@/lib/types/analytics-types";
+import type { AnalyticsTimeRange, AnalyticsRangePreset } from "@/lib/types/analytics-types";
 import { computePresetRange, createDefaultTimeRange } from "@/lib/utils/time-range";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
@@ -50,15 +43,9 @@ interface TimeRangeSelectorProps {
   className?: string;
 }
 
-export function TimeRangeSelector({
-  value,
-  onChange,
-  className,
-}: TimeRangeSelectorProps) {
+export function TimeRangeSelector({ value, onChange, className }: TimeRangeSelectorProps) {
   const [customOpen, setCustomOpen] = React.useState(false);
-  const [pendingRange, setPendingRange] = React.useState<
-    DateRange | undefined
-  >();
+  const [pendingRange, setPendingRange] = React.useState<DateRange | undefined>();
 
   function handlePresetChange(preset: string) {
     if (preset === "custom") {
@@ -69,9 +56,7 @@ export function TimeRangeSelector({
       setTimeout(() => setCustomOpen(true), 150);
       return;
     }
-    const range = computePresetRange(
-      preset as Exclude<AnalyticsRangePreset, "custom">,
-    );
+    const range = computePresetRange(preset as Exclude<AnalyticsRangePreset, "custom">);
     onChange({ ...range, preset: preset as AnalyticsRangePreset });
   }
 
@@ -105,9 +90,7 @@ export function TimeRangeSelector({
                 aria-label="Seleccionar periodo de tiempo"
               >
                 <CalendarDays className="size-3.5 shrink-0 text-zinc-400" />
-                <SelectValue placeholder="Periodo">
-                  {triggerLabel}
-                </SelectValue>
+                <SelectValue placeholder="Periodo">{triggerLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="today">{PRESET_LABELS.today}</SelectItem>
@@ -120,16 +103,10 @@ export function TimeRangeSelector({
         </PopoverAnchor>
       </div>
 
-      <PopoverContent
-        className="w-auto rounded-xl p-0"
-        align="start"
-        sideOffset={8}
-      >
+      <PopoverContent className="w-auto rounded-xl p-0" align="start" sideOffset={8}>
         <div className="space-y-3 p-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-zinc-900">
-              Rango personalizado
-            </p>
+            <p className="text-sm font-medium text-zinc-900">Rango personalizado</p>
             {pendingRange?.from && pendingRange?.to && (
               <p className="text-xs text-zinc-500">
                 {formatDateCompact(pendingRange.from.toISOString())} –{" "}

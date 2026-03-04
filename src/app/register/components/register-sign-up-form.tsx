@@ -19,10 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 const signUpSchema = z.object({
-  email: z
-    .string()
-    .email("Introduce un correo válido.")
-    .min(1, "Introduce tu correo."),
+  email: z.string().email("Introduce un correo válido.").min(1, "Introduce tu correo."),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres."),
 });
 
@@ -73,10 +70,7 @@ export function RegisterSignUpForm({
         return;
       }
 
-      if (
-        nextStep.signUpStep === "DONE" ||
-        nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN"
-      ) {
+      if (nextStep.signUpStep === "DONE" || nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN") {
         try {
           await autoSignIn();
         } catch {
@@ -146,11 +140,7 @@ export function RegisterSignUpForm({
           )}
         />
         {rootError && (
-          <p
-            className="text-sm text-red-600 dark:text-red-400"
-            role="alert"
-            aria-live="polite"
-          >
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert" aria-live="polite">
             {rootError}
           </p>
         )}

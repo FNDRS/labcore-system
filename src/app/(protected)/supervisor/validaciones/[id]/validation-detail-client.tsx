@@ -66,36 +66,26 @@ const approvalSchema = z.object({
 });
 
 const rejectionSchema = z.object({
-  reason: z
-    .string()
-    .trim()
-    .min(1, "Debe indicar un motivo de rechazo"),
+  reason: z.string().trim().min(1, "Debe indicar un motivo de rechazo"),
   comments: z.string().optional(),
 });
 
 const incidenceSchema = z.object({
   type: z.enum(incidenceTypeOptions.map((opt) => opt.value) as [string, ...string[]]),
-  description: z
-    .string()
-    .trim()
-    .min(1, "Debe indicar la descripción de la incidencia"),
+  description: z.string().trim().min(1, "Debe indicar la descripción de la incidencia"),
 });
 
 type ApprovalValues = z.infer<typeof approvalSchema>;
 type RejectionValues = z.infer<typeof rejectionSchema>;
 type IncidenceValues = z.infer<typeof incidenceSchema>;
 
-function buildReturnHref(
-	returnTo: string,
-	feedback: "approved" | "rejected",
-	reviewedId: string,
-) {
-	const [pathname, rawQuery = ""] = returnTo.split("?");
-	const params = new URLSearchParams(rawQuery);
-	params.set("feedback", feedback);
-	params.set("reviewed", reviewedId);
-	const query = params.toString();
-	return query ? `${pathname}?${query}` : pathname;
+function buildReturnHref(returnTo: string, feedback: "approved" | "rejected", reviewedId: string) {
+  const [pathname, rawQuery = ""] = returnTo.split("?");
+  const params = new URLSearchParams(rawQuery);
+  params.set("feedback", feedback);
+  params.set("reviewed", reviewedId);
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 function formatDateTime(value: string | null): string {
@@ -123,15 +113,15 @@ function statusLabel(status: ValidationDetail["exam"]["status"]): string {
 }
 
 export function ValidationDetailClient({
-	detail,
-	returnTo,
+  detail,
+  returnTo,
 }: {
-	detail: ValidationDetail;
-	returnTo: string;
+  detail: ValidationDetail;
+  returnTo: string;
 }) {
   const router = useRouter();
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | null>(
-    detail.exam.updatedAt ?? null,
+    detail.exam.updatedAt ?? null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
@@ -165,7 +155,7 @@ export function ValidationDetailClient({
       const status = await approveExamAction(
         detail.exam.id,
         values.comments?.trim() || undefined,
-        expectedUpdatedAt,
+        expectedUpdatedAt
       );
       if (status.ok) {
         setExpectedUpdatedAt(status.updatedAt ?? null);
@@ -195,7 +185,7 @@ export function ValidationDetailClient({
         detail.exam.id,
         values.reason,
         values.comments?.trim() || undefined,
-        expectedUpdatedAt,
+        expectedUpdatedAt
       );
       if (status.ok) {
         setExpectedUpdatedAt(status.updatedAt ?? null);
@@ -220,11 +210,7 @@ export function ValidationDetailClient({
     setConflictMessage(null);
     setIsSubmitting(true);
     try {
-      const status = await createIncidenceAction(
-        detail.exam.id,
-        values.type,
-        values.description,
-      );
+      const status = await createIncidenceAction(detail.exam.id, values.type, values.description);
       if (status.ok) {
         toast.success("Incidencia reportada");
         setIsIncidenceDialogOpen(false);
@@ -307,7 +293,7 @@ export function ValidationDetailClient({
                   detail.exam.status !== "approved" &&
                     detail.exam.status !== "rejected" &&
                     detail.exam.status !== "ready_for_validation" &&
-                    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+                    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                 )}
               >
                 {statusLabel(detail.exam.status)}
@@ -327,16 +313,14 @@ export function ValidationDetailClient({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>
-              <span className="text-muted-foreground">Paciente:</span>{" "}
-              {detail.patient.fullName}
+              <span className="text-muted-foreground">Paciente:</span> {detail.patient.fullName}
             </p>
             <p>
               <span className="text-muted-foreground">N° acceso:</span>{" "}
               {detail.workOrder.accessionNumber ?? "—"}
             </p>
             <p>
-              <span className="text-muted-foreground">Tipo examen:</span>{" "}
-              {detail.examType.name}
+              <span className="text-muted-foreground">Tipo examen:</span> {detail.examType.name}
             </p>
             <p>
               <span className="text-muted-foreground">Técnico:</span>{" "}
@@ -561,9 +545,7 @@ export function ValidationDetailClient({
                         <SelectTrigger
                           id="incidence-type"
                           aria-invalid={fieldState.invalid}
-                          aria-describedby={
-                            fieldState.invalid ? "incidence-type-error" : undefined
-                          }
+                          aria-describedby={fieldState.invalid ? "incidence-type-error" : undefined}
                         >
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>

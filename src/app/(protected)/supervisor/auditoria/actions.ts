@@ -38,41 +38,33 @@ const fetchAuditTimelineCached = cache(
   async (workOrderId: string): Promise<WorkOrderTimeline | null> => {
     await requireSupervisorAuth();
     return getAuditTimelineForWorkOrder(workOrderId);
-  },
+  }
 );
 
-const searchAuditCached = cache(
-  async (query: string): Promise<AuditSearchResult | null> => {
-    await requireSupervisorAuth();
-    return searchAudit(query);
-  },
-);
+const searchAuditCached = cache(async (query: string): Promise<AuditSearchResult | null> => {
+  await requireSupervisorAuth();
+  return searchAudit(query);
+});
 
-const fetchRecentAuditCached = cache(
-  async (limit: number): Promise<RecentAuditActivityItem[]> => {
-    await requireSupervisorAuth();
-    return getRecentAuditActivity(limit);
-  },
-);
+const fetchRecentAuditCached = cache(async (limit: number): Promise<RecentAuditActivityItem[]> => {
+  await requireSupervisorAuth();
+  return getRecentAuditActivity(limit);
+});
 
 export async function fetchAuditTimelineAction(
-  workOrderId: string,
+  workOrderId: string
 ): Promise<WorkOrderTimeline | null> {
   const normalizedWorkOrderId = normalizeWorkOrderId(workOrderId);
   if (!normalizedWorkOrderId) return null;
   return fetchAuditTimelineCached(normalizedWorkOrderId);
 }
 
-export async function searchAuditAction(
-  query: string,
-): Promise<AuditSearchResult | null> {
+export async function searchAuditAction(query: string): Promise<AuditSearchResult | null> {
   const normalizedQuery = normalizeSearchQuery(query);
   if (!normalizedQuery) return null;
   return searchAuditCached(normalizedQuery);
 }
 
-export async function fetchRecentAuditAction(
-  limit = 10,
-): Promise<RecentAuditActivityItem[]> {
+export async function fetchRecentAuditAction(limit = 10): Promise<RecentAuditActivityItem[]> {
   return fetchRecentAuditCached(normalizeLimit(limit));
 }

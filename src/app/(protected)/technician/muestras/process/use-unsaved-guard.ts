@@ -27,7 +27,7 @@ export function useUnsavedGuard(isDirty: boolean): void {
  */
 export function confirmNavigateIfDirty(
   isDirty: boolean,
-  message = "Tienes cambios sin guardar. ¿Seguro que quieres salir?",
+  message = "Tienes cambios sin guardar. ¿Seguro que quieres salir?"
 ): boolean {
   if (!isDirty) return true;
   return window.confirm(message);

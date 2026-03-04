@@ -1,11 +1,9 @@
-import type {
-  AnalyticsRangePreset,
-  AnalyticsTimeRange,
-} from "@/lib/types/analytics-types";
+import type { AnalyticsRangePreset, AnalyticsTimeRange } from "@/lib/types/analytics-types";
 
-export function computePresetRange(
-  preset: Exclude<AnalyticsRangePreset, "custom">,
-): { from: string; to: string } {
+export function computePresetRange(preset: Exclude<AnalyticsRangePreset, "custom">): {
+  from: string;
+  to: string;
+} {
   const now = new Date();
   const to = new Date(
     now.getFullYear(),
@@ -14,16 +12,12 @@ export function computePresetRange(
     23,
     59,
     59,
-    999,
+    999
   ).toISOString();
 
   if (preset === "today") {
     return {
-      from: new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-      ).toISOString(),
+      from: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(),
       to,
     };
   }
@@ -36,7 +30,7 @@ export function computePresetRange(
 }
 
 export function createDefaultTimeRange(
-  preset: AnalyticsRangePreset = "last7d",
+  preset: AnalyticsRangePreset = "last7d"
 ): AnalyticsTimeRange {
   if (preset === "custom") {
     const range = computePresetRange("last7d");

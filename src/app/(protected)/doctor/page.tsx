@@ -7,10 +7,38 @@ const MOCK_STATS = {
 };
 
 const MOCK_PATIENTS = [
-  { id: "1", patientName: "María García", study: "Hemograma completo", status: "Listo", statusVariant: "normal" as const, date: "2025-02-20" },
-  { id: "2", patientName: "Juan Pérez", study: "Perfil lipídico", status: "Crítico", statusVariant: "critical" as const, date: "2025-02-20" },
-  { id: "3", patientName: "Ana López", study: "Glucosa", status: "Atención", statusVariant: "warning" as const, date: "2025-02-19" },
-  { id: "4", patientName: "Carlos Ruiz", study: "TSH", status: "Listo", statusVariant: "normal" as const, date: "2025-02-19" },
+  {
+    id: "1",
+    patientName: "María García",
+    study: "Hemograma completo",
+    status: "Listo",
+    statusVariant: "normal" as const,
+    date: "2025-02-20",
+  },
+  {
+    id: "2",
+    patientName: "Juan Pérez",
+    study: "Perfil lipídico",
+    status: "Crítico",
+    statusVariant: "critical" as const,
+    date: "2025-02-20",
+  },
+  {
+    id: "3",
+    patientName: "Ana López",
+    study: "Glucosa",
+    status: "Atención",
+    statusVariant: "warning" as const,
+    date: "2025-02-19",
+  },
+  {
+    id: "4",
+    patientName: "Carlos Ruiz",
+    study: "TSH",
+    status: "Listo",
+    statusVariant: "normal" as const,
+    date: "2025-02-19",
+  },
 ];
 
 export default function DoctorPage() {

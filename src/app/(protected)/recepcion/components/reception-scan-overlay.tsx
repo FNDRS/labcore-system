@@ -19,7 +19,10 @@ type ReceptionScanOverlayProps = {
 
 function playBeep() {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const ctx = new (
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    )();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -119,7 +122,9 @@ export function ReceptionScanOverlay({
       ) : status === "manual" ? (
         <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white px-8 py-8">
           {closeButton}
-          <p className="text-center text-lg font-semibold text-zinc-900">Ingresar código de orden</p>
+          <p className="text-center text-lg font-semibold text-zinc-900">
+            Ingresar código de orden
+          </p>
           <form onSubmit={handleManualSubmit} className="mt-6 space-y-4">
             <Input
               ref={manualInputRef}
@@ -188,4 +193,3 @@ export function ReceptionScanOverlay({
     </div>
   );
 }
-

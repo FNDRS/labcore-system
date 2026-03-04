@@ -46,11 +46,7 @@ interface IncidenceTrendChartProps {
 
 export function IncidenceTrendChart({ data }: IncidenceTrendChartProps) {
   if (!data.length) {
-    return (
-      <p className="py-12 text-center text-sm text-zinc-400">
-        Sin datos de tendencia
-      </p>
-    );
+    return <p className="py-12 text-center text-sm text-zinc-400">Sin datos de tendencia</p>;
   }
 
   const chartData = React.useMemo(
@@ -59,7 +55,7 @@ export function IncidenceTrendChart({ data }: IncidenceTrendChartProps) {
         date: point.date,
         count: point.count,
       })),
-    [data],
+    [data]
   );
 
   const maxTicks = React.useMemo(() => {

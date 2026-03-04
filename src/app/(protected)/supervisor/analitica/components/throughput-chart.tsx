@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -53,9 +47,7 @@ export function ThroughputChart({ data }: ThroughputChartProps) {
     <Card className="flex h-full min-h-0 flex-col rounded-2xl border border-zinc-100 bg-white shadow-none">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-6">
         <div className="space-y-0.5">
-          <CardTitle className="text-sm font-medium text-zinc-800">
-            Volumen de exámenes
-          </CardTitle>
+          <CardTitle className="text-sm font-medium text-zinc-800">Volumen de exámenes</CardTitle>
           <CardDescription className="text-xs text-zinc-400">
             Aprobados vs rechazados por día
           </CardDescription>
@@ -81,8 +73,6 @@ export function ThroughputChart({ data }: ThroughputChartProps) {
               accessibilityLayer
               data={filtered}
               margin={{ top: 12, right: 4, bottom: 0, left: -8 }}
-              animationDuration={500}
-              animationBegin={0}
             >
               <defs>
                 <linearGradient id="throughputGradApproved" x1="0" y1="0" x2="0" y2="1">
@@ -137,6 +127,8 @@ export function ThroughputChart({ data }: ThroughputChartProps) {
                 stroke="var(--color-rejected)"
                 strokeWidth={1.5}
                 stackId="throughput"
+                animationDuration={500}
+                animationBegin={0}
               />
               <Area
                 dataKey="approved"
@@ -145,6 +137,8 @@ export function ThroughputChart({ data }: ThroughputChartProps) {
                 stroke="var(--color-approved)"
                 strokeWidth={1.5}
                 stackId="throughput"
+                animationDuration={500}
+                animationBegin={0}
               />
               <ChartLegend content={<ChartLegendContent className="text-zinc-500" />} />
             </AreaChart>

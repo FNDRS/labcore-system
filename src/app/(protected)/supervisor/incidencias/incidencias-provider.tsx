@@ -45,7 +45,7 @@ const IncidenciasContext = React.createContext<IncidenciasContextValue | null>(n
 
 function mergeFilters(
   previous: IncidentFeedFilters,
-  updates: Partial<IncidentFeedFilters>,
+  updates: Partial<IncidentFeedFilters>
 ): IncidentFeedFilters {
   return {
     ...previous,
@@ -57,7 +57,7 @@ function mergeFilters(
 
 function appendUniqueById(
   current: IncidentFeedItem[],
-  incoming: IncidentFeedItem[],
+  incoming: IncidentFeedItem[]
 ): IncidentFeedItem[] {
   if (!incoming.length) return current;
   const seen = new Set(current.map((item) => item.id));
@@ -124,7 +124,9 @@ export function IncidenciasProvider({
         const [nextSummary, nextFeedPage, maybePatterns] = await Promise.all([
           fetchIncidentSummaryAction(nextFilters.range),
           fetchIncidentFeedAction(nextFilters, { limit: DEFAULT_PAGE_LIMIT }),
-          tab === "patterns" ? fetchIncidentPatternsAction(nextFilters.range) : Promise.resolve(null),
+          tab === "patterns"
+            ? fetchIncidentPatternsAction(nextFilters.range)
+            : Promise.resolve(null),
         ]);
 
         setSummary(nextSummary);
@@ -139,7 +141,7 @@ export function IncidenciasProvider({
         setIsRefreshing(false);
       }
     },
-    [],
+    []
   );
 
   const setFilters = React.useCallback(
@@ -150,26 +152,23 @@ export function IncidenciasProvider({
         return merged;
       });
     },
-    [refreshForFilters],
+    [refreshForFilters]
   );
 
-  const setTab = React.useCallback(
-    (tab: IncidenciasTab) => {
-      setActiveTab(tab);
-      if (tab !== "patterns" || patternsRef.current) return;
+  const setTab = React.useCallback((tab: IncidenciasTab) => {
+    setActiveTab(tab);
+    if (tab !== "patterns" || patternsRef.current) return;
 
-      const currentFilters = filtersRef.current;
-      setIsLoadingPatterns(true);
-      void fetchIncidentPatternsAction(currentFilters.range)
-        .then((result) => {
-          setPatterns(result);
-        })
-        .finally(() => {
-          setIsLoadingPatterns(false);
-        });
-    },
-    [],
-  );
+    const currentFilters = filtersRef.current;
+    setIsLoadingPatterns(true);
+    void fetchIncidentPatternsAction(currentFilters.range)
+      .then((result) => {
+        setPatterns(result);
+      })
+      .finally(() => {
+        setIsLoadingPatterns(false);
+      });
+  }, []);
 
   const loadMore = React.useCallback(async () => {
     if (!nextCursor || isLoadingMore) return;
@@ -218,7 +217,7 @@ export function IncidenciasProvider({
       setFilters,
       setTab,
       loadMore,
-    ],
+    ]
   );
 
   return <IncidenciasContext.Provider value={value}>{children}</IncidenciasContext.Provider>;

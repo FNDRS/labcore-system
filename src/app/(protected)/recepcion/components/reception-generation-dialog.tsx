@@ -69,7 +69,10 @@ export function ReceptionGenerationDialog({
 
         <div className="space-y-2 text-sm">
           {state.specimens.map((specimen) => (
-            <div key={specimen.specimenCode} className="flex items-start justify-between rounded-md border p-3">
+            <div
+              key={specimen.specimenCode}
+              className="flex items-start justify-between rounded-md border p-3"
+            >
               <p className="font-medium">
                 {specimen.tubeLabel} → {specimen.examCount} exámenes
                 <span className="text-muted-foreground mt-1 block font-normal">
@@ -94,7 +97,12 @@ export function ReceptionGenerationDialog({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onDownloadPdf} disabled={isLoadingSpecimens || state.printState === "generating"}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onDownloadPdf}
+            disabled={isLoadingSpecimens || state.printState === "generating"}
+          >
             {isLoadingSpecimens ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" aria-hidden />

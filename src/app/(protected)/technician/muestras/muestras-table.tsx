@@ -85,112 +85,115 @@ export function MuestrasTable({
   return (
     <div className="space-y-3">
       <div
-          ref={tableRef}
-          className={`overflow-x-auto border border-zinc-100 bg-white ${total > 0 ? "rounded-t-xl border-b-0" : "rounded-xl"}`}
-        >
+        ref={tableRef}
+        className={`overflow-x-auto border border-zinc-100 bg-white ${total > 0 ? "rounded-t-xl border-b-0" : "rounded-xl"}`}
+      >
         <Table>
-        <TableHeader className="bg-zinc-50">
-          <TableRow className="border-b border-border/60 hover:bg-transparent">
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              ID
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Paciente
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Prueba
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Estado
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Prioridad
-            </TableHead>
-            <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Espera
-            </TableHead>
-            <TableHead className="h-12 w-[220px] px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Acción
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedRows.length === 0 ? (
-            <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
-                No hay muestras en esta vista.
-              </TableCell>
+          <TableHeader className="bg-zinc-50">
+            <TableRow className="border-b border-border/60 hover:bg-transparent">
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                ID
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Paciente
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Prueba
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Estado
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Prioridad
+              </TableHead>
+              <TableHead className="h-12 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Espera
+              </TableHead>
+              <TableHead className="h-12 w-[220px] px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Acción
+              </TableHead>
             </TableRow>
-          ) : (
-            paginatedRows.map((row) => (
-              <TableRow
-                key={row.id}
-                ref={rowRefs(row.id)}
-                className={`border-b border-border/40 transition-colors hover:bg-muted/70 ${
-                  highlightedId === row.id
-                    ? "bg-orange-100/80 dark:bg-orange-950/30"
-                    : selectedId === row.id
-                      ? "bg-muted/50"
-                      : ""
-                }`}
-              >
-                <TableCell className="px-6 py-4 font-mono text-sm font-semibold text-muted-foreground">
-                  {row.sampleId}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm font-semibold">{row.patientName}</TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.testType}
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <StatusBadge status={row.status} />
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {row.priority}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                  {formatWaitTime(row.waitMins)}
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:text-foreground inline-flex size-8 items-center justify-center rounded-md transition-colors"
-                        aria-label="Más opciones"
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem onClick={() => onSelect(row.id)}>
-                        Ver detalle
-                      </DropdownMenuItem>
-                      {(row.backendStatus === "received" || row.backendStatus === "inprogress") && (
-                        <DropdownMenuItem onClick={() => onProcess(row.id)}>
-                          Procesar
-                        </DropdownMenuItem>
-                      )}
-                      {(row.backendStatus === "ready_for_lab" ||
-                        row.backendStatus === "pending" ||
-                        row.backendStatus === "labeled") && (
-                        <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
-                          Marcar recibida
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onReportProblem(row.id)}
-                      >
-                        Reportar problema
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+          </TableHeader>
+          <TableBody>
+            {paginatedRows.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  No hay muestras en esta vista.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              paginatedRows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  ref={rowRefs(row.id)}
+                  className={`border-b border-border/40 transition-colors hover:bg-muted/70 ${
+                    highlightedId === row.id
+                      ? "bg-orange-100/80 dark:bg-orange-950/30"
+                      : selectedId === row.id
+                        ? "bg-muted/50"
+                        : ""
+                  }`}
+                >
+                  <TableCell className="px-6 py-4 font-mono text-sm font-semibold text-muted-foreground">
+                    {row.sampleId}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm font-semibold">
+                    {row.patientName}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {row.testType}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <StatusBadge status={row.status} />
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {row.priority}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                    {formatWaitTime(row.waitMins)}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground inline-flex size-8 items-center justify-center rounded-md transition-colors"
+                          aria-label="Más opciones"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => onSelect(row.id)}>
+                          Ver detalle
+                        </DropdownMenuItem>
+                        {(row.backendStatus === "received" ||
+                          row.backendStatus === "inprogress") && (
+                          <DropdownMenuItem onClick={() => onProcess(row.id)}>
+                            Procesar
+                          </DropdownMenuItem>
+                        )}
+                        {(row.backendStatus === "ready_for_lab" ||
+                          row.backendStatus === "pending" ||
+                          row.backendStatus === "labeled") && (
+                          <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
+                            Marcar recibida
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => onReportProblem(row.id)}
+                        >
+                          Reportar problema
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {total > 0 && (

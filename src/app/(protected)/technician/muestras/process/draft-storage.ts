@@ -28,7 +28,7 @@ export function loadDraft(examId: string): Record<string, string | number | unde
 
 export function saveDraft(
   examId: string,
-  results: Record<string, string | number | undefined>,
+  results: Record<string, string | number | undefined>
 ): void {
   if (typeof window === "undefined") return;
   try {

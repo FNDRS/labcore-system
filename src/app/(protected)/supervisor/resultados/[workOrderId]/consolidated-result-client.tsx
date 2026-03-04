@@ -122,7 +122,11 @@ function ClinicalFlagBadge({ flag }: { flag: ConsolidatedExamResult["clinicalFla
   return null;
 }
 
-function PriorityBadge({ priority }: { priority: ConsolidatedWorkOrderResult["workOrder"]["priority"] }) {
+function PriorityBadge({
+  priority,
+}: {
+  priority: ConsolidatedWorkOrderResult["workOrder"]["priority"];
+}) {
   if (priority === "stat") {
     return (
       <span className="rounded-sm bg-rose-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-white">
@@ -157,7 +161,7 @@ function PatientHeader({ result }: { result: ConsolidatedWorkOrderResult }) {
         "rounded-xl border border-zinc-200 bg-white shadow-none",
         overallStatus === "approved" && "border-l-4 border-l-emerald-400",
         overallStatus === "rejected" && "border-l-4 border-l-rose-400",
-        overallStatus === "partial" && "border-l-4 border-l-amber-400",
+        overallStatus === "partial" && "border-l-4 border-l-amber-400"
       )}
     >
       {/* Lab branding strip */}
@@ -191,12 +195,21 @@ function PatientHeader({ result }: { result: ConsolidatedWorkOrderResult }) {
         <span className="text-[12px] text-zinc-500">
           <span className="font-semibold text-zinc-900">{summary.totalExams}</span>{" "}
           {summary.totalExams === 1 ? "examen" : "exámenes"} ·{" "}
-          <span className="font-semibold text-emerald-700">{summary.approvedExams}</span> aprobado{summary.approvedExams !== 1 ? "s" : ""}
+          <span className="font-semibold text-emerald-700">{summary.approvedExams}</span> aprobado
+          {summary.approvedExams !== 1 ? "s" : ""}
           {summary.rejectedExams > 0 ? (
-            <> · <span className="font-semibold text-rose-700">{summary.rejectedExams}</span> rechazado{summary.rejectedExams !== 1 ? "s" : ""}</>
+            <>
+              {" "}
+              · <span className="font-semibold text-rose-700">{summary.rejectedExams}</span>{" "}
+              rechazado{summary.rejectedExams !== 1 ? "s" : ""}
+            </>
           ) : null}
           {summary.pendingExams > 0 ? (
-            <> · <span className="font-semibold text-amber-700">{summary.pendingExams}</span> pendiente{summary.pendingExams !== 1 ? "s" : ""}</>
+            <>
+              {" "}
+              · <span className="font-semibold text-amber-700">{summary.pendingExams}</span>{" "}
+              pendiente{summary.pendingExams !== 1 ? "s" : ""}
+            </>
           ) : null}
         </span>
         {summary.lastValidatedAt ? (
@@ -243,15 +256,16 @@ function ExamSection({ exam }: { exam: ConsolidatedExamResult }) {
       data-exam-section
       className={cn(
         "rounded-xl border border-zinc-200 bg-white shadow-none",
-        exam.examStatus === "approved" && !exam.hasReferenceRangeViolation && exam.clinicalFlag === "normal"
+        exam.examStatus === "approved" &&
+          !exam.hasReferenceRangeViolation &&
+          exam.clinicalFlag === "normal"
           ? "border-l-4 border-l-emerald-300"
           : null,
-        exam.examStatus === "rejected"
-          ? "border-l-4 border-l-rose-300"
-          : null,
-        (exam.hasReferenceRangeViolation || exam.clinicalFlag !== "normal") && exam.examStatus !== "rejected"
+        exam.examStatus === "rejected" ? "border-l-4 border-l-rose-300" : null,
+        (exam.hasReferenceRangeViolation || exam.clinicalFlag !== "normal") &&
+          exam.examStatus !== "rejected"
           ? "border-l-4 border-l-amber-300"
-          : null,
+          : null
       )}
     >
       {/* Exam header */}
@@ -284,10 +298,7 @@ function ExamSection({ exam }: { exam: ConsolidatedExamResult }) {
             </p>
           </div>
         ) : exam.fieldSchema.sections.length > 0 ? (
-          <ExamResultViewer
-            fieldSchema={exam.fieldSchema}
-            resultValues={exam.results}
-          />
+          <ExamResultViewer fieldSchema={exam.fieldSchema} resultValues={exam.results} />
         ) : (
           <p className="text-[13px] text-zinc-400 italic">Sin resultados registrados.</p>
         )}
@@ -303,10 +314,7 @@ function ExamSection({ exam }: { exam: ConsolidatedExamResult }) {
 
 function PrintFooter() {
   return (
-    <div
-      data-print-footer
-      className="mt-8 border-t border-zinc-200 pt-4"
-    >
+    <div data-print-footer className="mt-8 border-t border-zinc-200 pt-4">
       <div className="flex items-end justify-between text-[11px] text-zinc-400">
         <div className="space-y-0.5">
           <p className="font-bold uppercase tracking-widest text-zinc-500">LabCore LIS</p>
@@ -314,7 +322,16 @@ function PrintFooter() {
           <p>Documento generado electrónicamente — no requiere firma física</p>
         </div>
         <div className="text-right">
-          <p>Impreso: {new Date().toLocaleString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+          <p>
+            Impreso:{" "}
+            {new Date().toLocaleString("es-CL", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
       </div>
     </div>
@@ -330,10 +347,7 @@ interface ActionBarProps {
 
 function ActionBar({ onPrint, onExportPdf }: ActionBarProps) {
   return (
-    <div
-      data-no-print
-      className="flex items-center justify-end gap-2"
-    >
+    <div data-no-print className="flex items-center justify-end gap-2">
       <button
         type="button"
         onClick={onPrint}
@@ -376,14 +390,10 @@ export function ConsolidatedResultClient({ result }: ConsolidatedResultClientPro
 
         {result.exams.length === 0 ? (
           <div className="rounded-xl border border-zinc-200 bg-white px-6 py-10 text-center shadow-none">
-            <p className="text-[13px] text-zinc-400">
-              No se encontraron exámenes en esta orden.
-            </p>
+            <p className="text-[13px] text-zinc-400">No se encontraron exámenes en esta orden.</p>
           </div>
         ) : (
-          result.exams.map((exam) => (
-            <ExamSection key={exam.examId} exam={exam} />
-          ))
+          result.exams.map((exam) => <ExamSection key={exam.examId} exam={exam} />)
         )}
 
         <PrintFooter />

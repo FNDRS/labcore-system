@@ -23,10 +23,7 @@ export function ScanBar({
   return (
     <div className="flex flex-wrap items-center gap-4 px-4 py-3">
       <div className="flex flex-1 flex-wrap items-center gap-3">
-        <label
-          htmlFor="scan-input"
-          className="text-muted-foreground text-sm font-medium"
-        >
+        <label htmlFor="scan-input" className="text-muted-foreground text-sm font-medium">
           Escanear muestra:
         </label>
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">

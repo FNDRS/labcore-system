@@ -60,13 +60,7 @@ function PriorityChip({ priority }: { priority: ResultsListItem["priority"] }) {
   return <span className="text-xs text-zinc-400">Rutina</span>;
 }
 
-function ExamProgressBar({
-  terminalCount,
-  total,
-}: {
-  terminalCount: number;
-  total: number;
-}) {
+function ExamProgressBar({ terminalCount, total }: { terminalCount: number; total: number }) {
   const pct = total > 0 ? Math.round((terminalCount / total) * 100) : 0;
   return (
     <div className="flex items-center gap-2">
@@ -77,7 +71,7 @@ function ExamProgressBar({
         <div
           className={cn(
             "h-full rounded-full transition-all duration-300",
-            pct === 100 ? "bg-emerald-500" : "bg-amber-400",
+            pct === 100 ? "bg-emerald-500" : "bg-amber-400"
           )}
           style={{ width: `${pct}%` }}
         />
@@ -94,12 +88,8 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
       </div>
       {hasFilters ? (
         <>
-          <p className="text-[13px] font-medium text-zinc-600">
-            Sin resultados para esta búsqueda
-          </p>
-          <p className="text-xs text-zinc-400">
-            Ajusta los filtros o amplía el rango de fechas
-          </p>
+          <p className="text-[13px] font-medium text-zinc-600">Sin resultados para esta búsqueda</p>
+          <p className="text-xs text-zinc-400">Ajusta los filtros o amplía el rango de fechas</p>
         </>
       ) : (
         <>
@@ -126,7 +116,10 @@ export function ResultsTable() {
   // Limpiar pending cuando la navegación a resultados termina
   useEffect(() => {
     if (!pendingWorkOrderId || pathname == null) return;
-    if (pathname === `/supervisor/resultados/${pendingWorkOrderId}` || pathname.startsWith(`/supervisor/resultados/${pendingWorkOrderId}/`)) {
+    if (
+      pathname === `/supervisor/resultados/${pendingWorkOrderId}` ||
+      pathname.startsWith(`/supervisor/resultados/${pendingWorkOrderId}/`)
+    ) {
       setPendingWorkOrderId(null);
     }
   }, [pathname, pendingWorkOrderId]);
@@ -143,7 +136,7 @@ export function ResultsTable() {
     <Card
       className={cn(
         "overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-none transition-opacity duration-150",
-        isLoading && "opacity-50",
+        isLoading && "opacity-50"
       )}
     >
       <Table>
@@ -194,13 +187,17 @@ export function ResultsTable() {
                     </span>
                   </TableCell>
                   <TableCell className="py-3.5">
-                    <span className="text-[13px] font-medium text-zinc-900">{item.patientName}</span>
+                    <span className="text-[13px] font-medium text-zinc-900">
+                      {item.patientName}
+                    </span>
                     {item.referringDoctor ? (
                       <p className="mt-0.5 text-[11px] text-zinc-400">{item.referringDoctor}</p>
                     ) : null}
                   </TableCell>
                   <TableCell className="py-3.5">
-                    <span className="text-[13px] text-zinc-600">{formatDate(item.requestedAt)}</span>
+                    <span className="text-[13px] text-zinc-600">
+                      {formatDate(item.requestedAt)}
+                    </span>
                   </TableCell>
                   <TableCell className="py-3.5">
                     <PriorityChip priority={item.priority} />
@@ -226,7 +223,7 @@ export function ResultsTable() {
                       aria-busy={isPending}
                       className={cn(
                         "inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300",
-                        isPending && "pointer-events-none opacity-80",
+                        isPending && "pointer-events-none opacity-80"
                       )}
                     >
                       {isPending ? (

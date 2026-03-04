@@ -35,10 +35,7 @@ export async function proxy(request: NextRequest) {
       nextServerContext: { request, response },
       operation: async (contextSpec) => {
         const session = await fetchAuthSession(contextSpec);
-        return (
-          session.tokens?.accessToken !== undefined &&
-          session.tokens?.idToken !== undefined
-        );
+        return session.tokens?.accessToken !== undefined && session.tokens?.idToken !== undefined;
       },
     });
 

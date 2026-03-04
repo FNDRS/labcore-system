@@ -5,28 +5,19 @@ import { Loader2 } from "lucide-react";
 import { TimeRangeSelector } from "@/components/time-range-selector";
 import type { AnalyticsDashboardData } from "@/lib/types/analytics-types";
 import { cn } from "@/lib/utils";
-import {
-  AnalyticsProvider,
-  useAnalyticsProvider,
-} from "./analytics-provider";
+import { AnalyticsProvider, useAnalyticsProvider } from "./analytics-provider";
 import { DetailedChartsSection as DetailedChartsGrid } from "./components/detailed-charts-section";
 import { KPICards } from "./components/kpi-cards";
 import { ChartSkeleton } from "./components/chart-skeleton";
 
 const ThroughputChart = dynamic(
-  () =>
-    import("./components/throughput-chart").then(
-      (mod) => mod.ThroughputChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="min-h-[340px] w-full rounded-xl" /> },
+  () => import("./components/throughput-chart").then((mod) => mod.ThroughputChart),
+  { ssr: false, loading: () => <ChartSkeleton className="min-h-[340px] w-full rounded-xl" /> }
 );
 
 const ExamMixChart = dynamic(
-  () =>
-    import("./components/exam-mix-chart").then(
-      (mod) => mod.ExamMixChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="min-h-[340px] w-full rounded-xl" /> },
+  () => import("./components/exam-mix-chart").then((mod) => mod.ExamMixChart),
+  { ssr: false, loading: () => <ChartSkeleton className="min-h-[340px] w-full rounded-xl" /> }
 );
 
 function DashboardToolbar() {
@@ -34,13 +25,8 @@ function DashboardToolbar() {
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <TimeRangeSelector
-        value={state.range}
-        onChange={actions.setRange}
-      />
-      {state.isLoading && (
-        <Loader2 className="size-4 animate-spin text-zinc-400" />
-      )}
+      <TimeRangeSelector value={state.range} onChange={actions.setRange} />
+      {state.isLoading && <Loader2 className="size-4 animate-spin text-zinc-400" />}
     </div>
   );
 }
@@ -48,12 +34,7 @@ function DashboardToolbar() {
 function DashboardKPIs() {
   const { state } = useAnalyticsProvider();
 
-  return (
-    <KPICards
-      kpis={state.kpis}
-      isLoading={state.isLoading}
-    />
-  );
+  return <KPICards kpis={state.kpis} isLoading={state.isLoading} />;
 }
 
 function DashboardPrimaryCharts() {
@@ -63,7 +44,7 @@ function DashboardPrimaryCharts() {
     <div
       className={cn(
         "grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-stretch",
-        state.isLoading && "pointer-events-none opacity-60",
+        state.isLoading && "pointer-events-none opacity-60"
       )}
     >
       <div className="min-h-0 lg:col-span-3 lg:h-full">

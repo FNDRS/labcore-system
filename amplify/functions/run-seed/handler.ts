@@ -3,7 +3,7 @@ import { Schema } from "../../data/resource";
 import { env } from "$amplify/env/run-seed";
 
 const lambda = new LambdaClient({});
-const SEED_DATA_FUNCTION_NAME = env.SEED_DATA_FUNCTION_NAME; 
+const SEED_DATA_FUNCTION_NAME = env.SEED_DATA_FUNCTION_NAME;
 
 export const handler: Schema["runSeed"]["functionHandler"] = async (event, context) => {
   if (!SEED_DATA_FUNCTION_NAME) {

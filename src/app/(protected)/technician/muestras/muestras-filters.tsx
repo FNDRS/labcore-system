@@ -42,9 +42,7 @@ export function MuestrasFilters({
           onClick={() => onFilter(f.value)}
         >
           {f.label}
-          <span className="text-muted-foreground ml-1.5 text-[10px]">
-            ({i + 1})
-          </span>
+          <span className="text-muted-foreground ml-1.5 text-[10px]">({i + 1})</span>
         </Button>
       ))}
     </div>

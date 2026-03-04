@@ -6,10 +6,7 @@ export function IncidenciasSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card
-            key={i}
-            className="rounded-xl border border-zinc-200 bg-white shadow-none"
-          >
+          <Card key={i} className="rounded-xl border border-zinc-200 bg-white shadow-none">
             <CardHeader className="pb-2">
               <Skeleton className="h-3 w-24" />
             </CardHeader>

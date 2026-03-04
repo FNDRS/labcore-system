@@ -7,7 +7,6 @@
 
 ## Execution Checklist
 
-
 | #   | Test Case                                      | Pass | Fail | Notes |
 | --- | ---------------------------------------------- | ---- | ---- | ----- |
 | 1   | Reception — List Orders and View Detail        |      |      |       |
@@ -25,7 +24,6 @@
 | 13  | Reception — Scan Order Lookup                  |      |      |       |
 | 14  | Order Without Requested Exams (Edge)           |      |      |       |
 
-
 **Recommended order for full E2E:** 1 → 2 → 3 → 4 → 6 → 7 → 8 → 9 (covers happy path).
 
 ---
@@ -41,13 +39,11 @@
 
 Before running tests, capture these for verification:
 
-
 | Entity    | How to get                                                               |
 | --------- | ------------------------------------------------------------------------ |
 | WorkOrder | `accessionNumber` (e.g. `ORD-2025-001`), or list from reception          |
 | Sample    | Created after "Generar muestras"; `barcode` (e.g. `SMP-ORD-2025-001-01`) |
 | Exam      | Created with Sample; linked via `Sample.id` → `Exam.sampleId`            |
-
 
 ---
 
@@ -67,7 +63,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step         | Expected                                                       |
 | ------------ | -------------------------------------------------------------- |
 | Page loads   | "Órdenes entrantes" header visible                             |
@@ -76,15 +71,12 @@ Before running tests, capture these for verification:
 | Filters      | Quick filters (Todas, Urgentes, Sin muestras, etc.) and search |
 | Badge        | "X pendientes" shows count                                     |
 
-
 ### DB Verification
-
 
 | Entity    | Expected                                                                            |
 | --------- | ----------------------------------------------------------------------------------- |
 | WorkOrder | `status` = `pending`; `requestedExamTypeCodes` non-empty; `accessionNumber` present |
 | Sample    | No records for these WorkOrders yet                                                 |
-
 
 ---
 
@@ -106,7 +98,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step            | Expected                                                                        |
 | --------------- | ------------------------------------------------------------------------------- |
 | Before generate | "Generar" enabled for orders with "Sin muestras"                                |
@@ -114,16 +105,13 @@ Before running tests, capture these for verification:
 | After success   | Modal shows list of specimens with barcodes (e.g. `SMP-ORD-2025-001-01`, `-02`) |
 | No error        | No error toast or message                                                       |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                                                                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sample     | One record per requested exam type; `workOrderId` = order id; `status` = `labeled`; `barcode` = `SMP-{accession}-01`, etc.; `examTypeId` matches ExamType.code |
 | Exam       | One Exam per Sample; `sampleId` = Sample.id; `status` = `pending`; `examTypeId` matches Sample                                                                 |
 | AuditEvent | `entityType` = `WorkOrder`, `entityId` = WorkOrder.id, `action` = `SPECIMENS_GENERATED`; also `LABEL_PRINTED`                                                  |
-
 
 ### Idempotency Check
 
@@ -150,7 +138,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step                  | Expected                                                             |
 | --------------------- | -------------------------------------------------------------------- |
 | Before PDF download   | "Listo" disabled; "Descargar PDF" enabled                            |
@@ -159,15 +146,12 @@ Before running tests, capture these for verification:
 | Order in table        | Status changes from "Muestras creadas" to "Procesando" or equivalent |
 | Technician visibility | Samples now appear in technician muestras queue                      |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                     |
 | ---------- | ------------------------------------------------------------ |
 | Sample     | All Samples for that WorkOrder: `status` = `ready_for_lab`   |
 | AuditEvent | `action` = `ORDER_READY_FOR_LAB`; `entityType` = `WorkOrder` |
-
 
 ---
 
@@ -191,7 +175,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step           | Expected                                                                              |
 | -------------- | ------------------------------------------------------------------------------------- |
 | Dashboard      | Metrics reflect real data (or 0 if no completed yet)                                  |
@@ -200,14 +183,11 @@ Before running tests, capture these for verification:
 | Filters        | Filtering updates visible rows correctly                                              |
 | Search         | Search narrows results by patient/barcode                                             |
 
-
 ### DB Verification
-
 
 | Entity | Expected                                                                                                    |
 | ------ | ----------------------------------------------------------------------------------------------------------- |
 | Sample | Samples with `status` in `ready_for_lab`, `received`, `inprogress`, `completed`, `rejected` appear in queue |
-
 
 ---
 
@@ -228,22 +208,18 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step         | Expected                                                       |
 | ------------ | -------------------------------------------------------------- |
 | Scan success | Sample is located; detail panel opens or sample is highlighted |
 | Scan failure | Error message for invalid/unknown barcode                      |
 | No duplicate | Scanning same barcode again does not create duplicate records  |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------------------------- |
 | Sample     | No status change from scan alone; scan is lookup only. (If receive-on-scan is implemented, `status` may transition.) |
 | AuditEvent | Optional: `SPECIMEN_SCANNED` if implemented                                                                          |
-
 
 ---
 
@@ -263,22 +239,18 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
-| Step          | Expected                                                                   |
-| ------------- | -------------------------------------------------------------------------- |
-| Before action | "Recibir" visible for samples in ready_for_lab state                       |
+| Step          | Expected                                                                  |
+| ------------- | ------------------------------------------------------------------------- |
+| Before action | "Recibir" visible for samples in ready_for_lab state                      |
 | After success | Status updates to "Received" (or stays "Received" in UI); panel refreshes |
-| Error case    | If sample is not `ready_for_lab`, error message shown                      |
-
+| Error case    | If sample is not `ready_for_lab`, error message shown                     |
 
 ### DB Verification
-
 
 | Entity     | Expected                                                    |
 | ---------- | ----------------------------------------------------------- |
 | Sample     | `status` = `received`; `receivedAt` set to current datetime |
 | AuditEvent | `entityType` = `Sample`, `action` = `SPECIMEN_RECEIVED`     |
-
 
 ---
 
@@ -299,7 +271,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step          | Expected                                                                                                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------- |
 | Before action | "Procesar" visible for received samples                                                                       |
@@ -307,16 +278,13 @@ Before running tests, capture these for verification:
 | Process page  | Header "Procesando muestra {barcode}"; ExamType name; form with sections/fields from `fieldSchema`            |
 | Form fields   | Renders string, numeric, enum fields per ExamType.fieldSchema; reference ranges and units shown where defined |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------------------------- |
 | Sample     | `status` = `inprogress`                                                                                              |
 | Exam       | `status` = `inprogress` (or `pending` if markExamStarted not yet run); `startedAt` and `performedBy` set when opened |
 | AuditEvent | `SPECIMEN_IN_PROGRESS` for Sample; `EXAM_STARTED` for Exam (when opened with status pending)                         |
-
 
 ---
 
@@ -338,7 +306,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step          | Expected                                                              |
 | ------------- | --------------------------------------------------------------------- |
 | Dirty state   | "Guardar borrador" enabled when form has changes                      |
@@ -346,15 +313,12 @@ Before running tests, capture these for verification:
 | After success | Toast "Borrador guardado"; dirty flag clears                          |
 | Validation    | Invalid values (if applicable) show `aria-invalid` and error messages |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                                                  |
 | ---------- | ----------------------------------------------------------------------------------------- |
 | Exam       | `results` JSON updated with entered values; `status` remains `inprogress`                 |
 | AuditEvent | `entityType` = `Exam`, `action` = `EXAM_RESULTS_SAVED`, `metadata` includes `draft: true` |
-
 
 ---
 
@@ -375,23 +339,19 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step    | Expected                                                          |
 | ------- | ----------------------------------------------------------------- |
 | Submit  | "Enviar a validación" submits; loading state during request       |
 | Success | Toast "Enviado a validación"; redirects to `/technician/muestras` |
 | Queue   | Sample no longer in "Processing" (or appears as "Completed")      |
 
-
 ### DB Verification
-
 
 | Entity     | Expected                                                                                            |
 | ---------- | --------------------------------------------------------------------------------------------------- |
 | Exam       | `status` = `ready_for_validation`; `results` = submitted values; `resultedAt` and `performedBy` set |
 | Sample     | `status` = `completed` (when all exams for that sample are ready_for_validation/approved/rejected)  |
 | AuditEvent | `EXAM_RESULTS_SAVED` (finalized); `EXAM_SENT_TO_VALIDATION`; `SPECIMEN_COMPLETED` for Sample        |
-
 
 ---
 
@@ -413,13 +373,11 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step                | Expected                                                                |
 | ------------------- | ----------------------------------------------------------------------- |
 | Navigate with dirty | Confirmation dialog: "Tienes cambios sin guardar. ¿Salir?" (or similar) |
 | Confirm leave       | Navigates away; changes lost                                            |
 | Cancel              | Stays on page; form state preserved                                     |
-
 
 ---
 
@@ -439,13 +397,11 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step      | Expected                                                               |
 | --------- | ---------------------------------------------------------------------- |
 | Banner    | "Hay un borrador guardado localmente" with "Recuperar" and "Descartar" |
 | Recuperar | Restores draft values into form; banner dismisses; form dirty          |
 | Descartar | Clears draft from storage; banner dismisses; form uses server values   |
-
 
 ---
 
@@ -466,7 +422,6 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step            | Expected                                              |
 | --------------- | ----------------------------------------------------- |
 | Tab B submit    | Conflict message: "Otro usuario modificó este examen" |
@@ -474,14 +429,11 @@ Before running tests, capture these for verification:
 | Recargar        | Refreshes page with server state                      |
 | Cerrar          | Dismisses banner; user can retry or leave             |
 
-
 ### DB Verification
-
 
 | Entity | Expected                                                                             |
 | ------ | ------------------------------------------------------------------------------------ |
 | Exam   | Only the first successful update persisted; second fails due to `updatedAt` mismatch |
-
 
 ---
 
@@ -502,13 +454,11 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step         | Expected                                            |
 | ------------ | --------------------------------------------------- |
 | Match found  | Order is selected; sheet opens or order highlighted |
 | No match     | "No encontrada" or similar message                  |
 | Manual entry | If supported, same behavior as scan                 |
-
 
 ---
 
@@ -527,26 +477,21 @@ Before running tests, capture these for verification:
 
 ### UI Verification
 
-
 | Step     | Expected                                                           |
 | -------- | ------------------------------------------------------------------ |
 | Generate | Error message: "La orden no tiene exámenes solicitados" or similar |
 
-
 ### DB Verification
-
 
 | Entity | Expected               |
 | ------ | ---------------------- |
 | Sample | No new Samples created |
-
 
 ---
 
 ## Status Transition Summary
 
 Use this as a quick reference when verifying DB state:
-
 
 | Stage                           | Sample.status   | Exam.status                                        |
 | ------------------------------- | --------------- | -------------------------------------------------- |
@@ -558,11 +503,9 @@ Use this as a quick reference when verifying DB state:
 | After "Guardar borrador"        | `inprogress`    | `inprogress`                                       |
 | After "Enviar a validación"     | `completed`     | `ready_for_validation`                             |
 
-
 ---
 
 ## Audit Event Reference
-
 
 | Action                    | EntityType | When                                |
 | ------------------------- | ---------- | ----------------------------------- |
@@ -576,7 +519,6 @@ Use this as a quick reference when verifying DB state:
 | `EXAM_SENT_TO_VALIDATION` | Exam       | Send to validation                  |
 | `SPECIMEN_COMPLETED`      | Sample     | All exams ready → Sample completed  |
 
-
 ---
 
 ## Notes
@@ -584,4 +526,3 @@ Use this as a quick reference when verifying DB state:
 - **Order creation:** Phase 0–3 manual tests assume orders come from seed. "Nueva Orden" UI (A1 in flujo) is out of scope for this checkpoint.
 - **Multi-exam samples:** Seed creates 1 Exam per Sample. Multi-exam samples would require "all exams ready" logic for Sample completion.
 - **Supervisor/Doctor:** Phase 4–5; not covered in this document.
-

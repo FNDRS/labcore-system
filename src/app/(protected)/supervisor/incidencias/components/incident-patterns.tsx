@@ -4,15 +4,13 @@ import dynamic from "next/dynamic";
 import { useIncidencias } from "../incidencias-provider";
 
 const RejectionReasonsChart = dynamic(
-  () =>
-    import("./rejection-reasons-chart").then((m) => m.RejectionReasonsChart),
-  { ssr: false, loading: () => <ChartsSkeleton /> },
+  () => import("./rejection-reasons-chart").then((m) => m.RejectionReasonsChart),
+  { ssr: false, loading: () => <ChartsSkeleton /> }
 );
 
 const IncidenceTrendChart = dynamic(
-  () =>
-    import("./incidence-trend-chart").then((m) => m.IncidenceTrendChart),
-  { ssr: false, loading: () => <ChartsSkeleton /> },
+  () => import("./incidence-trend-chart").then((m) => m.IncidenceTrendChart),
+  { ssr: false, loading: () => <ChartsSkeleton /> }
 );
 
 function ChartsSkeleton() {

@@ -42,9 +42,7 @@ function RegisterForm() {
             height={28}
             className="dark:invert"
           />
-          <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">
-            LabCore
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">LabCore</h1>
         </div>
         <div className="mt-6 text-center">
           <h2 className="text-xl font-semibold text-black dark:text-white">
@@ -63,10 +61,7 @@ function RegisterForm() {
             onConfirmRequired={handleConfirmRequired}
           />
         ) : (
-          <RegisterConfirmForm
-            email={confirmedEmail}
-            onUseOtherEmail={handleUseOtherEmail}
-          />
+          <RegisterConfirmForm email={confirmedEmail} onUseOtherEmail={handleUseOtherEmail} />
         )}
 
         <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">

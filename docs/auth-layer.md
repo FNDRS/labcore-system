@@ -23,11 +23,11 @@ LabCore LIS uses **AWS Amplify Auth (Cognito)** with a layered security model: s
 
 The application employs three layers of authentication/authorization:
 
-| Layer | Location | Responsibility |
-|-------|----------|----------------|
-| **Layer 1: Proxy/Middleware** | `src/proxy.ts` | First-line server check. Blocks unauthenticated requests to protected paths. Redirects wrong-role users to their home route. |
-| **Layer 2: Server Layout** | `src/app/(protected)/layout.tsx` | Server-side auth + group check for all `/technician`, `/supervisor`, `/admin` routes. Passes `x-pathname` to layout. |
-| **Layer 3: Auth Context** | `src/contexts/auth-context.tsx` | Client-side state, Hub listeners, AuthGuard (if used), redirects for login page. |
+| Layer                         | Location                         | Responsibility                                                                                                               |
+| ----------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Layer 1: Proxy/Middleware** | `src/proxy.ts`                   | First-line server check. Blocks unauthenticated requests to protected paths. Redirects wrong-role users to their home route. |
+| **Layer 2: Server Layout**    | `src/app/(protected)/layout.tsx` | Server-side auth + group check for all `/technician`, `/supervisor`, `/admin` routes. Passes `x-pathname` to layout.         |
+| **Layer 3: Auth Context**     | `src/contexts/auth-context.tsx`  | Client-side state, Hub listeners, AuthGuard (if used), redirects for login page.                                             |
 
 ### 1.2 Role & Route Mapping
 
@@ -260,6 +260,7 @@ sequenceDiagram
 **Purpose:** First line of defense for protected paths.
 
 **Logic:**
+
 1. Reads `pathname` from `request.nextUrl.pathname`.
 2. Uses `getRequiredGroupForPath(pathname)` — returns `"tecnico" | "supervisor" | "admin" | null`.
 3. If no required group → `NextResponse.next()` (pass through).
@@ -278,37 +279,39 @@ sequenceDiagram
 
 ### 5.2 `src/lib/auth.ts` (Shared Auth Utilities)
 
-| Export | Use | Description |
-|--------|-----|-------------|
-| `AUTH_GROUPS` | Both | `["tecnico", "supervisor", "admin"]` |
-| `AuthGroup` | Both | Type for valid group names |
-| `GROUP_TO_ROUTE` | Both | Map group → route prefix |
-| `ROLE_PRIORITY` | Both | `["admin", "supervisor", "tecnico"]` |
-| `getUserGroups()` | Client | Reads `cognito:groups` from `fetchAuthSession()` |
-| `getRequiredGroupForPath(pathname)` | Both | Returns required group for path or null |
-| `hasAccessToPath(userGroups, pathname)` | Client | `userGroups.includes(requiredGroup)` |
-| `getDefaultRoleRoute()` | Client | Highest-priority group’s route |
+| Export                                  | Use    | Description                                      |
+| --------------------------------------- | ------ | ------------------------------------------------ |
+| `AUTH_GROUPS`                           | Both   | `["tecnico", "supervisor", "admin"]`             |
+| `AuthGroup`                             | Both   | Type for valid group names                       |
+| `GROUP_TO_ROUTE`                        | Both   | Map group → route prefix                         |
+| `ROLE_PRIORITY`                         | Both   | `["admin", "supervisor", "tecnico"]`             |
+| `getUserGroups()`                       | Client | Reads `cognito:groups` from `fetchAuthSession()` |
+| `getRequiredGroupForPath(pathname)`     | Both   | Returns required group for path or null          |
+| `hasAccessToPath(userGroups, pathname)` | Client | `userGroups.includes(requiredGroup)`             |
+| `getDefaultRoleRoute()`                 | Client | Highest-priority group’s route                   |
 
 ---
 
 ### 5.3 `src/lib/auth-server.ts` (Server Auth)
 
-| Export | Description |
-|--------|-------------|
-| `getUserGroupsServer(ctx)` | Reads groups from `fetchAuthSession(ctx)` inside Amplify context |
-| `requireAuthWithGroup(ctx, requiredGroup?)` | Throws if no user or missing required group |
+| Export                                      | Description                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `getUserGroupsServer(ctx)`                  | Reads groups from `fetchAuthSession(ctx)` inside Amplify context |
+| `requireAuthWithGroup(ctx, requiredGroup?)` | Throws if no user or missing required group                      |
 
 ---
 
 ### 5.4 `src/contexts/auth-context.tsx`
 
 **Provider (`AuthProviderInner`):**
+
 - State: `user`, `groups`, `userEmail`, `userName`, `isLoading`, `isAuthenticated`.
 - Actions: `refreshAuth`, `redirectToRoleRoute`, `signOut`.
 - On mount: calls `refreshAuth()`.
 - Hub listener: `signedIn` / `tokenRefresh` → `refreshAuth`; `signedOut` / `tokenRefresh_failure` → clear state.
 
 **AuthGuard (if used):**
+
 - Reads `state` and `pathname`.
 - If not loading and not authenticated → `router.replace("/")`.
 - If not loading and `!hasAccessToPath(groups, pathname)` → redirect to `GROUP_TO_ROUTE[groups[0]]`.
@@ -363,13 +366,13 @@ sequenceDiagram
 
 ## 6. Data Flow Summary
 
-| Source | Destination | Data |
-|--------|-------------|------|
-| Cognito | `fetchAuthSession` / `getCurrentUser` | JWT, `cognito:groups` |
-| Cookies | `runWithAmplifyServerContext({ cookies })` | Session tokens |
-| Proxy | Protected layout | `x-pathname` header |
-| AuthContext | Login page, AppSidebar, AuthGuard | `state`, `actions` |
-| Hub | AuthContext | `signedIn`, `signedOut`, `tokenRefresh` |
+| Source      | Destination                                | Data                                    |
+| ----------- | ------------------------------------------ | --------------------------------------- |
+| Cognito     | `fetchAuthSession` / `getCurrentUser`      | JWT, `cognito:groups`                   |
+| Cookies     | `runWithAmplifyServerContext({ cookies })` | Session tokens                          |
+| Proxy       | Protected layout                           | `x-pathname` header                     |
+| AuthContext | Login page, AppSidebar, AuthGuard          | `state`, `actions`                      |
+| Hub         | AuthContext                                | `signedIn`, `signedOut`, `tokenRefresh` |
 
 ---
 

@@ -25,9 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
-  query: z
-    .string()
-    .min(1, "Ingresa un número de acceso, código de barras o nombre de paciente"),
+  query: z.string().min(1, "Ingresa un número de acceso, código de barras o nombre de paciente"),
 });
 
 type SearchFormValues = z.infer<typeof searchSchema>;
@@ -129,7 +127,7 @@ function SearchForm({ defaultQuery = "", onClear, hasActiveSearch }: SearchFormP
             className={cn(
               "h-10 rounded-lg border-zinc-200 bg-white pl-10 pr-10 text-sm shadow-none placeholder:text-zinc-400",
               "focus-visible:border-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0",
-              (errors.query || notFound) && "border-red-300 focus-visible:border-red-400",
+              (errors.query || notFound) && "border-red-300 focus-visible:border-red-400"
             )}
           />
           {queryValue && (
@@ -145,11 +143,7 @@ function SearchForm({ defaultQuery = "", onClear, hasActiveSearch }: SearchFormP
         </div>
 
         <Button type="submit" size="default" disabled={isLoading} className="h-10 shrink-0">
-          {isLoading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            "Buscar"
-          )}
+          {isLoading ? <Loader2 className="size-4 animate-spin" /> : "Buscar"}
         </Button>
 
         {hasActiveSearch && (
@@ -224,7 +218,7 @@ function RecentActivityList({ items }: RecentActivityListProps) {
                 "group flex w-full items-center gap-3 py-3 text-left transition-colors",
                 "hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-1",
                 "rounded-lg px-3 -mx-3",
-                isPending && "pointer-events-none opacity-60",
+                isPending && "pointer-events-none opacity-60"
               )}
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-zinc-200">
@@ -296,7 +290,7 @@ function ActiveTimelineHeader({ timeline }: ActiveTimelineHeaderProps) {
               <Badge
                 className={cn(
                   "rounded-full border px-2 py-0.5 text-[11px] font-medium",
-                  priorityConfig.className,
+                  priorityConfig.className
                 )}
               >
                 {priorityConfig.label}
@@ -311,9 +305,7 @@ function ActiveTimelineHeader({ timeline }: ActiveTimelineHeaderProps) {
               </span>
             )}
             {timeline.referringDoctor && (
-              <span className="text-[12px] text-zinc-500">
-                Dr. {timeline.referringDoctor}
-              </span>
+              <span className="text-[12px] text-zinc-500">Dr. {timeline.referringDoctor}</span>
             )}
           </div>
         </div>
@@ -383,11 +375,7 @@ export function AuditSearchClient({ recentActivity, timeline }: AuditSearchClien
 
       {/* Search form */}
       <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-none">
-        <SearchForm
-          defaultQuery=""
-          onClear={handleClear}
-          hasActiveSearch={timeline !== null}
-        />
+        <SearchForm defaultQuery="" onClear={handleClear} hasActiveSearch={timeline !== null} />
       </div>
 
       {/* Active timeline */}

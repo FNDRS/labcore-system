@@ -1,8 +1,5 @@
 import { Suspense } from "react";
-import {
-  fetchIncidentFeedAction,
-  fetchIncidentSummaryAction,
-} from "./actions";
+import { fetchIncidentFeedAction, fetchIncidentSummaryAction } from "./actions";
 import { IncidenciasClient } from "./incidencias-client";
 import { IncidenciasProvider } from "./incidencias-provider";
 import { IncidenciasSkeleton } from "./incidencias-skeleton";
@@ -14,10 +11,7 @@ async function IncidenciasLoader() {
   const initialRange = createDefaultTimeRange("last7d");
   const [summary, feedPage] = await Promise.all([
     fetchIncidentSummaryAction(initialRange),
-    fetchIncidentFeedAction(
-      { range: initialRange },
-      { limit: DEFAULT_PAGE_LIMIT },
-    ),
+    fetchIncidentFeedAction({ range: initialRange }, { limit: DEFAULT_PAGE_LIMIT }),
   ]);
 
   return (

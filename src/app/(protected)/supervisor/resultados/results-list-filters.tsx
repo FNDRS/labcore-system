@@ -1,10 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  TimeRangeSelector,
-  createDefaultTimeRange,
-} from "@/components/time-range-selector";
+import { TimeRangeSelector, createDefaultTimeRange } from "@/components/time-range-selector";
 import {
   Select,
   SelectContent,
@@ -27,7 +24,7 @@ function inferPreset(from?: string, to?: string): AnalyticsTimeRange["preset"] {
     0,
     0,
     0,
-    0,
+    0
   ).toISOString();
   const expectedTodayEnd = new Date(
     now.getFullYear(),
@@ -36,7 +33,7 @@ function inferPreset(from?: string, to?: string): AnalyticsTimeRange["preset"] {
     23,
     59,
     59,
-    999,
+    999
   ).toISOString();
   if (from === expectedTodayStart && to === expectedTodayEnd) return "today";
   return "custom";
@@ -67,11 +64,7 @@ export function ResultsFilters() {
 
   return (
     <div className="flex items-center gap-2.5">
-      <TimeRangeSelector
-        value={timeRange}
-        onChange={handleTimeRangeChange}
-        className="shrink-0"
-      />
+      <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} className="shrink-0" />
       <Select
         value={status}
         onValueChange={(value) => {
@@ -80,10 +73,7 @@ export function ResultsFilters() {
           refetch({ status: nextStatus });
         }}
       >
-        <SelectTrigger
-          className="h-9 w-[130px] rounded-lg text-sm"
-          aria-label="Filtrar por estado"
-        >
+        <SelectTrigger className="h-9 w-[130px] rounded-lg text-sm" aria-label="Filtrar por estado">
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
         <SelectContent className="rounded-xl">

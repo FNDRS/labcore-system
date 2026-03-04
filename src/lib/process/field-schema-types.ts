@@ -58,7 +58,7 @@ function assertFieldSchema(value: unknown): FieldSchema | null {
       typeof s === "object" &&
       typeof (s as Section).id === "string" &&
       typeof (s as Section).label === "string" &&
-      Array.isArray((s as Section).fields),
+      Array.isArray((s as Section).fields)
   );
   if (sections.length === 0) return null;
 
@@ -72,7 +72,7 @@ function assertFieldSchema(value: unknown): FieldSchema | null {
           typeof f === "object" &&
           typeof (f as FieldDef).key === "string" &&
           typeof (f as FieldDef).label === "string" &&
-          ["string", "numeric", "enum"].includes((f as FieldDef).type ?? ""),
+          ["string", "numeric", "enum"].includes((f as FieldDef).type ?? "")
       )
       .map((f) => ({
         key: String(f.key),

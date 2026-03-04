@@ -43,7 +43,7 @@ function toTime(value: string | undefined): number {
 function filterItems(
   items: ResultsListItem[],
   search: string,
-  filters: ResultsListFilters,
+  filters: ResultsListFilters
 ): ResultsListItem[] {
   const term = search.trim().toLowerCase();
   const fromTimeValue = toTime(filters.from);
@@ -114,7 +114,7 @@ export function ResultsListProvider({
         router.replace(query ? `${pathname}?${query}` : pathname);
       });
     },
-    [filters, pathname, router],
+    [filters, pathname, router]
   );
 
   const clear = useCallback(() => {
@@ -125,7 +125,7 @@ export function ResultsListProvider({
 
   const filteredItems = useMemo(
     () => filterItems(initialItems, search, filters),
-    [initialItems, search, filters],
+    [initialItems, search, filters]
   );
 
   const value: ResultsListProviderValue = useMemo(
@@ -144,7 +144,7 @@ export function ResultsListProvider({
         clear,
       },
     }),
-    [initialItems, filteredItems, filters, search, isLoading, setFilters, refetch, clear],
+    [initialItems, filteredItems, filters, search, isLoading, setFilters, refetch, clear]
   );
 
   return <ResultsListContext.Provider value={value}>{children}</ResultsListContext.Provider>;

@@ -8,13 +8,13 @@
 
 ## Current State
 
-| Location | Mock Data | Notes |
-|----------|-----------|-------|
-| `/technician` (dashboard) | `MOCK_QUEUE`, `MOCK_NEXT_SAMPLE`, `MOCK_METRICS` via `fetchOperativeDashboard` | Next sample card, queue table, metrics |
-| `/technician/muestras` | `MOCK_MUESTRAS` via `fetchMuestrasWorkstation` | Samples table, status summary |
-| `sample-detail-sheet.tsx` | `MOCK_HISTORY` | Event history in sheet |
-| Scan flow | Local state only | No backend lookup |
-| Actions (Mark received, Process, Report problem, Reprint label) | Local state only | No persistence |
+| Location                                                        | Mock Data                                                                      | Notes                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------- |
+| `/technician` (dashboard)                                       | `MOCK_QUEUE`, `MOCK_NEXT_SAMPLE`, `MOCK_METRICS` via `fetchOperativeDashboard` | Next sample card, queue table, metrics |
+| `/technician/muestras`                                          | `MOCK_MUESTRAS` via `fetchMuestrasWorkstation`                                 | Samples table, status summary          |
+| `sample-detail-sheet.tsx`                                       | `MOCK_HISTORY`                                                                 | Event history in sheet                 |
+| Scan flow                                                       | Local state only                                                               | No backend lookup                      |
+| Actions (Mark received, Process, Report problem, Reprint label) | Local state only                                                               | No persistence                         |
 
 **Schema:** `Sample.status` = `pending | labeled | ready_for_lab | received | inprogress | completed | rejected`. No `assignedToId` or equipment assignment in schema.
 
@@ -22,14 +22,14 @@
 
 ## Status Mapping (Schema ↔ UI)
 
-| Schema `Sample.status` | UI `SampleWorkstationStatus` |
-|------------------------|-----------------------------|
-| `ready_for_lab` | Received (available for processing) |
-| `received` | Received |
-| `inprogress` | Processing |
-| `completed` | Completed |
-| `rejected` | Flagged |
-| — | Waiting Equipment — not in schema; treat as `received` for MVP or defer |
+| Schema `Sample.status` | UI `SampleWorkstationStatus`                                            |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `ready_for_lab`        | Received (available for processing)                                     |
+| `received`             | Received                                                                |
+| `inprogress`           | Processing                                                              |
+| `completed`            | Completed                                                               |
+| `rejected`             | Flagged                                                                 |
+| —                      | Waiting Equipment — not in schema; treat as `received` for MVP or defer |
 
 ---
 
@@ -37,11 +37,11 @@
 
 **Scope:** Data access and DTOs for technician views.
 
-| # | Task | Deliverables |
-|---|------|--------------|
+| #    | Task                      | Deliverables                                                                                                  |
+| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | 2a.1 | **Technician repository** | `src/lib/repositories/technician-repository.ts` with `listTechnicianSamples`, `getTechnicianDashboardMetrics` |
-| 2a.2 | **DTOs and mapping** | Map schema → `QueueRow`, `SampleWorkstationRow`, `NextSample`, `DashboardMetrics`, `MuestrasSummary` |
-| 2a.3 | **Contracts alignment** | Extend `contracts.ts` with technician status mapping if needed |
+| 2a.2 | **DTOs and mapping**      | Map schema → `QueueRow`, `SampleWorkstationRow`, `NextSample`, `DashboardMetrics`, `MuestrasSummary`          |
+| 2a.3 | **Contracts alignment**   | Extend `contracts.ts` with technician status mapping if needed                                                |
 
 **Exit:** Repository returns real data; `MOCK_TECHNICIAN` can be turned off for data reads.
 
@@ -54,6 +54,7 @@ Phase 2a is not directly testable in isolation because the repository is used on
 1. **Prerequisites:** Sandbox running (`pnpm ampx sandbox`), seed applied (`pnpm seed`). At least one work order must have samples marked `ready_for_lab` (use Reception: generate specimens → mark ready for lab for ORD-2025-003).
 
 2. **Enable real data:** Create or edit `.env.local`:
+
    ```
    NEXT_PUBLIC_MOCK_TECHNICIAN=false
    ```
@@ -72,12 +73,12 @@ Phase 2a is not directly testable in isolation because the repository is used on
 
 **Scope:** Replace mocks on the technician dashboard.
 
-| # | Task | Deliverables |
-|---|------|--------------|
-| 2b.1 | **Dashboard aggregation** | Single server action/function that runs `Promise.all` for metrics + next sample + queue rows (no waterfalls) |
-| 2b.2 | **Replace `fetchOperativeDashboard`** | Use repository; compute `nextSample`, `urgentCount`, `queueRows`, `metrics`, `lastScanned` from backend |
-| 2b.3 | **Completed-today metric** | Count samples with `status === "completed"` and `receivedAt`/`collectedAt` today (or use `AuditEvent` if needed) |
-| 2b.4 | **Turn off `MOCK_TECHNICIAN`** | Remove or gate mocks for dashboard; add loading/error UI |
+| #    | Task                                  | Deliverables                                                                                                     |
+| ---- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2b.1 | **Dashboard aggregation**             | Single server action/function that runs `Promise.all` for metrics + next sample + queue rows (no waterfalls)     |
+| 2b.2 | **Replace `fetchOperativeDashboard`** | Use repository; compute `nextSample`, `urgentCount`, `queueRows`, `metrics`, `lastScanned` from backend          |
+| 2b.3 | **Completed-today metric**            | Count samples with `status === "completed"` and `receivedAt`/`collectedAt` today (or use `AuditEvent` if needed) |
+| 2b.4 | **Turn off `MOCK_TECHNICIAN`**        | Remove or gate mocks for dashboard; add loading/error UI                                                         |
 
 **Exit:** Dashboard reads fully from backend.
 
@@ -103,13 +104,13 @@ Phase 2a is not directly testable in isolation because the repository is used on
 
 **Scope:** Replace mocks on the muestras page and wire status transitions.
 
-| # | Task | Deliverables |
-|---|------|--------------|
-| 2c.1 | **Replace `fetchMuestrasWorkstation`** | Use repository; return real samples and summary |
-| 2c.2 | **Sample detail from backend** | Replace `getSampleDetail` with repository/service; load Sample + Exam(s) + AuditEvent history |
-| 2c.3 | **Sample status service** | `src/lib/services/sample-status-service.ts`: `markSampleReceived`, `markSampleInProgress`, `markSampleCompleted`, `markSampleRejected` with guards and AuditEvent |
-| 2c.4 | **Server actions for muestras** | `fetchMuestrasWorkstationAction`, `getSampleDetailAction`, `markReceivedAction`, `markInProgressAction`, `markCompletedAction`, `markRejectedAction` |
-| 2c.5 | **Wire UI to actions** | `onMarkReceived`, `onProcess`, `onReportProblem` call server actions and refetch |
+| #    | Task                                   | Deliverables                                                                                                                                                      |
+| ---- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2c.1 | **Replace `fetchMuestrasWorkstation`** | Use repository; return real samples and summary                                                                                                                   |
+| 2c.2 | **Sample detail from backend**         | Replace `getSampleDetail` with repository/service; load Sample + Exam(s) + AuditEvent history                                                                     |
+| 2c.3 | **Sample status service**              | `src/lib/services/sample-status-service.ts`: `markSampleReceived`, `markSampleInProgress`, `markSampleCompleted`, `markSampleRejected` with guards and AuditEvent |
+| 2c.4 | **Server actions for muestras**        | `fetchMuestrasWorkstationAction`, `getSampleDetailAction`, `markReceivedAction`, `markInProgressAction`, `markCompletedAction`, `markRejectedAction`              |
+| 2c.5 | **Wire UI to actions**                 | `onMarkReceived`, `onProcess`, `onReportProblem` call server actions and refetch                                                                                  |
 
 **Exit:** Muestras table, detail sheet, and status changes use backend; transitions are auditable.
 
@@ -138,13 +139,13 @@ Phase 2a is not directly testable in isolation because the repository is used on
 
 **Scope:** Barcode lookup and scan flows backed by the API.
 
-| # | Task | Deliverables |
-|---|------|--------------|
-| 2d.1 | **Barcode lookup service** | `lookupSampleByBarcode(code)` — query by `Sample.barcode` or ID; return `SampleWorkstationRow | null` |
-| 2d.2 | **Scan server action** | `lookupSampleByBarcodeAction(code)` for dashboard and muestras |
-| 2d.3 | **Wire scan to lookup** | Dashboard and muestras scan flows call action instead of local search |
-| 2d.4 | **Reprint label action** | `reprintLabelAction(sampleId)` — audit `LABEL_REPRINTED`; printer integration optional/placeholder |
-| 2d.5 | **Report problem action** | `reportProblemAction(sampleId)` — set `Sample.status = "rejected"` (or incidence) + audit `SPECIMEN_REJECTED` |
+| #    | Task                       | Deliverables                                                                                                  |
+| ---- | -------------------------- | ------------------------------------------------------------------------------------------------------------- | ----- |
+| 2d.1 | **Barcode lookup service** | `lookupSampleByBarcode(code)` — query by `Sample.barcode` or ID; return `SampleWorkstationRow                 | null` |
+| 2d.2 | **Scan server action**     | `lookupSampleByBarcodeAction(code)` for dashboard and muestras                                                |
+| 2d.3 | **Wire scan to lookup**    | Dashboard and muestras scan flows call action instead of local search                                         |
+| 2d.4 | **Reprint label action**   | `reprintLabelAction(sampleId)` — audit `LABEL_REPRINTED`; printer integration optional/placeholder            |
+| 2d.5 | **Report problem action**  | `reportProblemAction(sampleId)` — set `Sample.status = "rejected"` (or incidence) + audit `SPECIMEN_REJECTED` |
 
 **Exit:** Scan uses backend lookup; reprint and report problem are first-class mutations with audit.
 
@@ -162,12 +163,12 @@ Phase 2a is not directly testable in isolation because the repository is used on
 
 **Scope:** Provider-based state and simpler components, per integration plan and Vercel patterns.
 
-| # | Task | Deliverables |
-|---|------|--------------|
-| 2e.1 | **Workstation provider** | `TechnicianWorkstationProvider` with queue/filter/search/sheet/scan state |
-| 2e.2 | **Split dashboard vs muestras** | Shared provider for muestras; dashboard uses lighter state or direct server data |
-| 2e.3 | **Replace boolean flags** | Use explicit subcomponents (e.g. `PendingQueue`, `UrgentQueue`) instead of `filter === "X"` branches where beneficial |
-| 2e.4 | **Compose table + sheet + dialogs** | Keep `MuestrasTable`, `SampleDetailSheet`, `ScanBar`, `ScanSampleDialog` as composed children |
+| #    | Task                                | Deliverables                                                                                                          |
+| ---- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 2e.1 | **Workstation provider**            | `TechnicianWorkstationProvider` with queue/filter/search/sheet/scan state                                             |
+| 2e.2 | **Split dashboard vs muestras**     | Shared provider for muestras; dashboard uses lighter state or direct server data                                      |
+| 2e.3 | **Replace boolean flags**           | Use explicit subcomponents (e.g. `PendingQueue`, `UrgentQueue`) instead of `filter === "X"` branches where beneficial |
+| 2e.4 | **Compose table + sheet + dialogs** | Keep `MuestrasTable`, `SampleDetailSheet`, `ScanBar`, `ScanSampleDialog` as composed children                         |
 
 **Note:** Can be done incrementally after 2c/2d to avoid blocking core functionality.
 
@@ -202,10 +203,10 @@ Phase 2a is not directly testable in isolation because the repository is used on
 
 ## Summary Table
 
-| Phase | Focus | Est. Effort |
-|-------|-------|-------------|
-| **2a** | Repository, DTOs | Small |
-| **2b** | Dashboard backend integration | Small |
-| **2c** | Muestras backend + status transitions | Medium |
-| **2d** | Scan, reprint, report problem | Medium |
-| **2e** | State architecture refactor | Medium |
+| Phase  | Focus                                 | Est. Effort |
+| ------ | ------------------------------------- | ----------- |
+| **2a** | Repository, DTOs                      | Small       |
+| **2b** | Dashboard backend integration         | Small       |
+| **2c** | Muestras backend + status transitions | Medium      |
+| **2d** | Scan, reprint, report problem         | Medium      |
+| **2e** | State architecture refactor           | Medium      |

@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  Bell,
-  FileCheck,
-  Key,
-  LayoutDashboard,
-  Shield,
-  User,
-} from "lucide-react";
+import { Bell, FileCheck, Key, LayoutDashboard, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,9 +23,7 @@ export function SupervisorSettingsClient() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-          Configuración
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Configuración</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Preferencias del panel de validación y supervisión.
         </p>
@@ -111,9 +102,7 @@ export function SupervisorSettingsClient() {
             </Label>
             <Switch
               checked={prefs.showClinicalFlagsFirst}
-              onCheckedChange={(v) =>
-                setPrefs((p) => ({ ...p, showClinicalFlagsFirst: v }))
-              }
+              onCheckedChange={(v) => setPrefs((p) => ({ ...p, showClinicalFlagsFirst: v }))}
             />
           </div>
         </CardContent>
@@ -126,9 +115,7 @@ export function SupervisorSettingsClient() {
             <Bell className="size-4 text-zinc-500" />
             Notificaciones
           </CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Alertas y avisos en el panel.
-          </p>
+          <p className="text-muted-foreground text-sm">Alertas y avisos en el panel.</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50/50 px-4 py-3">
@@ -137,9 +124,7 @@ export function SupervisorSettingsClient() {
             </Label>
             <Switch
               checked={prefs.notifyCriticalResults}
-              onCheckedChange={(v) =>
-                setPrefs((p) => ({ ...p, notifyCriticalResults: v }))
-              }
+              onCheckedChange={(v) => setPrefs((p) => ({ ...p, notifyCriticalResults: v }))}
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50/50 px-4 py-3">
@@ -148,9 +133,7 @@ export function SupervisorSettingsClient() {
             </Label>
             <Switch
               checked={prefs.notifyNewIncidents}
-              onCheckedChange={(v) =>
-                setPrefs((p) => ({ ...p, notifyNewIncidents: v }))
-              }
+              onCheckedChange={(v) => setPrefs((p) => ({ ...p, notifyNewIncidents: v }))}
             />
           </div>
         </CardContent>
@@ -223,9 +206,7 @@ export function SupervisorSettingsClient() {
             <Label className="text-sm font-medium">Bloquear tras inactividad</Label>
             <Switch
               checked={prefs.lockAfterInactivity}
-              onCheckedChange={(v) =>
-                setPrefs((p) => ({ ...p, lockAfterInactivity: v }))
-              }
+              onCheckedChange={(v) => setPrefs((p) => ({ ...p, lockAfterInactivity: v }))}
             />
           </div>
         </CardContent>
@@ -245,9 +226,7 @@ export function SupervisorSettingsClient() {
               <Link href="/support">Centro de ayuda</Link>
             </Button>
           </div>
-          <p className="text-muted-foreground text-xs">
-            LabCore LIS · Versión POC
-          </p>
+          <p className="text-muted-foreground text-xs">LabCore LIS · Versión POC</p>
         </CardContent>
       </Card>
     </div>

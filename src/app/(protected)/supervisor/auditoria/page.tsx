@@ -13,9 +13,7 @@ async function AuditoriaLoader({ searchParams }: { searchParams: PageSearchParam
     fetchRecentAuditAction(10),
     workOrderId ? fetchAuditTimelineAction(workOrderId) : Promise.resolve(null),
   ]);
-  return (
-    <AuditSearchClient recentActivity={recentActivity} timeline={timeline} />
-  );
+  return <AuditSearchClient recentActivity={recentActivity} timeline={timeline} />;
 }
 
 export default async function SupervisorAuditoriaPage({

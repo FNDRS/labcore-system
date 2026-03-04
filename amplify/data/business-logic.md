@@ -86,9 +86,7 @@ async function handleWorkOrderWebhook(event: WebhookEvent): Promise<WorkOrder> {
 ### 1.3 Helper: Find or Create Patient
 
 ```typescript
-async function findOrCreatePatient(
-  patientInput: WebhookPatient
-): Promise<Patient> {
+async function findOrCreatePatient(patientInput: WebhookPatient): Promise<Patient> {
   // Option A: match by external system ID if provided
   if (patientInput.externalId) {
     const { data } = await client.models.Patient.list({
@@ -116,9 +114,7 @@ async function findOrCreatePatient(
     gender: patientInput.gender,
     phone: patientInput.phone,
     email: patientInput.email,
-    extraData: patientInput.externalId
-      ? { externalId: patientInput.externalId }
-      : null,
+    extraData: patientInput.externalId ? { externalId: patientInput.externalId } : null,
   });
 
   return created;
@@ -342,10 +338,7 @@ function validateResultsAgainstSchema(
   }
 }
 
-async function saveExamResults(
-  examId: string,
-  results: Record<string, unknown>
-): Promise<void> {
+async function saveExamResults(examId: string, results: Record<string, unknown>): Promise<void> {
   const { data: exam } = await client.models.Exam.get({ id: examId });
   if (!exam) throw new Error("Exam not found");
 
@@ -405,9 +398,7 @@ interface FormField {
   required: boolean;
 }
 
-function mapToInputType(
-  fieldType: "string" | "numeric" | "enum"
-): "text" | "number" | "select" {
+function mapToInputType(fieldType: "string" | "numeric" | "enum"): "text" | "number" | "select" {
   switch (fieldType) {
     case "numeric":
       return "number";
@@ -467,10 +458,10 @@ flowchart TD
 
 ## 4. Key Data Dependencies
 
-| Operation | Reads | Writes |
-|-----------|-------|--------|
-| Webhook handler | Patient (find), ExamType (by code) | Patient?, WorkOrder, Sample, Exam |
-| Receive sample | Sample (by barcode) | Sample (status, receivedAt) |
-| Start exam | Exam, Sample | Exam (status, startedAt), Sample (status) |
-| Save results | Exam, ExamType (fieldSchema) | Exam (results, status), Sample (status), WorkOrder? (status) |
-| List queue | WorkOrder, Sample, Patient, ExamType, Exam | — |
+| Operation       | Reads                                      | Writes                                                       |
+| --------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Webhook handler | Patient (find), ExamType (by code)         | Patient?, WorkOrder, Sample, Exam                            |
+| Receive sample  | Sample (by barcode)                        | Sample (status, receivedAt)                                  |
+| Start exam      | Exam, Sample                               | Exam (status, startedAt), Sample (status)                    |
+| Save results    | Exam, ExamType (fieldSchema)               | Exam (results, status), Sample (status), WorkOrder? (status) |
+| List queue      | WorkOrder, Sample, Patient, ExamType, Exam | —                                                            |

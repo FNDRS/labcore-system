@@ -20,13 +20,8 @@ export function StatusSummary({ summary }: { summary: MuestrasSummaryUI }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {CARDS.map(({ label, key }) => (
-        <div
-          key={key}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-center"
-        >
-          <p className="text-2xl font-bold tabular-nums text-foreground">
-            {summary[key]}
-          </p>
+        <div key={key} className="rounded-xl border border-border bg-card px-4 py-3 text-center">
+          <p className="text-2xl font-bold tabular-nums text-foreground">{summary[key]}</p>
           <p className="text-muted-foreground text-xs font-medium">{label}</p>
         </div>
       ))}

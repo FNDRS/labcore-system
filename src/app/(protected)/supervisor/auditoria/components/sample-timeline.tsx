@@ -8,13 +8,12 @@ import {
   Timer,
   XCircle,
 } from "lucide-react";
-import type { SampleTimeline as SampleTimelineData, TimelineDurations } from "@/lib/types/audit-timeline-types";
+import type {
+  SampleTimeline as SampleTimelineData,
+  TimelineDurations,
+} from "@/lib/types/audit-timeline-types";
 import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { TimelineEvent } from "./timeline-event";
 
@@ -48,9 +47,24 @@ interface DurationBadgesProps {
 }
 
 const DURATION_ENTRIES = [
-  { key: "preAnalyticalMinutes", label: "Pre-analítica", icon: Clock, thresholds: SLA_THRESHOLDS.preAnalytical },
-  { key: "analyticalMinutes", label: "Analítica", icon: Microscope, thresholds: SLA_THRESHOLDS.analytical },
-  { key: "postAnalyticalMinutes", label: "Post-analítica", icon: Timer, thresholds: SLA_THRESHOLDS.postAnalytical },
+  {
+    key: "preAnalyticalMinutes",
+    label: "Pre-analítica",
+    icon: Clock,
+    thresholds: SLA_THRESHOLDS.preAnalytical,
+  },
+  {
+    key: "analyticalMinutes",
+    label: "Analítica",
+    icon: Microscope,
+    thresholds: SLA_THRESHOLDS.analytical,
+  },
+  {
+    key: "postAnalyticalMinutes",
+    label: "Post-analítica",
+    icon: Timer,
+    thresholds: SLA_THRESHOLDS.postAnalytical,
+  },
   { key: "totalLifecycleMinutes", label: "Total", icon: Beaker, thresholds: SLA_THRESHOLDS.total },
 ] as const;
 
@@ -67,7 +81,7 @@ function DurationBadges({ durations }: DurationBadgesProps) {
             key={key}
             className={cn(
               "rounded-md border px-2 py-0.5 text-[10px] font-medium tabular-nums gap-1",
-              getSlaColor(value, thresholds),
+              getSlaColor(value, thresholds)
             )}
           >
             <DurIcon className="size-2.5" />
@@ -88,7 +102,10 @@ const STATUS_DISPLAY: Record<string, { label: string; className: string }> = {
   ready_for_lab: { label: "Lista", className: "bg-blue-50 text-blue-700 border-blue-200" },
   received: { label: "Recibida", className: "bg-blue-50 text-blue-700 border-blue-200" },
   inprogress: { label: "En proceso", className: "bg-amber-50 text-amber-700 border-amber-200" },
-  completed: { label: "Completada", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  completed: {
+    label: "Completada",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
   rejected: { label: "Rechazada", className: "bg-red-50 text-red-700 border-red-200" },
 };
 
@@ -137,7 +154,7 @@ export function SampleTimelineCard({ timeline, defaultOpen = true }: SampleTimel
                 <Badge
                   className={cn(
                     "rounded-md border px-1.5 py-0 text-[10px] font-medium",
-                    statusConfig.className,
+                    statusConfig.className
                   )}
                 >
                   {statusConfig.label}

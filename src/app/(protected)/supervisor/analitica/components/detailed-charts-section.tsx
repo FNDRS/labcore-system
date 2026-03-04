@@ -5,35 +5,23 @@ import { useAnalyticsProvider } from "../analytics-provider";
 import { ChartSkeleton } from "./chart-skeleton";
 
 const TATDistributionChart = dynamic(
-  () =>
-    import("./tat-distribution-chart").then(
-      (mod) => mod.TATDistributionChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> },
+  () => import("./tat-distribution-chart").then((mod) => mod.TATDistributionChart),
+  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> }
 );
 
 const TechnicianWorkloadChart = dynamic(
-  () =>
-    import("./technician-workload-chart").then(
-      (mod) => mod.TechnicianWorkloadChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> },
+  () => import("./technician-workload-chart").then((mod) => mod.TechnicianWorkloadChart),
+  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> }
 );
 
 const RejectionAnalysisChart = dynamic(
-  () =>
-    import("./rejection-analysis-chart").then(
-      (mod) => mod.RejectionAnalysisChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> },
+  () => import("./rejection-analysis-chart").then((mod) => mod.RejectionAnalysisChart),
+  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> }
 );
 
 const DoctorVolumeChart = dynamic(
-  () =>
-    import("./doctor-volume-chart").then(
-      (mod) => mod.DoctorVolumeChart,
-    ),
-  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> },
+  () => import("./doctor-volume-chart").then((mod) => mod.DoctorVolumeChart),
+  { ssr: false, loading: () => <ChartSkeleton className="h-[280px] w-full rounded-xl" /> }
 );
 
 /**
@@ -48,9 +36,7 @@ export function DetailedChartsSection() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-zinc-700">
-        Análisis detallado
-      </h2>
+      <h2 className="text-sm font-semibold text-zinc-700">Análisis detallado</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TATDistributionChart data={data.tatDistribution} />
         <TechnicianWorkloadChart data={data.technicianWorkload} />

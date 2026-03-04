@@ -21,7 +21,7 @@ export function KPICards({ kpis, isLoading, className }: KPICardsProps) {
       className={cn(
         "grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6",
         isLoading && "pointer-events-none opacity-60",
-        className,
+        className
       )}
     >
       <KPICard
@@ -47,7 +47,9 @@ export function KPICards({ kpis, isLoading, className }: KPICardsProps) {
         unit="%"
         trendPositiveDirection="down"
         trend={kpis.trends?.rejectionRate}
-        variant={kpis.rejectionRate > 0.15 ? "danger" : kpis.rejectionRate > 0.08 ? "warning" : "default"}
+        variant={
+          kpis.rejectionRate > 0.15 ? "danger" : kpis.rejectionRate > 0.08 ? "warning" : "default"
+        }
       />
       <KPICard
         title="Incidencias"
@@ -61,7 +63,9 @@ export function KPICards({ kpis, isLoading, className }: KPICardsProps) {
         value={kpis.pendingBacklog}
         trendPositiveDirection="down"
         trend={kpis.trends?.pendingBacklog}
-        variant={kpis.pendingBacklog > 20 ? "danger" : kpis.pendingBacklog > 10 ? "warning" : "default"}
+        variant={
+          kpis.pendingBacklog > 20 ? "danger" : kpis.pendingBacklog > 10 ? "warning" : "default"
+        }
       />
     </div>
   );

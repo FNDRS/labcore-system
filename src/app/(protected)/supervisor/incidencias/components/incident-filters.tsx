@@ -103,9 +103,7 @@ function IncidentTypeSelect() {
   return (
     <Select
       value={value}
-      onValueChange={(next) =>
-        actions.setFilters({ type: next as IncidentType | "all" })
-      }
+      onValueChange={(next) => actions.setFilters({ type: next as IncidentType | "all" })}
     >
       <SelectTrigger
         className="h-9 w-[190px] shrink-0 rounded-lg text-sm"
@@ -172,7 +170,7 @@ export function IncidentFilters({ className }: IncidentFiltersProps) {
     <div
       className={cn(
         "flex flex-wrap items-center gap-2 border-b border-zinc-100 bg-zinc-50/80 px-5 py-3",
-        className,
+        className
       )}
       role="search"
       aria-label="Filtros de incidencias"

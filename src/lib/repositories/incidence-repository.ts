@@ -80,8 +80,14 @@ type IncidentContext = {
 type IncidentAggregation = {
   summary: Omit<IncidentSummaryCards, "criticalResults">;
   reasonDistribution: Map<string, number>;
-  rejectionByTechnician: Map<string, { technicianId: string; technicianName: string; count: number }>;
-  rejectionByExamType: Map<string, { examTypeId: string; examTypeCode: string; examTypeName: string; count: number }>;
+  rejectionByTechnician: Map<
+    string,
+    { technicianId: string; technicianName: string; count: number }
+  >;
+  rejectionByExamType: Map<
+    string,
+    { examTypeId: string; examTypeCode: string; examTypeName: string; count: number }
+  >;
   incidenceTrend: Map<string, number>;
 };
 
@@ -183,7 +189,9 @@ function parseAuditEvent(row: unknown): NormalizedAuditEvent | null {
   };
 }
 
-async function listAllIncidentAuditEvents(range: AnalyticsTimeRange): Promise<NormalizedAuditEvent[]> {
+async function listAllIncidentAuditEvents(
+  range: AnalyticsTimeRange
+): Promise<NormalizedAuditEvent[]> {
   const andFilters: Array<Record<string, unknown>> = [
     {
       or: [
@@ -261,8 +269,7 @@ function parseWorkOrderRecord(row: unknown): WorkOrderRecord | null {
   return {
     id,
     patientId,
-    accessionNumber:
-      typeof value.accessionNumber === "string" ? value.accessionNumber : null,
+    accessionNumber: typeof value.accessionNumber === "string" ? value.accessionNumber : null,
   };
 }
 
@@ -299,8 +306,7 @@ function resolveLinkedIds(event: NormalizedAuditEvent): {
   const metadata = event.metadata;
   const metadataSampleId =
     metadata && typeof metadata.sampleId === "string" ? metadata.sampleId : null;
-  const metadataExamId =
-    metadata && typeof metadata.examId === "string" ? metadata.examId : null;
+  const metadataExamId = metadata && typeof metadata.examId === "string" ? metadata.examId : null;
   const metadataWorkOrderId =
     metadata && typeof metadata.workOrderId === "string" ? metadata.workOrderId : null;
 
@@ -338,7 +344,7 @@ async function buildIncidentContext(events: NormalizedAuditEvent[]): Promise<Inc
   }
 
   const examResults = await Promise.all(
-    [...examIds].map((id) => cookieBasedClient.models.Exam.get({ id })),
+    [...examIds].map((id) => cookieBasedClient.models.Exam.get({ id }))
   );
   const examsById = new Map<string, ExamRecord>();
   for (const result of examResults) {
@@ -349,7 +355,7 @@ async function buildIncidentContext(events: NormalizedAuditEvent[]): Promise<Inc
   }
 
   const sampleResults = await Promise.all(
-    [...sampleIds].map((id) => cookieBasedClient.models.Sample.get({ id })),
+    [...sampleIds].map((id) => cookieBasedClient.models.Sample.get({ id }))
   );
   const samplesById = new Map<string, SampleRecord>();
   for (const result of sampleResults) {
@@ -360,7 +366,7 @@ async function buildIncidentContext(events: NormalizedAuditEvent[]): Promise<Inc
   }
 
   const workOrderResults = await Promise.all(
-    [...workOrderIds].map((id) => cookieBasedClient.models.WorkOrder.get({ id })),
+    [...workOrderIds].map((id) => cookieBasedClient.models.WorkOrder.get({ id }))
   );
   const workOrdersById = new Map<string, WorkOrderRecord>();
   const patientIds = new Set<string>();
@@ -372,7 +378,7 @@ async function buildIncidentContext(events: NormalizedAuditEvent[]): Promise<Inc
   }
 
   const patientResults = await Promise.all(
-    [...patientIds].map((id) => cookieBasedClient.models.Patient.get({ id })),
+    [...patientIds].map((id) => cookieBasedClient.models.Patient.get({ id }))
   );
   const patientsById = new Map<string, PatientRecord>();
   for (const result of patientResults) {
@@ -388,7 +394,7 @@ async function buildIncidentContext(events: NormalizedAuditEvent[]): Promise<Inc
   }
 
   const examTypeResults = await Promise.all(
-    [...examTypeIds].map((id) => cookieBasedClient.models.ExamType.get({ id })),
+    [...examTypeIds].map((id) => cookieBasedClient.models.ExamType.get({ id }))
   );
   const examTypesById = new Map<string, ExamTypeRecord>();
   for (const result of examTypeResults) {
@@ -445,7 +451,7 @@ function mapActionToSeverity(action: IncidentAuditAction): IncidentFeedItem["sev
 
 function resolveEventContext(
   event: NormalizedAuditEvent,
-  context: IncidentContext,
+  context: IncidentContext
 ): {
   sampleId: string | null;
   examId: string | null;
@@ -459,15 +465,15 @@ function resolveEventContext(
   examTypeCode: string | null;
 } {
   const linked = resolveLinkedIds(event);
-  const exam = linked.examId ? context.examsById.get(linked.examId) ?? null : null;
+  const exam = linked.examId ? (context.examsById.get(linked.examId) ?? null) : null;
   const sampleId = linked.sampleId ?? exam?.sampleId ?? null;
-  const sample = sampleId ? context.samplesById.get(sampleId) ?? null : null;
+  const sample = sampleId ? (context.samplesById.get(sampleId) ?? null) : null;
   const workOrderId = linked.workOrderId ?? sample?.workOrderId ?? null;
-  const workOrder = workOrderId ? context.workOrdersById.get(workOrderId) ?? null : null;
-  const patient = workOrder ? context.patientsById.get(workOrder.patientId) ?? null : null;
+  const workOrder = workOrderId ? (context.workOrdersById.get(workOrderId) ?? null) : null;
+  const patient = workOrder ? (context.patientsById.get(workOrder.patientId) ?? null) : null;
 
   const examTypeId = exam?.examTypeId ?? sample?.examTypeId ?? null;
-  const examType = examTypeId ? context.examTypesById.get(examTypeId) ?? null : null;
+  const examType = examTypeId ? (context.examTypesById.get(examTypeId) ?? null) : null;
 
   return {
     sampleId,
@@ -485,7 +491,7 @@ function resolveEventContext(
 
 function createIncidentItem(
   event: NormalizedAuditEvent,
-  context: IncidentContext,
+  context: IncidentContext
 ): IncidentFeedItem {
   const resolved = resolveEventContext(event, context);
   const reason = parseReason(event.metadata);
@@ -564,7 +570,9 @@ function matchesFeedFilters(item: IncidentFeedItem, filters: IncidentFeedFilters
   return true;
 }
 
-function decodeCursor(cursor: string | null | undefined): { timestamp: string; eventId: string } | null {
+function decodeCursor(
+  cursor: string | null | undefined
+): { timestamp: string; eventId: string } | null {
   if (!cursor) return null;
   const [timestamp, eventId] = cursor.split("::");
   if (!timestamp || !eventId) return null;
@@ -575,9 +583,7 @@ function encodeCursor(item: IncidentFeedItem): string {
   return `${item.timestamp}::${item.eventId}`;
 }
 
-function parseReferenceRange(
-  range: string | undefined,
-): { min: number; max: number } | null {
+function parseReferenceRange(range: string | undefined): { min: number; max: number } | null {
   if (!range || typeof range !== "string") return null;
   const match = range.match(/(\d+(?:\.\d+)?)\s*(?:-|\u2013)\s*(\d+(?:\.\d+)?)/);
   if (!match) return null;
@@ -589,7 +595,7 @@ function parseReferenceRange(
 
 function hasReferenceRangeViolation(
   results: Record<string, unknown> | null,
-  fieldSchema: FieldSchema,
+  fieldSchema: FieldSchema
 ): boolean {
   if (!results) return false;
   for (const section of fieldSchema.sections) {
@@ -613,7 +619,7 @@ function hasReferenceRangeViolation(
 
 function deriveClinicalFlag(
   results: Record<string, unknown> | null,
-  fieldSchema: FieldSchema,
+  fieldSchema: FieldSchema
 ): "normal" | "atencion" | "critico" {
   if (!results) return "normal";
 
@@ -673,7 +679,7 @@ async function countCriticalResults(range: AnalyticsTimeRange): Promise<number> 
 
   const examTypeIds = [...new Set(exams.map((exam) => exam.examTypeId))];
   const examTypeResults = await Promise.all(
-    examTypeIds.map((id) => cookieBasedClient.models.ExamType.get({ id })),
+    examTypeIds.map((id) => cookieBasedClient.models.ExamType.get({ id }))
   );
   const examTypesById = new Map<string, ExamTypeRecord>();
   for (const result of examTypeResults) {
@@ -694,9 +700,7 @@ async function countCriticalResults(range: AnalyticsTimeRange): Promise<number> 
   return criticalCount;
 }
 
-async function aggregateIncidentData(
-  range: AnalyticsTimeRange,
-): Promise<IncidentAggregation> {
+async function aggregateIncidentData(range: AnalyticsTimeRange): Promise<IncidentAggregation> {
   const events = await listAllIncidentAuditEvents(range);
   const context = await buildIncidentContext(events);
 
@@ -776,7 +780,7 @@ async function aggregateIncidentData(
 
 export async function listIncidentFeed(
   filters: IncidentFeedFilters,
-  pagination: IncidentFeedPagination,
+  pagination: IncidentFeedPagination
 ): Promise<IncidentFeedPage> {
   const effectiveLimit =
     Number.isFinite(pagination.limit) && pagination.limit > 0
@@ -794,8 +798,7 @@ export async function listIncidentFeed(
   const decodedCursor = decodeCursor(pagination.cursor);
   if (decodedCursor) {
     const cursorIndex = items.findIndex(
-      (item) =>
-        item.timestamp === decodedCursor.timestamp && item.eventId === decodedCursor.eventId,
+      (item) => item.timestamp === decodedCursor.timestamp && item.eventId === decodedCursor.eventId
     );
     if (cursorIndex >= 0) startIndex = cursorIndex + 1;
   }
@@ -804,12 +807,13 @@ export async function listIncidentFeed(
   const hasMore = startIndex + effectiveLimit < items.length;
   return {
     items: pageItems,
-    nextCursor: hasMore && pageItems.length > 0 ? encodeCursor(pageItems[pageItems.length - 1]) : null,
+    nextCursor:
+      hasMore && pageItems.length > 0 ? encodeCursor(pageItems[pageItems.length - 1]) : null,
   };
 }
 
 export async function getIncidentSummaryCards(
-  range: AnalyticsTimeRange,
+  range: AnalyticsTimeRange
 ): Promise<IncidentSummaryCards> {
   const [aggregation, criticalResults] = await Promise.all([
     aggregateIncidentData(range),
@@ -824,9 +828,7 @@ export async function getIncidentSummaryCards(
   };
 }
 
-export async function getIncidentPatterns(
-  range: AnalyticsTimeRange,
-): Promise<IncidentPattern> {
+export async function getIncidentPatterns(range: AnalyticsTimeRange): Promise<IncidentPattern> {
   const aggregation = await aggregateIncidentData(range);
 
   const reasonDistribution = [...aggregation.reasonDistribution.entries()]
@@ -834,11 +836,11 @@ export async function getIncidentPatterns(
     .toSorted((a, b) => b.count - a.count);
 
   const rejectionByTechnician = [...aggregation.rejectionByTechnician.values()].toSorted(
-    (a, b) => b.count - a.count,
+    (a, b) => b.count - a.count
   );
 
   const rejectionByExamType = [...aggregation.rejectionByExamType.values()].toSorted(
-    (a, b) => b.count - a.count,
+    (a, b) => b.count - a.count
   );
 
   const incidenceTrend = [...aggregation.incidenceTrend.entries()]

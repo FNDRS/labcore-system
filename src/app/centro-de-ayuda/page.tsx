@@ -39,7 +39,10 @@ export default function CentroDeAyudaPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-500">
           Si su correo no se abre, envíe su mensaje directamente a{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-zinc-700 underline hover:no-underline">
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-zinc-700 underline hover:no-underline"
+          >
             {SUPPORT_EMAIL}
           </a>
         </p>

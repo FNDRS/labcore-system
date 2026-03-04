@@ -15,9 +15,7 @@ export default function SupportPage() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
-            Soporte
-          </h1>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Soporte</h1>
           <p className="mt-1 text-sm text-zinc-500">
             Consulte ayuda, documentación o contacte al equipo.
           </p>
@@ -35,9 +33,7 @@ export default function SupportPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button className="rounded-full" asChild>
-              <Link href="/centro-de-ayuda">
-                Ir al centro de ayuda
-              </Link>
+              <Link href="/centro-de-ayuda">Ir al centro de ayuda</Link>
             </Button>
             <p className="text-muted-foreground text-xs">
               O escriba directamente a{" "}
@@ -80,16 +76,10 @@ export default function SupportPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Link
-              href="/privacidad"
-              className="block text-zinc-600 hover:text-zinc-900"
-            >
+            <Link href="/privacidad" className="block text-zinc-600 hover:text-zinc-900">
               Política de privacidad
             </Link>
-            <Link
-              href="/terminos"
-              className="block text-zinc-600 hover:text-zinc-900"
-            >
+            <Link href="/terminos" className="block text-zinc-600 hover:text-zinc-900">
               Términos de uso
             </Link>
           </CardContent>

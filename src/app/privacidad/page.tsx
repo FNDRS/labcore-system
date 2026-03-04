@@ -26,58 +26,69 @@ export default function PrivacidadPage() {
           <CardHeader>
             <CardTitle className="text-xl">Política de privacidad</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Última actualización: {new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })}
+              Última actualización:{" "}
+              {new Date().toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </CardHeader>
           <CardContent className="space-y-6 text-sm text-zinc-700">
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">1. Responsable del tratamiento</h2>
               <p>
-                LabCore LIS es un software como servicio (SaaS) de gestión de información de laboratorio.
-                El responsable del tratamiento de los datos personales en el marco del servicio es la entidad
-                que proporciona el software. Para consultas sobre privacidad puede contactar a{" "}
-                <a href="mailto:marlon.castro@thefndrs.com" className="text-zinc-900 underline hover:no-underline">
+                LabCore LIS es un software como servicio (SaaS) de gestión de información de
+                laboratorio. El responsable del tratamiento de los datos personales en el marco del
+                servicio es la entidad que proporciona el software. Para consultas sobre privacidad
+                puede contactar a{" "}
+                <a
+                  href="mailto:marlon.castro@thefndrs.com"
+                  className="text-zinc-900 underline hover:no-underline"
+                >
                   marlon.castro@thefndrs.com
-                </a>.
+                </a>
+                .
               </p>
             </section>
 
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">2. Datos que recogemos</h2>
               <p>
-                En el uso del sistema se pueden procesar datos de pacientes, profesionales sanitarios y
-                usuarios del laboratorio (identificación, datos clínicos asociados a órdenes y resultados,
-                registros de acceso y actividad). Estos datos son introducidos y gestionados por la organización
-                cliente (por ejemplo, el laboratorio o clínica) que utiliza LabCore LIS.
+                En el uso del sistema se pueden procesar datos de pacientes, profesionales
+                sanitarios y usuarios del laboratorio (identificación, datos clínicos asociados a
+                órdenes y resultados, registros de acceso y actividad). Estos datos son introducidos
+                y gestionados por la organización cliente (por ejemplo, el laboratorio o clínica)
+                que utiliza LabCore LIS.
               </p>
             </section>
 
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">3. Finalidad y base legal</h2>
               <p>
-                El tratamiento tiene como finalidad la prestación del servicio de información de laboratorio,
-                la gestión de órdenes, muestras y resultados, y el cumplimiento de obligaciones legales y
-                normativas aplicables al sector. La base legal puede ser la ejecución del contrato, el
-                consentimiento cuando aplique, o el interés legítimo.
+                El tratamiento tiene como finalidad la prestación del servicio de información de
+                laboratorio, la gestión de órdenes, muestras y resultados, y el cumplimiento de
+                obligaciones legales y normativas aplicables al sector. La base legal puede ser la
+                ejecución del contrato, el consentimiento cuando aplique, o el interés legítimo.
               </p>
             </section>
 
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">4. Conservación y seguridad</h2>
               <p>
-                Los datos se conservan durante el tiempo necesario para la finalidad indicada y según la
-                normativa aplicable. Se aplican medidas técnicas y organizativas para garantizar la
-                confidencialidad, integridad y disponibilidad de la información.
+                Los datos se conservan durante el tiempo necesario para la finalidad indicada y
+                según la normativa aplicable. Se aplican medidas técnicas y organizativas para
+                garantizar la confidencialidad, integridad y disponibilidad de la información.
               </p>
             </section>
 
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">5. Derechos</h2>
               <p>
-                Los interesados pueden ejercer los derechos de acceso, rectificación, supresión, limitación
-                del tratamiento, portabilidad y oposición ante el responsable del tratamiento o, en su caso,
-                ante la organización cliente que utiliza el sistema. También puede presentar una reclamación
-                ante la autoridad de control competente.
+                Los interesados pueden ejercer los derechos de acceso, rectificación, supresión,
+                limitación del tratamiento, portabilidad y oposición ante el responsable del
+                tratamiento o, en su caso, ante la organización cliente que utiliza el sistema.
+                También puede presentar una reclamación ante la autoridad de control competente.
               </p>
             </section>
           </CardContent>

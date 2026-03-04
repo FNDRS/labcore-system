@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { Label, Pie, PieChart } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -19,11 +13,11 @@ import type { ExamMixEntry } from "@/lib/types/analytics-types";
 
 // Paleta moderna minimalista: tonos suaves, sin café/marrón
 const CHART_PALETTE = [
-  "oklch(0.55 0.11 168)",   // teal
-  "oklch(0.6 0.1 250)",     // slate/blue
-  "oklch(0.58 0.1 145)",    // sage
-  "oklch(0.6 0.1 300)",     // violet
-  "oklch(0.55 0.08 200)",   // cyan
+  "oklch(0.55 0.11 168)", // teal
+  "oklch(0.6 0.1 250)", // slate/blue
+  "oklch(0.58 0.1 145)", // sage
+  "oklch(0.6 0.1 300)", // violet
+  "oklch(0.55 0.08 200)", // cyan
 ];
 
 interface ExamMixChartProps {
@@ -43,10 +37,7 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
     return cfg satisfies ChartConfig;
   }, [data]);
 
-  const total = React.useMemo(
-    () => data.reduce((sum, entry) => sum + entry.count, 0),
-    [data],
-  );
+  const total = React.useMemo(() => data.reduce((sum, entry) => sum + entry.count, 0), [data]);
 
   const pieData = React.useMemo(
     () =>
@@ -56,7 +47,7 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
         count: entry.count,
         fill: `var(--color-${entry.examTypeCode})`,
       })),
-    [data],
+    [data]
   );
 
   const hasData = data.length > 0;
@@ -101,39 +92,39 @@ export function ExamMixChart({ data }: ExamMixChartProps) {
                   animationBegin={0}
                   animationDuration={600}
                 >
-                <Label
-                  content={({ viewBox }) => {
-                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text
                             x={viewBox.cx}
                             y={viewBox.cy}
-                            className="fill-zinc-800 text-2xl font-semibold tabular-nums"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
                           >
-                            {total.toLocaleString("es-CL")}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 18}
-                            className="fill-zinc-400 text-[11px]"
-                          >
-                            Exámenes
-                          </tspan>
-                        </text>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-              </Pie>
-            </PieChart>
-          </ChartContainer>
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-zinc-800 text-2xl font-semibold tabular-nums"
+                            >
+                              {total.toLocaleString("es-CL")}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 18}
+                              className="fill-zinc-400 text-[11px]"
+                            >
+                              Exámenes
+                            </tspan>
+                          </text>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ChartContainer>
             <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-2 px-1">
               {data.map((entry, i) => (
                 <div

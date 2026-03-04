@@ -15,7 +15,9 @@ export function createSimplePdf(lines: string[]) {
     "BT",
     "/F1 12 Tf",
     "50 760 Td",
-    ...safeLines.flatMap((line, index) => (index === 0 ? [`(${line}) Tj`] : ["0 -16 Td", `(${line}) Tj`])),
+    ...safeLines.flatMap((line, index) =>
+      index === 0 ? [`(${line}) Tj`] : ["0 -16 Td", `(${line}) Tj`]
+    ),
     "ET",
   ].join("\n");
 
@@ -36,7 +38,9 @@ export function createSimplePdf(lines: string[]) {
     "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"
   );
   offsets[4] = currentOffset();
-  push(`4 0 obj\n<< /Length ${encoder.encode(stream).length} >>\nstream\n${stream}\nendstream\nendobj\n`);
+  push(
+    `4 0 obj\n<< /Length ${encoder.encode(stream).length} >>\nstream\n${stream}\nendstream\nendobj\n`
+  );
   offsets[5] = currentOffset();
   push("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
 

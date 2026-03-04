@@ -9,13 +9,7 @@
  */
 
 import type { Control, FieldValues, Path } from "react-hook-form";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -71,11 +65,8 @@ function FieldReferenceInfo({
   value: unknown;
   unit?: string;
 }) {
-  const refRange = field.referenceRange
-    ? parseReferenceRange(field.referenceRange)
-    : null;
-  const numValue =
-    field.type === "numeric" && typeof value === "number" ? value : undefined;
+  const refRange = field.referenceRange ? parseReferenceRange(field.referenceRange) : null;
+  const numValue = field.type === "numeric" && typeof value === "number" ? value : undefined;
   const flag = refRange && numValue != null ? getRangeFlag(numValue, refRange) : null;
 
   const parts: string[] = [];
@@ -86,10 +77,7 @@ function FieldReferenceInfo({
   if (!refText && !flag) return null;
 
   return (
-    <span
-      className="text-xs text-muted-foreground"
-      id={`${field.key}-ref-info`}
-    >
+    <span className="text-xs text-muted-foreground" id={`${field.key}-ref-info`}>
       {refText}
       {flag && (
         <span
@@ -115,9 +103,7 @@ export function ExamResultFields<T extends FieldValues>({
     <div className="space-y-6">
       {fieldSchema.sections.map((section) => (
         <fieldset key={section.id} className="space-y-4">
-          <legend className="text-sm font-semibold text-zinc-700">
-            {section.label}
-          </legend>
+          <legend className="text-sm font-semibold text-zinc-700">{section.label}</legend>
           <div className="grid gap-4 sm:grid-cols-2">
             {section.fields.map((field) => (
               <FormField
@@ -126,9 +112,7 @@ export function ExamResultFields<T extends FieldValues>({
                 name={field.key as Path<T>}
                 render={({ field: formField, fieldState }) => (
                   <FormItem>
-                    <FormLabel htmlFor={`${field.key}-input`}>
-                      {field.label}
-                    </FormLabel>
+                    <FormLabel htmlFor={`${field.key}-input`}>{field.label}</FormLabel>
                     <div className="flex flex-col gap-1">
                       <FormControl>
                         {field.type === "numeric" ? (
@@ -147,9 +131,7 @@ export function ExamResultFields<T extends FieldValues>({
                             value={formField.value ?? ""}
                             onChange={(e) => {
                               const v = e.target.value;
-                              formField.onChange(
-                                v === "" ? undefined : Number(v)
-                              );
+                              formField.onChange(v === "" ? undefined : Number(v));
                             }}
                           />
                         ) : field.type === "enum" && (field.options?.length ?? 0) > 0 ? (
@@ -160,9 +142,7 @@ export function ExamResultFields<T extends FieldValues>({
                                 : formField.value
                             }
                             onValueChange={(v) =>
-                              formField.onChange(
-                                v === EMPTY_SELECT_VALUE ? undefined : v
-                              )
+                              formField.onChange(v === EMPTY_SELECT_VALUE ? undefined : v)
                             }
                           >
                             <SelectTrigger
@@ -177,9 +157,7 @@ export function ExamResultFields<T extends FieldValues>({
                               <SelectValue placeholder="Seleccionar..." />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={EMPTY_SELECT_VALUE}>
-                                —
-                              </SelectItem>
+                              <SelectItem value={EMPTY_SELECT_VALUE}>—</SelectItem>
                               {field.options!.map((opt) => (
                                 <SelectItem key={opt} value={opt}>
                                   {opt}
@@ -202,11 +180,7 @@ export function ExamResultFields<T extends FieldValues>({
                           />
                         )}
                       </FormControl>
-                      <FieldReferenceInfo
-                        field={field}
-                        value={formField.value}
-                        unit={field.unit}
-                      />
+                      <FieldReferenceInfo field={field} value={formField.value} unit={field.unit} />
                     </div>
                     <FormMessage />
                   </FormItem>
