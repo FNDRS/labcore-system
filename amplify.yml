@@ -1,13 +1,15 @@
 version: 1
 applications:
-  - appRoot: amplify
+  - appRoot: .
     backend:
       phases:
         build:
           commands:
-            - cd $CODEBUILD_SRC_DIR
             - corepack enable
             - pnpm install --frozen-lockfile
+            - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+            - echo $AWS_BRANCH
+            - echo $AWS_APP_ID
             - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
         postBuild:
           commands:
@@ -18,3 +20,13 @@ applications:
               else
                 echo "VERCEL_DEPLOY_HOOK not set, skipping Vercel trigger"
               fi
+    frontend:
+      phases:
+        build:
+          commands:
+            - mkdir -p placeholder
+            - echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirect</title><meta http-equiv="refresh" content="0;url=https://poc-lis-dignitas.vercel.app"></head><body><p>Frontend hosted on Vercel. <a href="https://poc-lis-dignitas.vercel.app">Click here</a>.</p></body></html>' > placeholder/index.html
+      artifacts:
+        baseDirectory: placeholder
+        files:
+          - "**/*"
