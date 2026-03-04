@@ -22,6 +22,8 @@ const RECEPTION_WO_SELECTION = [
   "notes",
   "requestedAt",
   "status",
+  "hasSamples",
+  "hasSamplesKey",
   "patientId",
   "patient.id",
   "patient.firstName",
@@ -31,20 +33,54 @@ const RECEPTION_WO_SELECTION = [
   "samples.status",
 ] as const;
 
-/** Reception only cares about orders it can act on: Sin muestras (always) or Muestras creadas from today. */
-function isReceptionRelevant(status: ReceptionStatus, createdAt: string): boolean {
-  if (status === "Sin muestras") return true;
-  if (status === "Procesando") return false;
-  if (status === "Muestras creadas") {
-    const d = new Date(createdAt);
-    const now = new Date();
-    return (
-      d.getDate() === now.getDate() &&
-      d.getMonth() === now.getMonth() &&
-      d.getFullYear() === now.getFullYear()
-    );
+type ReceptionListCursor = {
+  stream: "without_samples" | "with_samples";
+  withoutSamplesNextToken: string | null;
+  withSamplesNextToken: string | null;
+};
+
+function parseCursor(raw: string | null | undefined): ReceptionListCursor {
+  if (!raw) {
+    return {
+      stream: "without_samples",
+      withoutSamplesNextToken: null,
+      withSamplesNextToken: null,
+    };
   }
-  return false;
+  try {
+    const parsed = JSON.parse(raw) as Partial<ReceptionListCursor>;
+    return {
+      stream: parsed.stream === "with_samples" ? "with_samples" : "without_samples",
+      withoutSamplesNextToken: parsed.withoutSamplesNextToken ?? null,
+      withSamplesNextToken: parsed.withSamplesNextToken ?? null,
+    };
+  } catch {
+    return {
+      stream: "without_samples",
+      withoutSamplesNextToken: null,
+      withSamplesNextToken: null,
+    };
+  }
+}
+
+async function listWorkOrdersByHasSamples(args: {
+  hasSamples: boolean;
+  limit: number;
+  nextToken?: string | null;
+}) {
+  const hasSamplesKey = args.hasSamples ? "YES" : "NO";
+  const { data, errors, nextToken } = await cookieBasedClient.models.WorkOrder.listByHasSamplesKey(
+    { hasSamplesKey },
+    {
+      limit: args.limit,
+      nextToken: args.nextToken ?? undefined,
+      selectionSet: RECEPTION_WO_SELECTION,
+    }
+  );
+  if (errors?.length) {
+    console.error("[listReceptionOrders] Amplify errors:", errors);
+  }
+  return { workOrders: data ?? [], nextToken: nextToken ?? null };
 }
 
 /** Compute reception status from samples. */
@@ -83,51 +119,99 @@ export async function listReceptionOrders(
 ): Promise<ReceptionListPage> {
   const { quickFilter = "Todas", search = "" } = filters;
   const limit = Math.min(pagination?.limit ?? PAGE_SIZE, 100);
+  const cursor = parseCursor(pagination?.nextToken);
+  const shouldOnlyWithoutSamples = quickFilter === "Sin muestras";
+  const shouldOnlyWithSamples = quickFilter === "Listas";
 
-  const [{ data: workOrders, errors, nextToken }, examTypeMap] = await Promise.all([
-    cookieBasedClient.models.WorkOrder.list({
-      filter: { status: { ne: "completed" } },
+  const workOrderRows: Awaited<ReturnType<typeof listWorkOrdersByHasSamples>>["workOrders"] = [];
+  let withoutSamplesNextToken = cursor.withoutSamplesNextToken;
+  let withSamplesNextToken = cursor.withSamplesNextToken;
+  let stream = cursor.stream;
+
+  if (shouldOnlyWithoutSamples) {
+    const page = await listWorkOrdersByHasSamples({
+      hasSamples: false,
       limit,
-      nextToken: pagination?.nextToken ?? undefined,
-      selectionSet: RECEPTION_WO_SELECTION,
-    }),
-    getExamTypeCodeMap(),
-  ]);
-
-  if (errors?.length) {
-    console.error("[listReceptionOrders] Amplify errors:", errors);
+      nextToken: withoutSamplesNextToken,
+    });
+    workOrderRows.push(...page.workOrders);
+    withoutSamplesNextToken = page.nextToken;
+    stream = "without_samples";
+  } else if (shouldOnlyWithSamples) {
+    const page = await listWorkOrdersByHasSamples({
+      hasSamples: true,
+      limit,
+      nextToken: withSamplesNextToken,
+    });
+    workOrderRows.push(...page.workOrders);
+    withSamplesNextToken = page.nextToken;
+    stream = "with_samples";
+  } else {
+    let remaining = limit;
+    if (stream === "without_samples" && remaining > 0) {
+      const withoutSamplesPage = await listWorkOrdersByHasSamples({
+        hasSamples: false,
+        limit: remaining,
+        nextToken: withoutSamplesNextToken,
+      });
+      workOrderRows.push(...withoutSamplesPage.workOrders);
+      remaining -= withoutSamplesPage.workOrders.length;
+      withoutSamplesNextToken = withoutSamplesPage.nextToken;
+      if (!withoutSamplesNextToken) {
+        stream = "with_samples";
+      }
+    }
+    if (remaining > 0 && stream === "with_samples") {
+      const withSamplesPage = await listWorkOrdersByHasSamples({
+        hasSamples: true,
+        limit: remaining,
+        nextToken: withSamplesNextToken,
+      });
+      workOrderRows.push(...withSamplesPage.workOrders);
+      withSamplesNextToken = withSamplesPage.nextToken;
+    }
   }
 
-  const workOrderRows = workOrders ?? [];
-  const pageNextToken = nextToken ?? null;
+  const pageNextToken =
+    withoutSamplesNextToken || withSamplesNextToken
+      ? JSON.stringify({
+          stream,
+          withoutSamplesNextToken,
+          withSamplesNextToken,
+        } satisfies ReceptionListCursor)
+      : null;
 
   if (workOrderRows.length === 0) {
     return { orders: [], nextToken: null, hasMore: false };
   }
 
+  const examTypeMap = await getExamTypeCodeMap();
+
   const candidateOrders: ReceptionOrder[] = [];
   for (const wo of workOrderRows) {
     if (!wo.id) continue;
 
+    const patient = wo.patient ?? null;
     const samples = (wo.samples ?? []).filter(
       (sample): sample is NonNullable<typeof sample> => sample != null
     );
     const createdAt = wo.requestedAt ?? new Date().toISOString();
     const sampleStatuses = samples.map((s) => s.status).filter(Boolean) as string[];
-    const status = deriveReceptionStatus(samples.length > 0, sampleStatuses);
-
-    if (!isReceptionRelevant(status, createdAt)) continue;
+    const hasSamples = wo.hasSamplesKey === "YES" || Boolean(wo.hasSamples) || samples.length > 0;
+    const status = deriveReceptionStatus(hasSamples, sampleStatuses);
+    if (wo.status === "completed") continue;
+    if (status === "Procesando") continue;
 
     const requestedCodes = (wo.requestedExamTypeCodes ?? []).filter((c): c is string => c != null);
     const testNames = requestedCodes.map((code) => examTypeMap.get(code) ?? code);
     const displayId = wo.accessionNumber ?? `#${wo.id.slice(0, 8)}`;
-    const patientName = buildPatientFullName(wo.patient?.firstName, wo.patient?.lastName);
+    const patientName = buildPatientFullName(patient?.firstName, patient?.lastName);
 
     const order: ReceptionOrder = {
       id: wo.id,
       displayId,
       patientName,
-      patientAge: ageFromDateOfBirth(wo.patient?.dateOfBirth),
+      patientAge: ageFromDateOfBirth(patient?.dateOfBirth),
       doctor: wo.referringDoctor ?? "—",
       tests: testNames,
       priority: toUIPriority(wo.priority),
@@ -232,7 +316,10 @@ export async function lookupOrderByCode(code: string): Promise<ReceptionOrder | 
   );
   const testNames = requestedCodes.map((code: string) => examTypeMap.get(code) ?? code);
   const sampleStatuses = (samples?.map((s) => s.status).filter(Boolean) ?? []) as string[];
-  const status = deriveReceptionStatus((samples?.length ?? 0) > 0, sampleStatuses);
+  const status = deriveReceptionStatus(
+    wo.hasSamplesKey === "YES" || Boolean(wo.hasSamples) || (samples?.length ?? 0) > 0,
+    sampleStatuses
+  );
 
   return {
     id: wo.id,

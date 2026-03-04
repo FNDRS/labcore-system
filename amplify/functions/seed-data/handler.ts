@@ -593,6 +593,8 @@ async function runSeedLogic(): Promise<Record<string, unknown>> {
       accessionNumber,
       priority,
       requestedAt,
+      hasSamples: scenario !== "reception_only",
+      hasSamplesKey: scenario !== "reception_only" ? "YES" : "NO",
       notes: `Seed ${scenario} #${woIndex + 1}`,
       requestedExamTypeCodes: examCodes,
       referringDoctor,

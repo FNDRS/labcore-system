@@ -28,10 +28,12 @@ export async function fetchReceptionOrders(
   filters: ReceptionListFilters,
   pagination?: { limit?: number; nextToken?: string | null }
 ): Promise<ReceptionListPage> {
+  await getUserId();
   return listReceptionOrders(filters, pagination);
 }
 
 export async function lookupReceptionOrderByCode(code: string): Promise<ReceptionOrder | null> {
+  await getUserId();
   return lookupOrderByCode(code);
 }
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createSimplePdf } from "./pdf";
-import type { GenerationModalState, QuickFilter, ReceptionOrder } from "./types";
-import { filterAndSortOrders } from "./utils";
+import type { GenerationModalState, ReceptionOrder } from "./types";
+import type { ReceptionListFilters } from "@/lib/repositories/reception-repository";
 import {
   fetchReceptionOrders,
   generateSpecimensAction,
@@ -22,97 +23,58 @@ const INITIAL_MODAL_STATE: GenerationModalState = {
   printAttempts: 0,
 };
 
-export function useReceptionInbox() {
-  const [orders, setOrders] = useState<ReceptionOrder[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+type UseReceptionInboxOptions = {
+  initialOrders: ReceptionOrder[];
+  initialHasMore: boolean;
+  initialNextToken: string | null;
+  filters: ReceptionListFilters;
+};
+
+export function useReceptionInbox({
+  initialOrders,
+  initialHasMore,
+  initialNextToken,
+  filters,
+}: UseReceptionInboxOptions) {
+  const router = useRouter();
+  const [orders, setOrders] = useState<ReceptionOrder[]>(initialOrders);
   const [ordersError, setOrdersError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<QuickFilter>("Sin muestras");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [highlightedNewIds, setHighlightedNewIds] = useState<string[]>([]);
   const [generationModal, setGenerationModal] = useState<GenerationModalState>(INITIAL_MODAL_STATE);
-  const latestLoadIdRef = useRef(0);
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 250);
-    return () => window.clearTimeout(timeoutId);
-  }, [search]);
-
-  const nextTokenRef = useRef<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const nextTokenRef = useRef<string | null>(initialNextToken);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
-
-  const loadOrders = useCallback(async () => {
-    const loadId = ++latestLoadIdRef.current;
-    setOrdersLoading(true);
-    setOrdersError(null);
-    try {
-      const { orders: data, nextToken: nt, hasMore: more } = await fetchReceptionOrders({});
-      if (latestLoadIdRef.current !== loadId) return;
-      setOrders(data);
-      nextTokenRef.current = nt;
-      setHasMore(more ?? false);
-    } catch (err) {
-      if (latestLoadIdRef.current !== loadId) return;
-      setOrdersError(err instanceof Error ? err.message : "Error al cargar órdenes");
-      setOrders([]);
-    } finally {
-      if (latestLoadIdRef.current !== loadId) return;
-      setOrdersLoading(false);
-    }
-  }, []);
 
   const loadMore = useCallback(async () => {
     const token = nextTokenRef.current;
-    if (!token || loadMoreLoading || ordersLoading) return;
-    const loadId = ++latestLoadIdRef.current;
+    if (!token || loadMoreLoading) return;
     setLoadMoreLoading(true);
     try {
       const {
         orders: data,
         nextToken: nt,
         hasMore: more,
-      } = await fetchReceptionOrders({}, { nextToken: token });
-      if (latestLoadIdRef.current !== loadId) return;
+      } = await fetchReceptionOrders(filters, { nextToken: token });
       setOrders((prev) => [...prev, ...data]);
       nextTokenRef.current = nt;
       setHasMore(more ?? false);
     } catch (err) {
-      if (latestLoadIdRef.current !== loadId) return;
       setOrdersError(err instanceof Error ? err.message : "Error al cargar órdenes");
     } finally {
-      if (latestLoadIdRef.current !== loadId) return;
       setLoadMoreLoading(false);
     }
-  }, [loadMoreLoading, ordersLoading]);
-
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  }, [filters, loadMoreLoading]);
 
   const pendingCount = useMemo(
     () => orders.filter((order) => order.status === "Sin muestras").length,
     [orders]
   );
 
-  const urgentPendingCount = useMemo(
-    () =>
-      orders.filter((order) => order.status === "Sin muestras" && order.priority === "Urgente")
-        .length,
-    [orders]
-  );
-
   const selectedOrder = useMemo(
     () => orders.find((order) => order.id === selectedOrderId) ?? null,
     [orders, selectedOrderId]
-  );
-
-  const visibleOrders = useMemo(
-    () => filterAndSortOrders(orders, debouncedSearch, activeFilter),
-    [activeFilter, orders, debouncedSearch]
   );
 
   async function findOrderByScannedCode(raw: string): Promise<ReceptionOrder | null> {
@@ -220,7 +182,7 @@ export function useReceptionInbox() {
 
       setGenerationModal((prev) => ({ ...prev, printState: "printed" }));
       setHighlightedNewIds((prev) => [...prev, generationModal.orderId]);
-      await loadOrders();
+      router.refresh();
     } catch {
       setGenerationModal((prev) => ({ ...prev, printState: "error" }));
     }
@@ -233,7 +195,7 @@ export function useReceptionInbox() {
     setGenerationModal((prev) => ({ ...prev, open: false }));
 
     if (result.ok) {
-      await loadOrders();
+      router.refresh();
     }
   }
 
@@ -243,28 +205,19 @@ export function useReceptionInbox() {
 
   return {
     orders,
-    ordersLoading,
     ordersError,
-    search,
-    activeFilter,
-    selectedOrderId,
     highlightedNewIds,
     generationModal,
     pendingCount,
-    urgentPendingCount,
     selectedOrder,
-    visibleOrders,
     hasMore,
     loadMoreLoading,
-    setSearch,
-    setActiveFilter,
     setSelectedOrderId,
     runGenerateSpecimens,
     downloadSpecimensPdf,
     confirmReadyForLab,
     setGenerationModalOpen,
     findOrderByScannedCode,
-    loadOrders,
     loadMore,
   };
 }

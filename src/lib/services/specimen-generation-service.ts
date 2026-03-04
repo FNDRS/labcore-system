@@ -16,6 +16,21 @@ function serializeJsonForAwsJson(value: Record<string, unknown> | undefined): st
   }
 }
 
+async function syncWorkOrderHasSamples(workOrderId: string, hasSamples: boolean) {
+  const { errors } = await cookieBasedClient.models.WorkOrder.update({
+    id: workOrderId,
+    hasSamples,
+    hasSamplesKey: hasSamples ? "YES" : "NO",
+  });
+  if (errors?.length) {
+    console.error("[specimen-generation] Failed syncing WorkOrder.hasSamples", {
+      workOrderId,
+      hasSamples,
+      errors,
+    });
+  }
+}
+
 /**
  * Generate specimens for a work order. Idempotent: if samples already exist,
  * returns them without creating duplicates.
@@ -43,6 +58,7 @@ export async function generateSpecimensForOrder(
   });
 
   if (existingSamples && existingSamples.length > 0) {
+    await syncWorkOrderHasSamples(workOrderId, true);
     // Idempotent: already generated
     return {
       ok: true,
@@ -117,6 +133,8 @@ export async function generateSpecimensForOrder(
       };
     }
   }
+
+  await syncWorkOrderHasSamples(workOrderId, true);
 
   // Emit audit events
   await cookieBasedClient.models.AuditEvent.create({

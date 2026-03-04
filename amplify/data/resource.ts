@@ -10,6 +10,8 @@ const schema = a
         accessionNumber: a.string(),
         priority: a.enum(["routine", "urgent", "stat"]),
         requestedAt: a.datetime(),
+        hasSamples: a.boolean().default(false),
+        hasSamplesKey: a.string().default("NO"),
         patientId: a.id().required(),
         patient: a.belongsTo("Patient", "patientId"),
         samples: a.hasMany("Sample", "workOrderId"),
@@ -19,6 +21,7 @@ const schema = a
         /** Referring physician name or identifier. */
         referringDoctor: a.string(),
       })
+      .secondaryIndexes((index) => [index("hasSamplesKey").queryField("listByHasSamplesKey")])
       .authorization((allow) => [allow.authenticated(), allow.guest()]),
 
     Patient: a

@@ -67,13 +67,15 @@ export function useTechnicianWorkstation(): TechnicianWorkstationContextValue {
 export function TechnicianWorkstationProvider({
   children,
   initialSampleId,
+  initialSamples,
 }: {
   children: ReactNode;
   initialSampleId?: string | null;
+  initialSamples?: SampleWorkstationRow[];
 }) {
   const router = useRouter();
-  const [samples, setSamples] = useState<SampleWorkstationRow[]>([]);
-  const [samplesLoading, setSamplesLoading] = useState(true);
+  const [samples, setSamples] = useState<SampleWorkstationRow[]>(() => initialSamples ?? []);
+  const [samplesLoading, setSamplesLoading] = useState(() => !initialSamples?.length);
   const [samplesError, setSamplesError] = useState<string | null>(null);
   const [scanValue, setScanValue] = useState("");
   const [scanModalOpen, setScanModalOpen] = useState(false);
@@ -103,8 +105,9 @@ export function TechnicianWorkstationProvider({
   }, []);
 
   useEffect(() => {
+    if (initialSamples?.length) return;
     loadSamples();
-  }, [loadSamples]);
+  }, [loadSamples, initialSamples]);
 
   useEffect(() => {
     if (!selectedId || !panelOpen) {

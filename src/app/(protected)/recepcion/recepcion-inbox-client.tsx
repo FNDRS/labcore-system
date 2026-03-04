@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2, ScanBarcode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,32 +12,45 @@ import { ReceptionOrdersTable } from "./components/reception-orders-table";
 import { ReceptionScanOverlay, type ScanStatus } from "./components/reception-scan-overlay";
 import { ReceptionSearchFilters } from "./components/reception-search-filters";
 import { useReceptionInbox } from "./use-reception-inbox";
+import type { ReceptionOrder } from "./types";
+import type { ReceptionListFilters } from "@/lib/repositories/reception-repository";
 
-export function ReceptionInboxClient() {
+type ReceptionInboxClientProps = {
+  initialOrders: ReceptionOrder[];
+  initialFilters: ReceptionListFilters;
+  initialHasMore: boolean;
+  initialNextToken: string | null;
+};
+
+export function ReceptionInboxClient({
+  initialOrders,
+  initialFilters,
+  initialHasMore,
+  initialNextToken,
+}: ReceptionInboxClientProps) {
+  const router = useRouter();
   const {
-    search,
-    activeFilter,
+    orders,
     selectedOrder,
     highlightedNewIds,
     generationModal,
     pendingCount,
-    urgentPendingCount,
-    visibleOrders,
-    ordersLoading,
     ordersError,
     hasMore,
     loadMoreLoading,
-    setSearch,
-    setActiveFilter,
     setSelectedOrderId,
     runGenerateSpecimens,
     downloadSpecimensPdf,
     confirmReadyForLab,
     setGenerationModalOpen,
     findOrderByScannedCode,
-    loadOrders,
     loadMore,
-  } = useReceptionInbox();
+  } = useReceptionInbox({
+    initialOrders,
+    initialHasMore,
+    initialNextToken,
+    filters: initialFilters,
+  });
 
   const [scanModeOpen, setScanModeOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
@@ -97,10 +111,8 @@ export function ReceptionInboxClient() {
             </header>
 
             <ReceptionSearchFilters
-              search={search}
-              activeFilter={activeFilter}
-              onSearchChange={setSearch}
-              onFilterChange={setActiveFilter}
+              search={initialFilters.search ?? ""}
+              activeFilter={initialFilters.quickFilter ?? "Sin muestras"}
             />
 
             {ordersError ? (
@@ -111,7 +123,7 @@ export function ReceptionInboxClient() {
                 </p>
                 <Button
                   variant="outline"
-                  onClick={loadOrders}
+                  onClick={() => router.refresh()}
                   className="min-h-11 shrink-0 rounded-full"
                 >
                   Reintentar
@@ -119,42 +131,33 @@ export function ReceptionInboxClient() {
               </div>
             ) : null}
 
-            {ordersLoading ? (
-              <div className="flex items-center justify-center gap-2 py-12 text-zinc-500">
-                <Loader2 className="size-5 animate-spin" aria-hidden />
-                <span>Cargando órdenes...</span>
+            <ReceptionOrdersTable
+              orders={orders}
+              highlightedNewIds={highlightedNewIds}
+              onSelectOrder={setSelectedOrderId}
+              onGenerateForOrder={(order) => {
+                runGenerateSpecimens(order);
+                setSelectedOrderId(order.id);
+              }}
+            />
+            {hasMore && orders.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  className="min-h-11 rounded-full px-6"
+                  onClick={loadMore}
+                  disabled={loadMoreLoading}
+                >
+                  {loadMoreLoading ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                      Cargando más...
+                    </>
+                  ) : (
+                    "Cargar más órdenes"
+                  )}
+                </Button>
               </div>
-            ) : (
-              <>
-                <ReceptionOrdersTable
-                  orders={visibleOrders}
-                  highlightedNewIds={highlightedNewIds}
-                  onSelectOrder={setSelectedOrderId}
-                  onGenerateForOrder={(order) => {
-                    runGenerateSpecimens(order);
-                    setSelectedOrderId(order.id);
-                  }}
-                />
-                {hasMore && visibleOrders.length > 0 && (
-                  <div className="mt-4 flex justify-center">
-                    <Button
-                      variant="outline"
-                      className="min-h-11 rounded-full px-6"
-                      onClick={loadMore}
-                      disabled={loadMoreLoading}
-                    >
-                      {loadMoreLoading ? (
-                        <>
-                          <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                          Cargando más...
-                        </>
-                      ) : (
-                        "Cargar más órdenes"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </>
             )}
           </div>
         </Card>
