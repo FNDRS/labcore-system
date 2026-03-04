@@ -50,6 +50,57 @@ const VALIDATION_EXAM_SELECTION = [
   "examType.fieldSchema",
 ] as const;
 
+type ValidationExamListRow = {
+  id: string;
+  sampleId?: string;
+  examTypeId?: string;
+  status?: string | null;
+  results?: unknown;
+  startedAt?: string | null;
+  resultedAt?: string | null;
+  performedBy?: string | null;
+  notes?: string | null;
+  validatedBy?: string | null;
+  validatedAt?: string | null;
+  updatedAt?: string | null;
+  sample?: {
+    id?: string;
+    barcode?: string | null;
+    workOrderId?: string;
+    examTypeId?: string;
+    status?: string | null;
+    collectedAt?: string | null;
+    receivedAt?: string | null;
+    workOrder?: {
+      id?: string;
+      accessionNumber?: string | null;
+      priority?: string | null;
+      requestedAt?: string | null;
+      referringDoctor?: string | null;
+      status?: string | null;
+      patient?: {
+        id?: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        dateOfBirth?: string | null;
+      };
+    };
+  };
+  examType?: {
+    id?: string;
+    code?: string | null;
+    name?: string | null;
+    sampleType?: string | null;
+    fieldSchema?: unknown;
+  };
+};
+
+type ValidatedExamRow = {
+  id?: string;
+  resultedAt?: string | null;
+  validatedAt?: string | null;
+};
+
 function matchFlagFilter(
   item: Pick<ValidationQueueItem, "clinicalFlag" | "hasReferenceRangeViolation">,
   filter: ValidationQueueFilters["flag"]
@@ -90,13 +141,26 @@ export async function listPendingValidation(
     examAndFilters.push({ resultedAt: { le: filters.toResultedAt.trim() } });
   }
 
-  const { data: examRows, errors } = await cookieBasedClient.models.Exam.list({
-    filter: { and: examAndFilters },
-    selectionSet: VALIDATION_EXAM_SELECTION,
-  });
-  if (errors?.length) {
-    console.error("[listPendingValidation] Amplify errors:", errors);
-  }
+  // Paginate to fetch all matching exams. Prioritizes data accuracy over latency
+  // (AppSync list() returns limited pages; partial results misrepresent the queue).
+  const allExamRows: ValidationExamListRow[] = [];
+  let nextToken: string | null | undefined = undefined;
+  do {
+    const response = (await cookieBasedClient.models.Exam.list({
+      filter: { and: examAndFilters },
+      selectionSet: VALIDATION_EXAM_SELECTION,
+      limit: 100,
+      nextToken: nextToken ?? undefined,
+    })) as { data?: typeof allExamRows; nextToken?: string | null; errors?: unknown[] };
+    if (response.errors?.length) {
+      console.error("[listPendingValidation] Amplify errors:", response.errors);
+    }
+    const page = response.data ?? [];
+    allExamRows.push(...page);
+    nextToken = response.nextToken;
+  } while (nextToken);
+
+  const examRows = allExamRows;
   if (!(examRows ?? []).length) return [];
 
   const rows: ValidationQueueItem[] = [];
@@ -117,6 +181,12 @@ export async function listPendingValidation(
     const results = parseResults(exam.results);
     const hasViolation = hasReferenceRangeViolation(results, fieldSchema);
     const clinicalFlag = deriveClinicalFlag(results, fieldSchema);
+    const priority =
+      workOrder.priority === "routine" ||
+      workOrder.priority === "urgent" ||
+      workOrder.priority === "stat"
+        ? workOrder.priority
+        : null;
 
     const row: ValidationQueueItem = {
       examId: exam.id,
@@ -125,12 +195,12 @@ export async function listPendingValidation(
       patientName,
       accessionNumber: workOrder.accessionNumber ?? null,
       examTypeName: examType.name,
-      technicianId: exam.performedBy,
+      technicianId: exam.performedBy ?? null,
       status: (exam.status as ValidationQueueItem["status"]) ?? "ready_for_validation",
-      processedAt: exam.resultedAt,
+      processedAt: exam.resultedAt ?? null,
       clinicalFlag,
       hasReferenceRangeViolation: hasViolation,
-      priority: workOrder.priority ?? null,
+      priority,
     };
     if (!matchFlagFilter(row, filters.flag)) continue;
     rows.push(row);
@@ -262,14 +332,23 @@ export async function getDashboardStats(): Promise<SupervisorDashboardStats> {
     activeIncidences = pendingIncidenceExamIds.size;
   }
 
-  const { data: validatedExamsRaw } = await cookieBasedClient.models.Exam.list({
-    filter: {
-      or: [{ status: { eq: "approved" } }, { status: { eq: "rejected" } }],
-    },
-  });
+  // Paginate to include all validated exams for accurate turnaround average.
+  const validatedExamsRaw: ValidatedExamRow[] = [];
+  let validatedNextToken: string | null | undefined = undefined;
+  do {
+    const validatedResponse = (await cookieBasedClient.models.Exam.list({
+      filter: {
+        or: [{ status: { eq: "approved" } }, { status: { eq: "rejected" } }],
+      },
+      limit: 100,
+      nextToken: validatedNextToken ?? undefined,
+    })) as { data?: typeof validatedExamsRaw; nextToken?: string | null };
+    validatedExamsRaw.push(...(validatedResponse.data ?? []));
+    validatedNextToken = validatedResponse.nextToken;
+  } while (validatedNextToken);
 
   const turnaroundMinutes: number[] = [];
-  for (const exam of validatedExamsRaw ?? []) {
+  for (const exam of validatedExamsRaw) {
     if (!exam?.id) continue;
     if (!exam.resultedAt || !exam.validatedAt) continue;
     const resultedMs = new Date(exam.resultedAt).getTime();

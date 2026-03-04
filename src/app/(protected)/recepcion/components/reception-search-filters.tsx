@@ -74,11 +74,7 @@ export function ReceptionSearchFilters({
             aria-label="Buscar paciente, orden o prueba"
           />
         </div>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="min-h-11 rounded-full px-5"
-        >
+        <Button type="submit" disabled={isPending} className="min-h-11 rounded-full px-5">
           Buscar
         </Button>
       </form>

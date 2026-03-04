@@ -66,6 +66,45 @@ type AnalyticsBaseData = {
   examTypeById: Map<string, ExamTypeRecord>;
 };
 
+type WorkOrderListRow = {
+  id?: string;
+  requestedAt?: string | null;
+  priority?: "routine" | "urgent" | "stat" | null;
+  referringDoctor?: string | null;
+};
+
+type SampleListRow = {
+  id?: string;
+  workOrderId?: string;
+  examTypeId?: string;
+};
+
+type ExamListRow = {
+  id?: string;
+  sampleId?: string;
+  examTypeId?: string;
+  status?: string | null;
+  startedAt?: string | null;
+  resultedAt?: string | null;
+  validatedAt?: string | null;
+  performedBy?: string | null;
+};
+
+type ExamTypeListRow = {
+  id?: string;
+  code?: string | null;
+  name?: string | null;
+};
+
+type AuditEventListRow = {
+  id?: string;
+  action?: string;
+  entityType?: string | null;
+  entityId?: string | null;
+  timestamp?: string;
+  metadata?: unknown;
+};
+
 const TERMINAL_EXAM_STATUSES = new Set(["approved", "rejected"]);
 const TAT_BUCKETS: { label: string; minMinutes: number; maxMinutes: number | null }[] = [
   { label: "0-30 min", minMinutes: 0, maxMinutes: 30 },
@@ -138,18 +177,101 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   if (range.from?.trim()) auditFilter.push({ timestamp: { ge: range.from.trim() } });
   if (range.to?.trim()) auditFilter.push({ timestamp: { le: range.to.trim() } });
 
-  const [workOrderRes, sampleRes, examRes, examTypeRes, auditRes] = await Promise.all([
-    cookieBasedClient.models.WorkOrder.list(),
-    cookieBasedClient.models.Sample.list(),
-    cookieBasedClient.models.Exam.list(),
-    cookieBasedClient.models.ExamType.list(),
-    cookieBasedClient.models.AuditEvent.list({
-      filter: auditFilter.length > 0 ? { and: auditFilter } : undefined,
-    }),
+  const [workOrderData, sampleData, examData, examTypeData, auditData] = await Promise.all([
+    (async () => {
+      const rows: WorkOrderListRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      let pages = 0;
+      do {
+        const res = (await cookieBasedClient.models.WorkOrder.list({
+          limit: 100,
+          nextToken: nextToken ?? undefined,
+        })) as {
+          data?: typeof rows;
+          nextToken?: string | null;
+        };
+        rows.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+        pages++;
+      } while (nextToken);
+      return { rows, pages, finalNextToken: nextToken ?? null };
+    })(),
+    (async () => {
+      const rows: SampleListRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      let pages = 0;
+      do {
+        const res = (await cookieBasedClient.models.Sample.list({
+          limit: 100,
+          nextToken: nextToken ?? undefined,
+        })) as {
+          data?: typeof rows;
+          nextToken?: string | null;
+        };
+        rows.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+        pages++;
+      } while (nextToken);
+      return { rows, pages, finalNextToken: nextToken ?? null };
+    })(),
+    (async () => {
+      const rows: ExamListRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      let pages = 0;
+      do {
+        const res = (await cookieBasedClient.models.Exam.list({
+          limit: 100,
+          nextToken: nextToken ?? undefined,
+        })) as {
+          data?: typeof rows;
+          nextToken?: string | null;
+        };
+        rows.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+        pages++;
+      } while (nextToken);
+      return { rows, pages, finalNextToken: nextToken ?? null };
+    })(),
+    (async () => {
+      const rows: ExamTypeListRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      let pages = 0;
+      do {
+        const res = (await cookieBasedClient.models.ExamType.list({
+          limit: 100,
+          nextToken: nextToken ?? undefined,
+        })) as {
+          data?: typeof rows;
+          nextToken?: string | null;
+        };
+        rows.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+        pages++;
+      } while (nextToken);
+      return { rows, pages, finalNextToken: nextToken ?? null };
+    })(),
+    (async () => {
+      const rows: AuditEventListRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      let pages = 0;
+      do {
+        const res = (await cookieBasedClient.models.AuditEvent.list({
+          filter: auditFilter.length > 0 ? { and: auditFilter } : undefined,
+          limit: 100,
+          nextToken: nextToken ?? undefined,
+        })) as {
+          data?: typeof rows;
+          nextToken?: string | null;
+        };
+        rows.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+        pages++;
+      } while (nextToken);
+      return { rows, pages, finalNextToken: nextToken ?? null };
+    })(),
   ]);
-
   const workOrders: WorkOrderRecord[] = [];
-  for (const row of workOrderRes.data ?? []) {
+  for (const row of workOrderData.rows) {
     if (!row?.id) continue;
     workOrders.push({
       id: row.id,
@@ -163,7 +285,7 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   }
 
   const samples: SampleRecord[] = [];
-  for (const row of sampleRes.data ?? []) {
+  for (const row of sampleData.rows) {
     if (!row?.id || !row.workOrderId || !row.examTypeId) continue;
     samples.push({
       id: row.id,
@@ -173,7 +295,7 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   }
 
   const exams: ExamRecord[] = [];
-  for (const row of examRes.data ?? []) {
+  for (const row of examData.rows) {
     if (!row?.id || !row.sampleId || !row.examTypeId) continue;
     exams.push({
       id: row.id,
@@ -188,7 +310,7 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   }
 
   const examTypes: ExamTypeRecord[] = [];
-  for (const row of examTypeRes.data ?? []) {
+  for (const row of examTypeData.rows) {
     if (!row?.id) continue;
     examTypes.push({
       id: row.id,
@@ -198,7 +320,7 @@ async function fetchAnalyticsBaseData(range: AnalyticsTimeRange): Promise<Analyt
   }
 
   const auditEvents: AuditEventRecord[] = [];
-  for (const row of auditRes.data ?? []) {
+  for (const row of auditData.rows) {
     if (!row?.id || !row.timestamp || !row.action) continue;
     auditEvents.push({
       id: row.id,
@@ -307,7 +429,7 @@ export async function getKPISummary(
   const base = await fetchAnalyticsBaseDataCached(JSON.stringify(range));
   const { workOrderIdsInRange, examIdsInRange } = applyFilters(base, range, filters);
 
-  let ordersProcessed = workOrderIdsInRange.size;
+  const ordersProcessed = workOrderIdsInRange.size;
   let examsCompleted = 0;
   let totalTatMs = 0;
   let tatCount = 0;

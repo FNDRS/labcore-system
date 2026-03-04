@@ -139,6 +139,22 @@ export async function getTechnicianDashboardMetrics(
   return computeDashboardMetrics(samples);
 }
 
+/** Shape of Sample.list items with TECHNICIAN_SAMPLE_SELECTION (avoids Amplify deep type instantiation). */
+type TechnicianSampleListItem = {
+  id?: string | null;
+  barcode?: string | null;
+  status?: string | null;
+  receivedAt?: string | null;
+  collectedAt?: string | null;
+  workOrder?: {
+    id?: string | null;
+    priority?: string | null;
+    patientId?: string | null;
+    patient?: { id?: string | null; firstName?: string | null; lastName?: string | null } | null;
+  } | null;
+  examType?: { id?: string | null; name?: string | null; sampleType?: string | null } | null;
+};
+
 /** Selection set for technician samples: eager-load workOrder+patient and examType in one call. */
 const TECHNICIAN_SAMPLE_SELECTION = [
   "id",
@@ -186,14 +202,28 @@ const SAMPLE_DETAIL_SELECTION = [
  * instead of 90+ parallel get requests.
  */
 export async function listTechnicianSamples(): Promise<SampleWorkstationRow[]> {
-  const { data: samples } = await cookieBasedClient.models.Sample.list({
-    filter: {
-      or: TECHNICIAN_SAMPLE_STATUSES.map((status) => ({
-        status: { eq: status },
-      })),
-    },
-    selectionSet: TECHNICIAN_SAMPLE_SELECTION,
-  });
+  const filter = {
+    or: TECHNICIAN_SAMPLE_STATUSES.map((status) => ({
+      status: { eq: status },
+    })),
+  };
+
+  const allSamples: TechnicianSampleListItem[] = [];
+  let nextToken: string | null | undefined = undefined;
+
+  do {
+    const listResult = (await cookieBasedClient.models.Sample.list({
+      filter,
+      selectionSet: TECHNICIAN_SAMPLE_SELECTION,
+      limit: 100,
+      nextToken: nextToken ?? undefined,
+    })) as { data?: TechnicianSampleListItem[] | null; nextToken?: string | null };
+    const page = listResult.data ?? [];
+    allSamples.push(...page);
+    nextToken = listResult.nextToken;
+  } while (nextToken);
+
+  const samples = allSamples;
 
   if (!samples?.length) return [];
 
