@@ -11,7 +11,7 @@
     "format:check": "prettier --check .",
     "sandbox": "pnpm ampx sandbox --profile Nimbus --identifier Nimbus",
     "seed": "pnpm ampx sandbox seed --profile Nimbus --identifier Nimbus",
-    "buildCI": "pnpm ampx generate-outputs --app-id $AMPLIFY_APP_ID --branch $VERCEL_GIT_COMMIT_REF && next build"
+    "buildCI": "pnpm ampx generate outputs --app-id $AMPLIFY_APP_ID --branch $VERCEL_GIT_COMMIT_REF && next build"
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.7.2",
