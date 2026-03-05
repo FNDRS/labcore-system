@@ -10,7 +10,6 @@ applications:
             - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
             - echo $AWS_BRANCH
             - echo $AWS_APP_ID
-            - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
         postBuild:
           commands:
             - |
