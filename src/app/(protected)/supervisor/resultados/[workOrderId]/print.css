@@ -4,12 +4,7 @@
    @media print rules: strip UI chrome, apply A4 layout, control page breaks.
 ─────────────────────────────────────────────────────────────────────────── */
 
-/* Hide print-footer on screen (shown only when printing) */
-@media screen {
-  [data-print-footer] {
-    display: none;
-  }
-}
+/* Print footer visible on screen for document completeness */
 
 /* ─── Print layout ──────────────────────────────────────────────────────── */
 
@@ -46,6 +41,35 @@
   [data-sidebar],
   [data-no-print] {
     display: none !important;
+  }
+
+  /* ─ Unclip the app shell so content flows to the printer ─ */
+
+  /* The root layout div is `position: fixed; overflow: hidden` —
+     this is the #1 cause of blank print output in this app. */
+  .fixed {
+    position: static !important;
+    inset: auto !important;
+  }
+
+  /* Scroll containers clip printed content; make them transparent for print. */
+  .overflow-hidden,
+  .overflow-x-hidden,
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  .overflow-x-auto,
+  .overflow-x-scroll {
+    overflow: visible !important;
+  }
+
+  /* Height constraints that would clip content */
+  .min-h-0,
+  .h-full,
+  .h-screen,
+  .max-h-screen {
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
   }
 
   /* The main content wrapper may have padding / flex layout — reset it */

@@ -31,6 +31,10 @@ export interface TechnicianWorkstationState {
   selectedSample: SampleWorkstationDetail | SampleWorkstationRow | null;
   detailLoading: boolean;
   actionError: string | null;
+  pendingAction: {
+    kind: "markReceived" | "process" | "reportProblem" | "reprintLabel";
+    sampleId: string;
+  } | null;
 }
 
 /** Actions exposed by the workstation provider. */
@@ -89,6 +93,10 @@ export function TechnicianWorkstationProvider({
   const [selectedDetail, setSelectedDetail] = useState<SampleWorkstationDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    kind: "markReceived" | "process" | "reportProblem" | "reprintLabel";
+    sampleId: string;
+  } | null>(null);
 
   const loadSamples = useCallback(async () => {
     setSamplesLoading(true);
@@ -139,8 +147,19 @@ export function TechnicianWorkstationProvider({
 
   const handleScan = useCallback(async () => {
     const q = scanValue.trim();
+    const localMatch = samples.find((sample) => sample.sampleId === q || sample.id === q) ?? null;
     if (!q) return;
     setScannerStatus("ocupado");
+    if (localMatch) {
+      setLastScannedId(localMatch.sampleId);
+      setHighlightedId(localMatch.id);
+      setScannerStatus("listo");
+      setScanValue("");
+      setActionError(null);
+      openPanel(localMatch.id);
+      setTimeout(() => setHighlightedId(null), 2000);
+      return;
+    }
     const result = await lookupSampleByBarcodeAction(q);
     if (result.ok) {
       const { sample } = result;
@@ -159,19 +178,26 @@ export function TechnicianWorkstationProvider({
         setActionError(null);
       }, 2500);
     }
-  }, [scanValue, openPanel, loadSamples]);
+  }, [scanValue, samples, openPanel, loadSamples]);
 
   const onMarkReceived = useCallback(
     async (id: string) => {
       setActionError(null);
-      const result = await markReceivedAction(id);
-      if (result.ok) {
-        await loadSamples();
-        if (selectedId === id) {
-          getSampleDetail(id).then(setSelectedDetail);
+      setPendingAction({ kind: "markReceived", sampleId: id });
+      try {
+        const result = await markReceivedAction(id);
+        if (result.ok) {
+          await loadSamples();
+          if (selectedId === id) {
+            getSampleDetail(id).then(setSelectedDetail);
+          }
+        } else {
+          setActionError(result.error);
         }
-      } else {
-        setActionError(result.error);
+      } catch {
+        setActionError("No se pudo marcar la muestra como recibida");
+      } finally {
+        setPendingAction(null);
       }
     },
     [loadSamples, selectedId]
@@ -190,20 +216,32 @@ export function TechnicianWorkstationProvider({
         return;
       }
       if (sample?.backendStatus === "inprogress") {
-        setPanelOpen(false);
-        router.push(
-          `/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample.sampleId ?? "")}`
-        );
+        setPendingAction({ kind: "process", sampleId: id });
+        try {
+          setPanelOpen(false);
+          router.push(
+            `/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample.sampleId ?? "")}`
+          );
+        } finally {
+          setPendingAction(null);
+        }
         return;
       }
-      const result = await markInProgressAction(id);
-      if (result.ok) {
-        setPanelOpen(false);
-        router.push(
-          `/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample?.sampleId ?? "")}`
-        );
-      } else {
-        setActionError(result.error);
+      setPendingAction({ kind: "process", sampleId: id });
+      try {
+        const result = await markInProgressAction(id);
+        if (result.ok) {
+          setPanelOpen(false);
+          router.push(
+            `/technician/muestras/process/${id}?sampleId=${encodeURIComponent(sample?.sampleId ?? "")}`
+          );
+        } else {
+          setActionError(result.error);
+        }
+      } catch {
+        setActionError("No se pudo iniciar el procesamiento de la muestra");
+      } finally {
+        setPendingAction(null);
       }
     },
     [samples, router]
@@ -212,13 +250,20 @@ export function TechnicianWorkstationProvider({
   const onReportProblem = useCallback(
     async (id: string) => {
       setActionError(null);
-      const result = await markRejectedAction(id);
-      if (result.ok) {
-        await loadSamples();
-        setPanelOpen(false);
-        if (selectedId === id) setSelectedDetail(null);
-      } else {
-        setActionError(result.error);
+      setPendingAction({ kind: "reportProblem", sampleId: id });
+      try {
+        const result = await markRejectedAction(id);
+        if (result.ok) {
+          await loadSamples();
+          setPanelOpen(false);
+          if (selectedId === id) setSelectedDetail(null);
+        } else {
+          setActionError(result.error);
+        }
+      } catch {
+        setActionError("No se pudo reportar la incidencia");
+      } finally {
+        setPendingAction(null);
       }
     },
     [loadSamples, selectedId]
@@ -227,14 +272,21 @@ export function TechnicianWorkstationProvider({
   const onReprintLabel = useCallback(
     async (id: string) => {
       setActionError(null);
-      const result = await reprintLabelAction(id);
-      if (result.ok) {
-        if (selectedId === id) {
-          getSampleDetail(id).then(setSelectedDetail);
+      setPendingAction({ kind: "reprintLabel", sampleId: id });
+      try {
+        const result = await reprintLabelAction(id);
+        if (result.ok) {
+          if (selectedId === id) {
+            getSampleDetail(id).then(setSelectedDetail);
+          }
+          setPanelOpen(false);
+        } else {
+          setActionError(result.error);
         }
-        setPanelOpen(false);
-      } else {
-        setActionError(result.error);
+      } catch {
+        setActionError("No se pudo reimprimir la etiqueta");
+      } finally {
+        setPendingAction(null);
       }
     },
     [selectedId]
@@ -257,6 +309,7 @@ export function TechnicianWorkstationProvider({
       selectedSample,
       detailLoading,
       actionError,
+      pendingAction,
     },
     actions: {
       loadSamples,

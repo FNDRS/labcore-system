@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,6 +42,8 @@ export function MuestrasTable({
   onMarkReceived,
   onProcess,
   onReportProblem,
+  pendingActionKind,
+  pendingActionSampleId,
   tableRef,
   rowRefs,
 }: {
@@ -54,6 +56,8 @@ export function MuestrasTable({
   onMarkReceived: (id: string) => void;
   onProcess: (id: string) => void;
   onReportProblem: (id: string) => void;
+  pendingActionKind: "markReceived" | "process" | "reportProblem" | "reprintLabel" | null;
+  pendingActionSampleId: string | null;
   tableRef: React.RefObject<HTMLDivElement | null>;
   rowRefs: (id: string) => (el: HTMLTableRowElement | null) => void;
 }) {
@@ -67,20 +71,23 @@ export function MuestrasTable({
     );
   });
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filter, searchQuery]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    filter,
+    searchQuery,
+  });
+  const pageSize = pagination.pageSize;
+  const pageForView =
+    pagination.filter === filter && pagination.searchQuery === searchQuery ? pagination.page : 1;
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const start = (page - 1) * pageSize;
+  const start = (pageForView - 1) * pageSize;
   const paginatedRows = filtered.slice(start, start + pageSize);
 
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
+  const canPrev = pageForView > 1;
+  const canNext = pageForView < totalPages;
 
   return (
     <div className="space-y-3">
@@ -122,7 +129,11 @@ export function MuestrasTable({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedRows.map((row) => (
+              paginatedRows.map((row) => {
+                const isRowPending = pendingActionSampleId === row.id;
+                const isMarkingReceived = isRowPending && pendingActionKind === "markReceived";
+                const isProcessing = isRowPending && pendingActionKind === "process";
+                return (
                 <TableRow
                   key={row.id}
                   ref={rowRefs(row.id)}
@@ -164,25 +175,43 @@ export function MuestrasTable({
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => onSelect(row.id)}>
+                        <DropdownMenuItem onClick={() => onSelect(row.id)} disabled={isRowPending}>
                           Ver detalle
                         </DropdownMenuItem>
                         {(row.backendStatus === "received" ||
                           row.backendStatus === "inprogress") && (
-                          <DropdownMenuItem onClick={() => onProcess(row.id)}>
-                            Procesar
+                          <DropdownMenuItem onClick={() => onProcess(row.id)} disabled={isRowPending}>
+                            {isProcessing ? (
+                              <span className="inline-flex items-center gap-2">
+                                <Loader2 className="size-3.5 animate-spin" />
+                                Procesando...
+                              </span>
+                            ) : (
+                              "Procesar"
+                            )}
                           </DropdownMenuItem>
                         )}
                         {(row.backendStatus === "ready_for_lab" ||
                           row.backendStatus === "pending" ||
                           row.backendStatus === "labeled") && (
-                          <DropdownMenuItem onClick={() => onMarkReceived(row.id)}>
-                            Marcar recibida
+                          <DropdownMenuItem
+                            onClick={() => onMarkReceived(row.id)}
+                            disabled={isRowPending}
+                          >
+                            {isMarkingReceived ? (
+                              <span className="inline-flex items-center gap-2">
+                                <Loader2 className="size-3.5 animate-spin" />
+                                Marcando...
+                              </span>
+                            ) : (
+                              "Marcar recibida"
+                            )}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => onReportProblem(row.id)}
+                          disabled={isRowPending}
                         >
                           Reportar problema
                         </DropdownMenuItem>
@@ -190,7 +219,8 @@ export function MuestrasTable({
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -205,8 +235,12 @@ export function MuestrasTable({
             <Select
               value={String(pageSize)}
               onValueChange={(v) => {
-                setPageSize(Number(v));
-                setPage(1);
+                setPagination({
+                  page: 1,
+                  pageSize: Number(v),
+                  filter,
+                  searchQuery,
+                });
               }}
             >
               <SelectTrigger className="h-9 w-[100px]" size="sm">
@@ -227,7 +261,14 @@ export function MuestrasTable({
                 size="icon"
                 className="h-9 w-9"
                 disabled={!canPrev}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() =>
+                  setPagination({
+                    page: Math.max(1, pageForView - 1),
+                    pageSize,
+                    filter,
+                    searchQuery,
+                  })
+                }
                 aria-label="Página anterior"
               >
                 <ChevronLeft className="size-4" />
@@ -238,7 +279,14 @@ export function MuestrasTable({
                 size="icon"
                 className="h-9 w-9"
                 disabled={!canNext}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setPagination({
+                    page: Math.min(totalPages, pageForView + 1),
+                    pageSize,
+                    filter,
+                    searchQuery,
+                  })
+                }
                 aria-label="Página siguiente"
               >
                 <ChevronRight className="size-4" />

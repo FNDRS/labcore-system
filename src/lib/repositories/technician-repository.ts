@@ -282,7 +282,7 @@ export async function listTechnicianSamples(): Promise<SampleWorkstationRow[]> {
 
 /**
  * Lookup sample by barcode or ID. Returns SampleWorkstationRow for scan flows.
- * Tries get-by-id first, then list-by-barcode.
+ * Tries get-by-id first, then secondary-index lookup by barcode.
  */
 export async function lookupSampleByBarcode(code: string): Promise<SampleWorkstationRow | null> {
   const trimmed = code.trim();
@@ -297,10 +297,13 @@ export async function lookupSampleByBarcode(code: string): Promise<SampleWorksta
     return detail;
   }
 
-  // Try list by barcode (exact match)
-  const { data: byBarcode } = await cookieBasedClient.models.Sample.list({
-    filter: { barcode: { eq: trimmed } },
-  });
+  const { data: byBarcode, errors } = await cookieBasedClient.models.Sample.listByBarcode(
+    { barcode: trimmed },
+    { limit: 1, selectionSet: ["id"] }
+  );
+  if (errors?.length) {
+    console.error("[lookupSampleByBarcode] Amplify errors:", errors);
+  }
   const first = byBarcode?.[0];
   if (!first?.id) return null;
 

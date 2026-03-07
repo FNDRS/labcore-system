@@ -1,7 +1,9 @@
 "use client";
 
 import "./print.css";
-import { FileDown, Printer } from "lucide-react";
+import { FileDown, Loader2, Printer } from "lucide-react";
+import { useState } from "react";
+import { createConsolidatedResultPdf } from "@/lib/pdf/consolidated-result-pdf";
 import { ExamResultViewer } from "@/components/exam-result-viewer";
 import type {
   ConsolidatedExamResult,
@@ -48,12 +50,6 @@ function formatGender(gender: string | null): string {
   if (gender === "M") return "Masculino";
   if (gender === "F") return "Femenino";
   return "—";
-}
-
-function formatPriority(priority: string | null): string {
-  if (priority === "stat") return "STAT";
-  if (priority === "urgent") return "Urgente";
-  return "Rutina";
 }
 
 const SAMPLE_TYPE_MAP: Record<string, string> = {
@@ -343,26 +339,37 @@ function PrintFooter() {
 interface ActionBarProps {
   onPrint: () => void;
   onExportPdf: () => void;
+  isGenerating: boolean;
 }
 
-function ActionBar({ onPrint, onExportPdf }: ActionBarProps) {
+function ActionBar({ onPrint, onExportPdf, isGenerating }: ActionBarProps) {
   return (
     <div data-no-print className="flex items-center justify-end gap-2">
       <button
         type="button"
         onClick={onPrint}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+        disabled={isGenerating}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <Printer className="size-3.5" />
+        {isGenerating ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <Printer className="size-3.5" />
+        )}
         Imprimir
       </button>
       <button
         type="button"
         onClick={onExportPdf}
-        title="Abrir diálogo de impresión — use «Guardar como PDF»"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+        disabled={isGenerating}
+        title="Descargar informe como PDF"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-600 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <FileDown className="size-3.5" />
+        {isGenerating ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <FileDown className="size-3.5" />
+        )}
         Exportar PDF
       </button>
     </div>
@@ -371,19 +378,52 @@ function ActionBar({ onPrint, onExportPdf }: ActionBarProps) {
 
 // ─── Main component ─────────────────────────────────────────────────────────
 
+function sanitizeFilename(name: string): string {
+  // Keep letters, numbers, spaces, hyphens, underscores; hyphen at start of class is literal
+  return name
+    .replace(/[^-\p{L}\p{N}\s_]/gu, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 40);
+}
+
 export function ConsolidatedResultClient({ result }: ConsolidatedResultClientProps) {
-  function handlePrint() {
-    window.print();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const baseFilename = `informe-${result.workOrder.accessionNumber ?? result.workOrder.id}-${sanitizeFilename(result.patient.fullName)}`;
+
+  async function handlePrint() {
+    setIsGenerating(true);
+    try {
+      const blob = await createConsolidatedResultPdf(result);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
-  /** Placeholder for future react-pdf integration. Uses browser print dialog → Save as PDF for now. */
-  function handleExportPdf() {
-    window.print();
+  async function handleExportPdf() {
+    setIsGenerating(true);
+    try {
+      const blob = await createConsolidatedResultPdf(result);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${baseFilename}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   return (
     <div className="space-y-4">
-      <ActionBar onPrint={handlePrint} onExportPdf={handleExportPdf} />
+      <ActionBar
+        onPrint={handlePrint}
+        onExportPdf={handleExportPdf}
+        isGenerating={isGenerating}
+      />
 
       <div data-report-document className="space-y-4">
         <PatientHeader result={result} />

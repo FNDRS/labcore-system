@@ -72,7 +72,12 @@ const schema = a
         specimenData: a.json(),
         exam: a.hasOne("Exam", "sampleId"),
       })
-      .secondaryIndexes((index) => [index("workOrderId"), index("examTypeId"), index("status")])
+      .secondaryIndexes((index) => [
+        index("workOrderId"),
+        index("examTypeId"),
+        index("status"),
+        index("barcode").queryField("listByBarcode"),
+      ])
       .authorization((allow) => [allow.authenticated(), allow.guest()]),
 
     Exam: a

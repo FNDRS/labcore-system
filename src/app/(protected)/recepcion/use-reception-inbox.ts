@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSimplePdf } from "./pdf";
+import { createStickerPdf } from "./pdf";
 import type { GenerationModalState, ReceptionOrder } from "./types";
 import type { ReceptionListFilters } from "@/lib/repositories/reception-repository";
 import {
@@ -126,6 +126,7 @@ export function useReceptionInbox({
 
     // Map barcodes to specimens for display (tube label from barcode pattern)
     const specimens = result.barcodes.map((barcode, i) => ({
+      sampleId: result.sampleIds[i] ?? barcode,
       tubeLabel: `Muestra ${i + 1}`,
       examCount: 1,
       specimenCode: barcode,
@@ -155,18 +156,14 @@ export function useReceptionInbox({
     try {
       await new Promise((resolve) => window.setTimeout(resolve, 300));
 
-      const lines = [
-        "LabCore - Etiquetas de muestras",
-        `Orden: ${generationModal.displayId}`,
-        `Paciente: ${generationModal.patientName}`,
-        "",
-        ...generationModal.specimens.map(
-          (specimen) =>
-            `${specimen.tubeLabel} | ${specimen.examCount} exámenes | Código: ${specimen.specimenCode}`
-        ),
-      ];
-
-      const pdfBlob = createSimplePdf(lines);
+      const pdfBlob = await createStickerPdf({
+        specimens: generationModal.specimens.map((s) => ({
+          sampleId: s.sampleId,
+          specimenCode: s.specimenCode,
+        })),
+        workOrderCode: generationModal.displayId,
+        patientName: generationModal.patientName,
+      });
       const url = URL.createObjectURL(pdfBlob);
       const anchor = document.createElement("a");
       anchor.href = url;

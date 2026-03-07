@@ -3,6 +3,27 @@
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/lib/contracts";
 import { cookieBasedClient } from "@/utils/amplifyServerUtils";
 
+const WORK_ORDER_SAMPLE_SELECTION = ["id", "samples.id", "samples.barcode", "samples.status"] as const;
+
+async function loadSamplesForWorkOrder(workOrderId: string) {
+  const { data: directSamples } = await cookieBasedClient.models.Sample.list({
+    filter: { workOrderId: { eq: workOrderId } },
+  });
+  if ((directSamples?.length ?? 0) > 0) {
+    return directSamples;
+  }
+
+  const { data: workOrder } = await cookieBasedClient.models.WorkOrder.get(
+    { id: workOrderId },
+    { selectionSet: WORK_ORDER_SAMPLE_SELECTION }
+  );
+  const workOrderSamples = workOrder?.samples ?? [];
+  const relatedSamples = workOrderSamples.filter(
+    (sample): sample is NonNullable<(typeof workOrderSamples)[number]> => sample != null
+  );
+  return relatedSamples;
+}
+
 export type GenerateSpecimensResult =
   | { ok: true; sampleIds: string[]; barcodes: string[] }
   | { ok: false; error: string };
@@ -161,9 +182,7 @@ export async function markLabelsPrintedForOrder(
   workOrderId: string,
   userId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { data: samples } = await cookieBasedClient.models.Sample.list({
-    filter: { workOrderId: { eq: workOrderId } },
-  });
+  const samples = await loadSamplesForWorkOrder(workOrderId);
   if (!samples || samples.length === 0) {
     return { ok: false, error: "No hay muestras para esta orden" };
   }
@@ -188,9 +207,7 @@ export async function markOrderReadyForLab(
   workOrderId: string,
   userId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { data: samples } = await cookieBasedClient.models.Sample.list({
-    filter: { workOrderId: { eq: workOrderId } },
-  });
+  const samples = await loadSamplesForWorkOrder(workOrderId);
 
   if (!samples || samples.length === 0) {
     return { ok: false, error: "No hay muestras para esta orden" };

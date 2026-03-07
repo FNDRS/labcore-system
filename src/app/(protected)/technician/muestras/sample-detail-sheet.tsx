@@ -59,23 +59,32 @@ export function SampleDetailSheet({
   sample,
   open,
   onOpenChange,
+  onMarkReceived,
   onProcess,
   onReportIncident,
   onReprintLabel,
   detailLoading = false,
+  pendingAction = null,
 }: {
   sample: SampleWorkstationRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProcess: (id: string) => void;
-  onReportIncident: (id: string) => void;
-  onReprintLabel: (id: string) => void;
+  onMarkReceived: (id: string) => Promise<void> | void;
+  onProcess: (id: string) => Promise<void> | void;
+  onReportIncident: (id: string) => Promise<void> | void;
+  onReprintLabel: (id: string) => Promise<void> | void;
   detailLoading?: boolean;
+  pendingAction?: "markReceived" | "process" | "reportProblem" | "reprintLabel" | null;
 }) {
   if (!sample) return null;
 
   const exams = getExamsFromSample(sample);
   const history = getHistory(sample);
+  const isMarkingReceived = pendingAction === "markReceived";
+  const isProcessing = pendingAction === "process";
+  const isReportingProblem = pendingAction === "reportProblem";
+  const isReprintingLabel = pendingAction === "reprintLabel";
+  const actionsDisabled = pendingAction !== null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -124,13 +133,43 @@ export function SampleDetailSheet({
                     <span className="font-medium">{exam.name}</span>
                     <ExamStatusBadge status={exam.status} />
                   </div>
+                  {(exam.backendStatus === "ready_for_lab" ||
+                    exam.backendStatus === "pending" ||
+                    exam.backendStatus === "labeled") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 rounded-full"
+                      onClick={() => onMarkReceived(exam.id)}
+                      disabled={actionsDisabled}
+                    >
+                      {isMarkingReceived ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          Marcando...
+                        </>
+                      ) : (
+                        "Marcar recibida"
+                      )}
+                    </Button>
+                  )}
                   {(exam.backendStatus === "received" || exam.backendStatus === "inprogress") && (
                     <Button
                       size="sm"
                       className="shrink-0 rounded-full bg-primary hover:bg-primary/90 focus-visible:ring-primary"
                       onClick={() => onProcess(exam.id)}
+                      disabled={actionsDisabled}
                     >
-                      {exam.backendStatus === "inprogress" ? "Continuar" : "Procesar"}
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          Procesando...
+                        </>
+                      ) : exam.backendStatus === "inprogress" ? (
+                        "Continuar"
+                      ) : (
+                        "Procesar"
+                      )}
                     </Button>
                   )}
                 </li>
@@ -164,12 +203,38 @@ export function SampleDetailSheet({
           </div>
         </div>
         <SheetFooter className="flex flex-col gap-2 sm:flex-col">
-          <Button variant="outline" className="w-full" onClick={() => onReportIncident(sample.id)}>
-            Marcar incidencia
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onReportIncident(sample.id)}
+            disabled={actionsDisabled}
+          >
+            {isReportingProblem ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Marcando incidencia...
+              </>
+            ) : (
+              "Marcar incidencia"
+            )}
           </Button>
-          <Button variant="outline" className="w-full" onClick={() => onReprintLabel(sample.id)}>
-            <Printer className="size-4 mr-2" />
-            Reimprimir etiqueta
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onReprintLabel(sample.id)}
+            disabled={actionsDisabled}
+          >
+            {isReprintingLabel ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Reimprimiendo etiqueta...
+              </>
+            ) : (
+              <>
+                <Printer className="mr-2 size-4" />
+                Reimprimir etiqueta
+              </>
+            )}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -60,18 +60,36 @@ type Signal = "normal" | "attention" | "critical";
 
 const CONFIG = {
   seed: 20260225,
-  daysBack: 40,
-  totalPatients: 140,
-  totalWorkOrders: 220,
+  daysBack: 7,
+  totalPatients: 35,
+  totalWorkOrders: 55,
 } as const;
+
+// Schemas aligned with docs/Reportes de laboratorio Claudio.pdf
 
 const UROANALYSIS_SCHEMA = {
   sections: [
     {
+      id: "macroscopico",
+      label: "Examen Macroscopico",
+      fields: [
+        { key: "color", label: "Color", type: "string" },
+        { key: "olor", label: "Olor", type: "string" },
+        { key: "opacidad", label: "Opacidad", type: "string" },
+      ],
+    },
+    {
       id: "quimico",
-      label: "Quimico",
+      label: "Examen Quimico",
       fields: [
         { key: "ph", label: "pH", type: "numeric", referenceRange: "5-6" },
+        {
+          key: "proteinas",
+          label: "Proteinas",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
         {
           key: "glucosa",
           label: "Glucosa",
@@ -80,13 +98,69 @@ const UROANALYSIS_SCHEMA = {
           referenceRange: "negativo",
         },
         {
-          key: "proteinas",
-          label: "Proteinas",
+          key: "cetonas",
+          label: "Cetonas",
           type: "enum",
           options: ["negativo", "trazas", "+", "++", "+++"],
           referenceRange: "negativo",
         },
-        { key: "flag", label: "Flag", type: "string" },
+        {
+          key: "sangreOculta",
+          label: "Sangre Oculta",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
+        {
+          key: "bilirrubina",
+          label: "Bilirrubina",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
+        {
+          key: "urobilinogeno",
+          label: "Urobilinogeno",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
+        {
+          key: "nitritos",
+          label: "Nitritos",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
+        {
+          key: "esterasaLeucocitaria",
+          label: "Esterasa Leucocitaria",
+          type: "enum",
+          options: ["negativo", "trazas", "+", "++", "+++"],
+          referenceRange: "negativo",
+        },
+        {
+          key: "gravedadEspecifica",
+          label: "Gravedad Especifica",
+          type: "numeric",
+          referenceRange: "1.005-1.030",
+        },
+      ],
+    },
+    {
+      id: "microscopico",
+      label: "Examen Microscopico",
+      fields: [
+        { key: "leucocitos", label: "Leucocitos", type: "numeric", referenceRange: "0-4" },
+        { key: "eritrocitos", label: "Eritrocitos", type: "numeric", referenceRange: "0-4" },
+        { key: "celulasEpiteliales", label: "Celulas Epiteliales", type: "numeric", referenceRange: "0-4" },
+        { key: "cristales", label: "Cristales", type: "string" },
+        { key: "cilindros", label: "Cilindros", type: "string" },
+        { key: "bacterias", label: "Bacterias", type: "string" },
+        { key: "levaduras", label: "Levaduras", type: "string" },
+        { key: "estructurasMicoticas", label: "Estructuras Micoticas", type: "string" },
+        { key: "parasitos", label: "Parasitos", type: "string" },
+        { key: "otrasObservaciones", label: "Otras Observaciones", type: "string" },
       ],
     },
   ],
@@ -95,12 +169,56 @@ const UROANALYSIS_SCHEMA = {
 const CBC_SCHEMA = {
   sections: [
     {
-      id: "hemograma",
-      label: "Hemograma",
+      id: "serieRoja",
+      label: "Serie Roja",
       fields: [
-        { key: "rbc", label: "RBC", type: "numeric", unit: "x10^6/uL", referenceRange: "4.0-5.5" },
-        { key: "hb", label: "Hb", type: "numeric", unit: "g/dL", referenceRange: "12.0-17.5" },
-        { key: "wbc", label: "WBC", type: "numeric", unit: "x10^3/uL", referenceRange: "4.0-11.0" },
+        { key: "rbc", label: "Eritrocitos (RBC)", type: "numeric", unit: "x10^6/uL", referenceRange: "4.0-5.5" },
+        { key: "hb", label: "Hemoglobina (Hb)", type: "numeric", unit: "g/dL", referenceRange: "12.0-17.5" },
+        { key: "hto", label: "Hematocrito (Hto)", type: "numeric", unit: "%", referenceRange: "36-52" },
+        { key: "vcm", label: "VCM", type: "numeric", unit: "fL", referenceRange: "80-100" },
+        { key: "hcm", label: "HCM", type: "numeric", unit: "pg", referenceRange: "27-33" },
+        { key: "chcm", label: "CHCM", type: "numeric", unit: "g/dL", referenceRange: "32-36" },
+        { key: "rdwCV", label: "RDW-CV", type: "numeric", unit: "%", referenceRange: "11.5-14.5" },
+        { key: "rdwSD", label: "RDW-SD", type: "numeric", unit: "fL" },
+      ],
+    },
+    {
+      id: "serieBlanca",
+      label: "Serie Blanca",
+      fields: [
+        { key: "wbc", label: "Leucocitos totales (WBC)", type: "numeric", unit: "x10^3/uL", referenceRange: "4.0-11.0" },
+      ],
+    },
+    {
+      id: "diferencialPorcentual",
+      label: "Diferencial Porcentual",
+      fields: [
+        { key: "neutrofilosPct", label: "Neutrofilos", type: "numeric", unit: "%", referenceRange: "40-70" },
+        { key: "linfocitosPct", label: "Linfocitos", type: "numeric", unit: "%", referenceRange: "20-45" },
+        { key: "monocitosPct", label: "Monocitos", type: "numeric", unit: "%", referenceRange: "2-10" },
+        { key: "eosinofilosPct", label: "Eosinofilos", type: "numeric", unit: "%", referenceRange: "1-6" },
+        { key: "basofilosPct", label: "Basofilos", type: "numeric", unit: "%", referenceRange: "0-2" },
+      ],
+    },
+    {
+      id: "diferencialAbsoluto",
+      label: "Diferencial Absoluto",
+      fields: [
+        { key: "neutrofilosAbs", label: "Neutrofilos abs", type: "numeric", unit: "x10^3/uL", referenceRange: "1.8-7.5" },
+        { key: "linfocitosAbs", label: "Linfocitos abs", type: "numeric", unit: "x10^3/uL", referenceRange: "1.0-4.0" },
+        { key: "monocitosAbs", label: "Monocitos abs", type: "numeric", unit: "x10^3/uL", referenceRange: "0.2-0.8" },
+        { key: "eosinofilosAbs", label: "Eosinofilos abs", type: "numeric", unit: "x10^3/uL", referenceRange: "0.05-0.5" },
+        { key: "basofilosAbs", label: "Basofilos abs", type: "numeric", unit: "x10^3/uL", referenceRange: "0-0.2" },
+      ],
+    },
+    {
+      id: "seriePlaquetaria",
+      label: "Serie Plaquetaria",
+      fields: [
+        { key: "plt", label: "Plaquetas (PLT)", type: "numeric", unit: "x10^3/uL", referenceRange: "150-450" },
+        { key: "vpm", label: "VPM (MPV)", type: "numeric", unit: "fL", referenceRange: "7.5-11.5" },
+        { key: "pdw", label: "PDW", type: "numeric", unit: "fL", referenceRange: "9-17" },
+        { key: "pct", label: "Plaquetocrito (PCT)", type: "numeric", unit: "%", referenceRange: "0.15-0.40" },
       ],
     },
   ],
@@ -112,27 +230,28 @@ const CHEMISTRY_SCHEMA = {
       id: "quimica",
       label: "Quimica Sanguinea",
       fields: [
-        {
-          key: "glucosaAyunas",
-          label: "Glucosa",
-          type: "numeric",
-          unit: "mg/dL",
-          referenceRange: "70-99",
-        },
-        {
-          key: "creatinina",
-          label: "Creatinina",
-          type: "numeric",
-          unit: "mg/dL",
-          referenceRange: "0.6-1.2",
-        },
-        {
-          key: "colesterolTotal",
-          label: "Colesterol",
-          type: "numeric",
-          unit: "mg/dL",
-          referenceRange: "120-200",
-        },
+        { key: "glucosaAyunas", label: "Glucosa en ayunas", type: "numeric", unit: "mg/dL", referenceRange: "70-99" },
+        { key: "glucosaPostprandial", label: "Glucosa postprandial", type: "numeric", unit: "mg/dL" },
+        { key: "urea", label: "Urea", type: "numeric", unit: "mg/dL" },
+        { key: "bun", label: "Nitrogeno ureico (BUN)", type: "numeric", unit: "mg/dL" },
+        { key: "creatinina", label: "Creatinina", type: "numeric", unit: "mg/dL", referenceRange: "0.6-1.2" },
+        { key: "acidoUrico", label: "Acido urico", type: "numeric", unit: "mg/dL" },
+        { key: "alt", label: "ALT (TGP)", type: "numeric", unit: "U/L" },
+        { key: "ast", label: "AST (TGO)", type: "numeric", unit: "U/L" },
+        { key: "fosfatasaAlcalina", label: "Fosfatasa alcalina (FA)", type: "numeric", unit: "U/L" },
+        { key: "ggt", label: "Gamma-glutamil transferasa (GGT)", type: "numeric", unit: "U/L" },
+        { key: "bilirrubinaTotal", label: "Bilirrubina total", type: "numeric", unit: "mg/dL" },
+        { key: "bilirrubinaDirecta", label: "Bilirrubina directa", type: "numeric", unit: "mg/dL" },
+        { key: "proteinasTotales", label: "Proteinas totales", type: "numeric", unit: "g/dL" },
+        { key: "albumina", label: "Albumina", type: "numeric", unit: "g/dL" },
+        { key: "colesterolTotal", label: "Colesterol total", type: "numeric", unit: "mg/dL", referenceRange: "120-200" },
+        { key: "colesterolHDL", label: "Colesterol HDL", type: "numeric", unit: "mg/dL" },
+        { key: "colesterolLDL", label: "Colesterol LDL", type: "numeric", unit: "mg/dL" },
+        { key: "trigliceridos", label: "Trigliceridos", type: "numeric", unit: "mg/dL" },
+        { key: "sodio", label: "Sodio (Na+)", type: "numeric", unit: "mEq/L" },
+        { key: "potasio", label: "Potasio (K+)", type: "numeric", unit: "mEq/L" },
+        { key: "cloro", label: "Cloro (Cl-)", type: "numeric", unit: "mEq/L" },
+        { key: "calcioTotal", label: "Calcio total", type: "numeric", unit: "mg/dL" },
       ],
     },
   ],
@@ -141,12 +260,33 @@ const CHEMISTRY_SCHEMA = {
 const STOOL_SCHEMA = {
   sections: [
     {
-      id: "copro",
-      label: "Coproanalisis",
+      id: "macroscopico",
+      label: "Macroscopico",
       fields: [
-        { key: "consistencia", label: "Consistencia", type: "string" },
+        {
+          key: "consistencia",
+          label: "Consistencia",
+          type: "enum",
+          options: ["Formada", "Semiformada", "Pastosa", "Diarreica", "Liquida"],
+        },
+        { key: "color", label: "Color", type: "string" },
+        {
+          key: "aspecto",
+          label: "Aspecto",
+          type: "enum",
+          options: ["Homogeneo", "Mucoso", "Sangre", "Restos Alimentarios"],
+        },
+        { key: "parasitosMacroscopicos", label: "Parasitos Macroscopicos", type: "string" },
+      ],
+    },
+    {
+      id: "microscopico",
+      label: "Analisis Microscopico",
+      fields: [
+        { key: "huevos", label: "Huevos", type: "string" },
         { key: "parasitos", label: "Parasitos", type: "string" },
         { key: "eritrocitos", label: "Eritrocitos", type: "string" },
+        { key: "leucocitos", label: "Leucocitos", type: "string" },
       ],
     },
   ],
@@ -379,69 +519,294 @@ function signalForExamStatus(rng: () => number, examStatus: ExamStatus): Signal 
   return "normal";
 }
 
+const URO_ENUM_OPTIONS = ["negativo", "trazas", "+", "++", "+++"] as const;
+
 function resultPayloadForExam(
   code: string,
   signal: Signal,
   rng: () => number
 ): Record<string, unknown> {
   if (code === "HEM") {
-    if (signal === "normal")
-      return { rbc: 4.7 + rng() * 0.5, hb: 13.5 + rng() * 2, wbc: 5.2 + rng() * 3.2 };
-    if (signal === "attention")
-      return { rbc: 3.5 + rng() * 0.3, hb: 10.2 + rng() * 0.8, wbc: 12.2 + rng() * 1.2 };
+    if (signal === "normal") {
+      const rbc = 4.4 + rng() * 0.8;
+      const hb = 12.5 + rng() * 3.5;
+      const hto = 36 + (hb - 12) * 2.5;
+      const wbc = 5.0 + rng() * 4.0;
+      const neutPct = 50 + randomInt(rng, 5, 15);
+      const linfPct = 30 + randomInt(rng, 5, 12);
+      const plt = 200 + randomInt(rng, 50, 150);
+      return {
+        rbc: Math.round(rbc * 100) / 100,
+        hb: Math.round(hb * 10) / 10,
+        hto: Math.round(hto * 10) / 10,
+        vcm: 85 + randomInt(rng, 0, 12),
+        hcm: 28 + randomInt(rng, 0, 4),
+        chcm: 33 + randomInt(rng, 0, 2),
+        rdwCV: 12 + rng() * 2,
+        wbc: Math.round(wbc * 10) / 10,
+        neutrofilosPct: neutPct,
+        linfocitosPct: linfPct,
+        monocitosPct: 4 + randomInt(rng, 0, 4),
+        eosinofilosPct: 2 + randomInt(rng, 0, 3),
+        basofilosPct: randomInt(rng, 0, 1),
+        neutrofilosAbs: Math.round((wbc * neutPct) / 100 * 100) / 100,
+        linfocitosAbs: Math.round((wbc * linfPct) / 100 * 100) / 100,
+        monocitosAbs: 0.3 + rng() * 0.3,
+        eosinofilosAbs: 0.1 + rng() * 0.2,
+        basofilosAbs: 0 + rng() * 0.1,
+        plt,
+        vpm: 9 + rng() * 1.5,
+        pdw: 11 + rng() * 4,
+        pct: Math.round((plt * 0.001) * 1000) / 1000,
+      };
+    }
+    if (signal === "attention") {
+      const rbc = 3.5 + rng() * 0.4;
+      const hb = 10.0 + rng() * 1.0;
+      const hto = 30 + (hb - 10) * 2.2;
+      const wbc = 11.5 + rng() * 2.0;
+      return {
+        rbc: Math.round(rbc * 100) / 100,
+        hb: Math.round(hb * 10) / 10,
+        hto: Math.round(hto * 10) / 10,
+        vcm: 82 + randomInt(rng, 0, 10),
+        hcm: 27 + randomInt(rng, 0, 3),
+        chcm: 32 + randomInt(rng, 0, 2),
+        rdwCV: 13.5 + rng() * 1.5,
+        wbc: Math.round(wbc * 10) / 10,
+        neutrofilosPct: 72,
+        linfocitosPct: 22,
+        monocitosPct: 4,
+        eosinofilosPct: 1.5,
+        basofilosPct: 0.5,
+        neutrofilosAbs: Math.round(wbc * 0.72 * 100) / 100,
+        linfocitosAbs: Math.round(wbc * 0.22 * 100) / 100,
+        monocitosAbs: 0.5,
+        eosinofilosAbs: 0.2,
+        basofilosAbs: 0.05,
+        plt: 145 + randomInt(rng, 0, 30),
+        vpm: 10 + rng() * 1,
+        pdw: 14,
+        pct: 0.18,
+      };
+    }
+    const rbc = 2.6 + rng() * 0.4;
+    const hb = 6.8 + rng() * 0.8;
+    const hto = 22 + (hb - 6.8) * 2.2;
+    const wbc = 17 + rng() * 4;
     return {
-      rbc: 2.8 + rng() * 0.2,
-      hb: 7.1 + rng() * 0.6,
-      wbc: 17.5 + rng() * 2.2,
-      flag: "critico",
+      rbc: Math.round(rbc * 100) / 100,
+      hb: Math.round(hb * 10) / 10,
+      hto: Math.round(hto * 10) / 10,
+      vcm: 78 + randomInt(rng, 0, 8),
+      hcm: 25,
+      chcm: 31,
+      rdwCV: 16,
+      wbc: Math.round(wbc * 10) / 10,
+      neutrofilosPct: 88,
+      linfocitosPct: 9,
+      monocitosPct: 2,
+      eosinofilosPct: 0.5,
+      basofilosPct: 0.5,
+      neutrofilosAbs: Math.round(wbc * 0.88 * 100) / 100,
+      linfocitosAbs: Math.round(wbc * 0.09 * 100) / 100,
+      monocitosAbs: 0.3,
+      eosinofilosAbs: 0.08,
+      basofilosAbs: 0.08,
+      plt: 110 + randomInt(rng, 0, 25),
+      vpm: 11,
+      pdw: 18,
+      pct: 0.12,
     };
   }
   if (code === "QS") {
-    if (signal === "normal")
+    if (signal === "normal") {
       return {
-        glucosaAyunas: 82 + randomInt(rng, 0, 12),
-        creatinina: 0.7 + rng() * 0.3,
-        colesterolTotal: 160 + randomInt(rng, 0, 25),
+        glucosaAyunas: 82 + randomInt(rng, 0, 14),
+        creatinina: 0.75 + rng() * 0.35,
+        colesterolTotal: 165 + randomInt(rng, 0, 30),
+        colesterolHDL: 45 + randomInt(rng, 5, 20),
+        colesterolLDL: 95 + randomInt(rng, 0, 35),
+        trigliceridos: 90 + randomInt(rng, 0, 50),
+        urea: 35 + randomInt(rng, 0, 15),
+        bun: 15 + randomInt(rng, 0, 8),
+        acidoUrico: 4.5 + rng() * 2.5,
+        alt: 25 + randomInt(rng, 0, 20),
+        ast: 28 + randomInt(rng, 0, 18),
+        fosfatasaAlcalina: 70 + randomInt(rng, 0, 40),
+        ggt: 20 + randomInt(rng, 0, 25),
+        bilirrubinaTotal: 0.8 + rng() * 0.6,
+        bilirrubinaDirecta: 0.2 + rng() * 0.2,
+        proteinasTotales: 6.8 + rng() * 0.6,
+        albumina: 4.0 + rng() * 0.5,
+        sodio: 138 + randomInt(rng, 0, 4),
+        potasio: 4.0 + rng() * 0.6,
+        cloro: 100 + randomInt(rng, 0, 4),
+        calcioTotal: 9.2 + rng() * 0.5,
       };
-    if (signal === "attention")
+    }
+    if (signal === "attention") {
       return {
-        glucosaAyunas: 112 + randomInt(rng, 0, 25),
-        creatinina: 1.3 + rng() * 0.3,
-        colesterolTotal: 210 + randomInt(rng, 0, 40),
+        glucosaAyunas: 115 + randomInt(rng, 0, 25),
+        creatinina: 1.35 + rng() * 0.25,
+        colesterolTotal: 225 + randomInt(rng, 0, 40),
+        colesterolHDL: 38 + randomInt(rng, 0, 10),
+        colesterolLDL: 145 + randomInt(rng, 0, 35),
+        trigliceridos: 175 + randomInt(rng, 0, 75),
+        urea: 48 + randomInt(rng, 0, 15),
+        bun: 22 + randomInt(rng, 0, 8),
+        acidoUrico: 6.5 + rng() * 1.5,
+        alt: 48 + randomInt(rng, 0, 25),
+        ast: 45 + randomInt(rng, 0, 22),
+        fosfatasaAlcalina: 125 + randomInt(rng, 0, 50),
+        ggt: 55 + randomInt(rng, 0, 30),
+        bilirrubinaTotal: 1.4 + rng() * 0.4,
+        bilirrubinaDirecta: 0.5 + rng() * 0.3,
+        proteinasTotales: 6.5,
+        albumina: 3.8,
+        sodio: 142,
+        potasio: 5.2,
+        cloro: 104,
+        calcioTotal: 9.8,
       };
+    }
     return {
-      glucosaAyunas: 285 + randomInt(rng, 0, 45),
-      creatinina: 2.2 + rng() * 0.6,
-      colesterolTotal: 300 + randomInt(rng, 0, 40),
-      flag: "valor critico",
+      glucosaAyunas: 285 + randomInt(rng, 0, 50),
+      creatinina: 2.4 + rng() * 0.8,
+      colesterolTotal: 310 + randomInt(rng, 0, 50),
+      colesterolHDL: 30,
+      colesterolLDL: 220,
+      trigliceridos: 320,
+      urea: 85,
+      bun: 40,
+      acidoUrico: 9.5,
+      alt: 180,
+      ast: 165,
+      fosfatasaAlcalina: 280,
+      ggt: 220,
+      bilirrubinaTotal: 3.2,
+      bilirrubinaDirecta: 2.1,
+      proteinasTotales: 5.8,
+      albumina: 3.2,
+      sodio: 132,
+      potasio: 6.2,
+      cloro: 96,
+      calcioTotal: 8.1,
     };
   }
   if (code === "URO") {
-    if (signal === "normal")
-      return { ph: 5.4 + rng() * 0.5, glucosa: "negativo", proteinas: "negativo", flag: "normal" };
-    if (signal === "attention")
-      return { ph: 7.2, glucosa: "+", proteinas: "trazas", flag: "atencion" };
-    return { ph: 8.4, glucosa: "+++", proteinas: "+++", flag: "critico" };
+    const enumVal = (idx: number) => URO_ENUM_OPTIONS[Math.min(idx, URO_ENUM_OPTIONS.length - 1)];
+    if (signal === "normal") {
+      return {
+        color: "Amarillo",
+        olor: "Caracteristico",
+        opacidad: "Limpia",
+        ph: 5.5 + rng() * 0.4,
+        proteinas: "negativo",
+        glucosa: "negativo",
+        cetonas: "negativo",
+        sangreOculta: "negativo",
+        bilirrubina: "negativo",
+        urobilinogeno: "negativo",
+        nitritos: "negativo",
+        esterasaLeucocitaria: "negativo",
+        gravedadEspecifica: 1.015 + rng() * 0.012,
+        leucocitos: randomInt(rng, 0, 2),
+        eritrocitos: randomInt(rng, 0, 2),
+        celulasEpiteliales: randomInt(rng, 0, 3),
+        cristales: "No se observan",
+        cilindros: "No se observan",
+        bacterias: "No se observan",
+        levaduras: "No se observan",
+        estructurasMicoticas: "No se observan",
+        parasitos: "No se observan",
+      };
+    }
+    if (signal === "attention") {
+      return {
+        color: "Amarillo oscuro",
+        olor: "Suave",
+        opacidad: "Ligeramente turbia",
+        ph: 7.0 + rng() * 0.3,
+        proteinas: "trazas",
+        glucosa: "+",
+        cetonas: "negativo",
+        sangreOculta: "negativo",
+        bilirrubina: "negativo",
+        urobilinogeno: "negativo",
+        nitritos: "negativo",
+        esterasaLeucocitaria: enumVal(1),
+        gravedadEspecifica: 1.020 + rng() * 0.008,
+        leucocitos: 8 + randomInt(rng, 0, 6),
+        eritrocitos: 6 + randomInt(rng, 0, 4),
+        celulasEpiteliales: 5 + randomInt(rng, 0, 3),
+        cristales: "Cristales de oxalato de calcio escasos",
+        cilindros: "No se observan",
+        bacterias: "Escasas bacterias en forma de baston",
+        levaduras: "No se observan",
+        estructurasMicoticas: "No se observan",
+        parasitos: "No se observan",
+      };
+    }
+    return {
+      color: "Rojo",
+      olor: "Fetido",
+      opacidad: "Turbia",
+      ph: 8.2 + rng() * 0.4,
+      proteinas: "+++",
+      glucosa: "+++",
+      cetonas: enumVal(2),
+      sangreOculta: "++",
+      bilirrubina: enumVal(1),
+      urobilinogeno: enumVal(1),
+      nitritos: "++",
+      esterasaLeucocitaria: "+++",
+      gravedadEspecifica: 1.028,
+      leucocitos: 25 + randomInt(rng, 0, 15),
+      eritrocitos: 30 + randomInt(rng, 0, 20),
+      celulasEpiteliales: 12,
+      cristales: "Abundantes cristales de fosfato",
+      cilindros: "Cilindros granulosos abundantes",
+      bacterias: "Abundantes diplococos",
+      levaduras: "Abundantes levaduras",
+      estructurasMicoticas: "Escasas",
+      parasitos: "No se observan",
+    };
   }
-  if (signal === "critical")
+  // COP (Coproanalisis)
+  if (signal === "critical") {
     return {
       consistencia: "Liquida",
-      parasitos: "Positivo",
+      color: "Verde oscuro",
+      aspecto: "Restos Alimentarios",
+      parasitosMacroscopicos: "No",
+      huevos: "Huevos de Entamoeba histolytica observados",
+      parasitos: "Trofozoitos identificados",
       eritrocitos: "Abundantes",
-      flag: "critico",
+      leucocitos: "Abundantes",
     };
-  if (signal === "attention")
+  }
+  if (signal === "attention") {
     return {
       consistencia: "Pastosa",
-      parasitos: "Sospecha",
+      color: "Pardo",
+      aspecto: "Mucoso",
+      parasitosMacroscopicos: "No",
+      huevos: "No observados",
+      parasitos: "Sospecha de formas parasitarias",
       eritrocitos: "Escasos",
-      flag: "atencion",
+      leucocitos: "Escasos",
     };
+  }
   return {
     consistencia: "Formada",
+    color: "Pardo",
+    aspecto: "Homogeneo",
+    parasitosMacroscopicos: "No",
+    huevos: "No observados",
     parasitos: "No observados",
     eritrocitos: "No observados",
-    flag: "normal",
+    leucocitos: "No observados",
   };
 }
 

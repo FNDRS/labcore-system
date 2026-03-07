@@ -13,7 +13,7 @@ interface QueueViewProps {
 /** Renders the samples table with a specific filter. Explicit variant per filter. */
 function QueueView({ filter, tableRef, rowRefs }: QueueViewProps & { filter: Filter }) {
   const {
-    state: { samples, searchQuery, selectedId, highlightedId },
+    state: { samples, searchQuery, selectedId, highlightedId, pendingAction },
     actions: { openPanel, onMarkReceived, onProcess, onReportProblem },
   } = useTechnicianWorkstation();
 
@@ -28,6 +28,8 @@ function QueueView({ filter, tableRef, rowRefs }: QueueViewProps & { filter: Fil
       onMarkReceived={onMarkReceived}
       onProcess={onProcess}
       onReportProblem={onReportProblem}
+      pendingActionKind={pendingAction?.kind ?? null}
+      pendingActionSampleId={pendingAction?.sampleId ?? null}
       tableRef={tableRef}
       rowRefs={rowRefs}
     />

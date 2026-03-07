@@ -38,7 +38,7 @@ export async function lookupReceptionOrderByCode(code: string): Promise<Receptio
 }
 
 export type GenerateSpecimensActionResult =
-  | { ok: true; barcodes: string[] }
+  | { ok: true; sampleIds: string[]; barcodes: string[] }
   | { ok: false; error: string };
 
 export async function generateSpecimensAction(
@@ -47,7 +47,7 @@ export async function generateSpecimensAction(
   const userId = await getUserId();
   const result = await generateSpecimensForOrder(workOrderId, userId);
   if (result.ok) {
-    return { ok: true, barcodes: result.barcodes };
+    return { ok: true, sampleIds: result.sampleIds, barcodes: result.barcodes };
   }
   return { ok: false, error: result.error };
 }

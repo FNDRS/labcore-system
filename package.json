@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "sandbox": "pnpm ampx sandbox --profile Nimbus --identifier Nimbus",
-    "seed": "pnpm ampx sandbox seed --profile Nimbus --identifier Nimbus",
+    "sandbox": "pnpm ampx sandbox --profile Nimbus --identifier nimbus",
+    "seed": "pnpm ampx sandbox seed --profile Nimbus --identifier nimbus",
     "buildCI": "pnpm ampx generate outputs --app-id $AMPLIFY_APP_ID --branch $VERCEL_GIT_COMMIT_REF && next build"
   },
   "dependencies": {
@@ -27,10 +27,12 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "jsbarcode": "^3.12.3",
     "lucide-react": "^0.574.0",
     "motion": "^11.15.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
+    "pdf-lib": "^1.17.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-day-picker": "^9.13.2",

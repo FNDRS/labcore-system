@@ -36,6 +36,7 @@ function MuestrasContent() {
       selectedSample,
       detailLoading,
       actionError,
+      pendingAction,
     },
     actions: {
       setScanValue,
@@ -44,6 +45,7 @@ function MuestrasContent() {
       setSearchQuery,
       setPanelOpen,
       handleScan,
+      onMarkReceived,
       onProcess,
       onReportProblem,
       onReprintLabel,
@@ -161,10 +163,16 @@ function MuestrasContent() {
         sample={selectedSample}
         open={panelOpen}
         onOpenChange={setPanelOpen}
+        onMarkReceived={onMarkReceived}
         onProcess={onProcess}
         onReportIncident={onReportProblem}
         onReprintLabel={onReprintLabel}
         detailLoading={detailLoading}
+        pendingAction={
+          pendingAction && selectedSample && pendingAction.sampleId === selectedSample.id
+            ? pendingAction.kind
+            : null
+        }
       />
     </div>
   );

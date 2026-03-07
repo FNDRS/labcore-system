@@ -20,6 +20,7 @@ export type ReceptionOrder = {
 };
 
 export type GeneratedSpecimen = {
+  sampleId: string;
   tubeLabel: string;
   examCount: number;
   specimenCode: string;
