@@ -1,7 +1,7 @@
 # Phase 4 — Supervisor Validation: Manual Test Cases
 
 **Scope:** End-to-end testing from order/sample creation through technician result submission to supervisor validation.
-**Reference:** `docs/integration/phase-4.md`, `docs/flujo-end-to-end-labcore.md`
+**Reference:** `docs/integration/phase-4.md`, `docs/flujo-end-to-end-lumacore.md`
 
 ---
 

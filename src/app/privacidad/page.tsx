@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Política de privacidad",
-  description: "Política de privacidad y protección de datos de LabCore LIS.",
+  description: "Política de privacidad y protección de datos de LumaCore LIS.",
 };
 
 export default function PrivacidadPage() {
@@ -13,7 +13,7 @@ export default function PrivacidadPage() {
       <header className="border-b border-zinc-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Link href="/login" className="text-sm font-medium text-zinc-700 hover:text-zinc-900">
-            LabCore LIS
+            LumaCore LIS
           </Link>
           <Button variant="outline" size="sm" className="rounded-full" asChild>
             <Link href="/login">Iniciar sesión</Link>
@@ -38,7 +38,7 @@ export default function PrivacidadPage() {
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">1. Responsable del tratamiento</h2>
               <p>
-                LabCore LIS es un software como servicio (SaaS) de gestión de información de
+                LumaCore LIS es un software como servicio (SaaS) de gestión de información de
                 laboratorio. El responsable del tratamiento de los datos personales en el marco del
                 servicio es la entidad que proporciona el software. Para consultas sobre privacidad
                 puede contactar a{" "}
@@ -59,7 +59,7 @@ export default function PrivacidadPage() {
                 sanitarios y usuarios del laboratorio (identificación, datos clínicos asociados a
                 órdenes y resultados, registros de acceso y actividad). Estos datos son introducidos
                 y gestionados por la organización cliente (por ejemplo, el laboratorio o clínica)
-                que utiliza LabCore LIS.
+                que utiliza LumaCore LIS.
               </p>
             </section>
 

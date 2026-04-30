@@ -163,7 +163,7 @@ function PatientHeader({ result }: { result: ConsolidatedWorkOrderResult }) {
       {/* Lab branding strip */}
       <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-3">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          LabCore LIS · Informe de resultados
+          LumaCore LIS · Informe de resultados
         </p>
         <div className="flex items-center gap-2">
           <PriorityBadge priority={workOrder.priority} />
@@ -313,7 +313,7 @@ function PrintFooter() {
     <div data-print-footer className="mt-8 border-t border-zinc-200 pt-4">
       <div className="flex items-end justify-between text-[11px] text-zinc-400">
         <div className="space-y-0.5">
-          <p className="font-bold uppercase tracking-widest text-zinc-500">LabCore LIS</p>
+          <p className="font-bold uppercase tracking-widest text-zinc-500">LumaCore LIS</p>
           <p>Sistema de información de laboratorio clínico</p>
           <p>Documento generado electrónicamente — no requiere firma física</p>
         </div>

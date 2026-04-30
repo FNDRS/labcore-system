@@ -5,7 +5,7 @@ import { CentroDeAyudaForm } from "./centro-de-ayuda-form";
 
 export const metadata = {
   title: "Centro de ayuda",
-  description: "Envíe su consulta o mensaje al equipo de soporte de LabCore LIS.",
+  description: "Envíe su consulta o mensaje al equipo de soporte de LumaCore LIS.",
 };
 
 const SUPPORT_EMAIL = "marlon.castro@thefndrs.com";
@@ -16,7 +16,7 @@ export default function CentroDeAyudaPage() {
       <header className="border-b border-zinc-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <Link href="/login" className="text-sm font-medium text-zinc-700 hover:text-zinc-900">
-            LabCore LIS
+            LumaCore LIS
           </Link>
           <Button variant="outline" size="sm" className="rounded-full" asChild>
             <Link href="/login">Iniciar sesión</Link>

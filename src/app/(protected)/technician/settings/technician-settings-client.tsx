@@ -333,7 +333,7 @@ export function TechnicianSettingsClient() {
             </Button>
           </div>
           <p className="text-muted-foreground text-xs">
-            Estado del sistema · Versión LabCore (POC)
+            Estado del sistema · Versión LumaCore (POC)
           </p>
         </CardContent>
       </Card>

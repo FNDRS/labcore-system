@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-LabCore LIS uses **AWS Amplify Auth (Cognito)** with a layered security model: server-side middleware (proxy), server layout guards, and client-side context. Role-based access control (RBAC) is enforced via Cognito groups (`tecnico`, `supervisor`, `admin`) with path-based route protection.
+LumaCore LIS uses **AWS Amplify Auth (Cognito)** with a layered security model: server-side middleware (proxy), server layout guards, and client-side context. Role-based access control (RBAC) is enforced via Cognito groups (`tecnico`, `supervisor`, `admin`) with path-based route protection.
 
 ---
 

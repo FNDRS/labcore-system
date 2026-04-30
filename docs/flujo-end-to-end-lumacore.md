@@ -1,4 +1,4 @@
-# Flujo End-to-End de Laboratorio (LabCore)
+# Flujo End-to-End de Laboratorio (LumaCore)
 
 Este documento describe el flujo operativo completo desde el origen de la orden hasta la trazabilidad final de resultados, con enfoque por rol y etapas del proceso.
 

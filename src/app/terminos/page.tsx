@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Términos de uso",
-  description: "Términos y condiciones de uso de LabCore LIS.",
+  description: "Términos y condiciones de uso de LumaCore LIS.",
 };
 
 export default function TerminosPage() {
@@ -13,7 +13,7 @@ export default function TerminosPage() {
       <header className="border-b border-zinc-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Link href="/login" className="text-sm font-medium text-zinc-700 hover:text-zinc-900">
-            LabCore LIS
+            LumaCore LIS
           </Link>
           <Button variant="outline" size="sm" className="rounded-full" asChild>
             <Link href="/login">Iniciar sesión</Link>
@@ -38,7 +38,7 @@ export default function TerminosPage() {
             <section>
               <h2 className="mb-2 font-semibold text-zinc-900">1. Aceptación</h2>
               <p>
-                El acceso y uso de LabCore LIS («el Servicio») implica la aceptación de estos
+                El acceso y uso de LumaCore LIS («el Servicio») implica la aceptación de estos
                 términos de uso. Si no está de acuerdo, no utilice el Servicio. El Servicio se
                 ofrece como software como servicio (SaaS) para la gestión de información de
                 laboratorio.

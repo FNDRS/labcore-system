@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const DEFAULT_SUBJECT = "Centro de ayuda - LabCore LIS";
+const DEFAULT_SUBJECT = "Centro de ayuda - LumaCore LIS";
 
 type Props = { supportEmail: string };
 

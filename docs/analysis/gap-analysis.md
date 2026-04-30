@@ -1,11 +1,11 @@
-# LabCore LIS — Gap Analysis: Backend Integration Readiness
+# LumaCore LIS — Gap Analysis: Backend Integration Readiness
 
 **Date:** 2026-02-21  
 **Scope:** `src/app/` — All routes, folders, and UI components
 
 ## Executive Summary
 
-This document analyzes the current state of the LabCore LIS UI to identify which screens have **complete designs** (ready for backend integration) vs. **placeholder-only screens** ("Próximamente" or equivalent). Screens are "ready" when they have a full, functional UI design—even if they still use mocked data—and can be connected to real APIs without redesign.
+This document analyzes the current state of the LumaCore LIS UI to identify which screens have **complete designs** (ready for backend integration) vs. **placeholder-only screens** ("Próximamente" or equivalent). Screens are "ready" when they have a full, functional UI design—even if they still use mocked data—and can be connected to real APIs without redesign.
 
 ---
 
@@ -224,7 +224,7 @@ These show a card with title, description, and "Próximamente." No functional UI
 
 # Appendix: Backend–Frontend Gap Analysis
 
-**Purpose:** Compare the proposed end-to-end flow (`docs/flujo-end-to-end-labcore.md`), the frontend-ready screens, and the current Amplify backend (`amplify/`) to identify what the backend provides, what it lacks, and what changes are needed to support the frontend design.
+**Purpose:** Compare the proposed end-to-end flow (`docs/flujo-end-to-end-lumacore.md`), the frontend-ready screens, and the current Amplify backend (`amplify/`) to identify what the backend provides, what it lacks, and what changes are needed to support the frontend design.
 
 **Reference:** AWS Amplify backend implementation SOP (`retrieve_agent_sop` → `amplify-backend-implementation`).
 

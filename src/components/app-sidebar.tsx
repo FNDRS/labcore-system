@@ -292,11 +292,11 @@ export function AppSidebar() {
             type="button"
             onClick={() => toggleSidebar()}
             className="flex min-w-0 size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-zinc-900 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:rounded"
-            aria-label={isCollapsed ? "Expandir barra" : "LabCore"}
+            aria-label={isCollapsed ? "Expandir barra" : "LumaCore"}
           >
             <Image
               src="/images/logo-white.png"
-              alt="LabCore"
+              alt="LumaCore"
               width={24}
               height={24}
               className="size-full max-w-[24px] max-h-[24px] object-contain p-0.5 group-data-[collapsible=icon]:p-0.5"
@@ -305,7 +305,7 @@ export function AppSidebar() {
             />
           </button>
           <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold leading-tight text-zinc-900">LabCore</p>
+            <p className="truncate text-sm font-semibold leading-tight text-zinc-900">LumaCore</p>
             <p className="truncate text-xs leading-tight text-zinc-500">LIS</p>
           </div>
           <button

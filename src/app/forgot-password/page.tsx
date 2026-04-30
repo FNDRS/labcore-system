@@ -103,12 +103,12 @@ function ForgotPasswordForm() {
         <div className="flex items-center justify-center gap-2">
           <Image
             src="/images/logo-black.png"
-            alt="LabCore"
+            alt="LumaCore"
             width={28}
             height={28}
             className="dark:invert"
           />
-          <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">LabCore</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">LumaCore</h1>
         </div>
         <div className="mt-6 text-center">
           <h2 className="text-xl font-semibold text-black dark:text-white">

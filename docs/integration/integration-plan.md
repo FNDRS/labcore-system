@@ -1,4 +1,4 @@
-# LabCore LIS — End-to-End Backend Integration Plan
+# LumaCore LIS — End-to-End Backend Integration Plan
 
 **Date:** 2026-02-21  
 **Input reference:** `docs/analysis/gap-analysis.md`  

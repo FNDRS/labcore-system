@@ -226,7 +226,7 @@ export function SupervisorSettingsClient() {
               <Link href="/support">Centro de ayuda</Link>
             </Button>
           </div>
-          <p className="text-muted-foreground text-xs">LabCore LIS · Versión POC</p>
+          <p className="text-muted-foreground text-xs">LumaCore LIS · Versión POC</p>
         </CardContent>
       </Card>
     </div>

@@ -29,8 +29,8 @@ export function OperationalHeader({ roleLabel, userLabel }: OperationalHeaderPro
     <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white backdrop-blur ">
       <div className="mx-auto flex h-14 w-full items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-2">
-          <Image src="/images/logo-black.png" alt="LabCore" width={20} height={20} />
-          <span className="text-lg font-semibold tracking-tight text-zinc-900">LabCore</span>
+          <Image src="/images/logo-black.png" alt="LumaCore" width={20} height={20} />
+          <span className="text-lg font-semibold tracking-tight text-zinc-900">LumaCore</span>
         </div>
 
         <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-# LabCore
+# LumaCore
 
 Sistema moderno de gestión y trazabilidad de muestras de laboratorio.
 

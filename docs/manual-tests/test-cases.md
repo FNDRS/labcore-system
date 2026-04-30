@@ -1,7 +1,7 @@
 # Manual Test Cases — Phase 0–3 E2E
 
 **Scope:** New order → reception → technician muestras → technician process (exam result capture).  
-**Reference:** [integration-plan.md](../integration/integration-plan.md) (Phase 0–3), [flujo-end-to-end-labcore.md](../flujo-end-to-end-labcore.md)
+**Reference:** [integration-plan.md](../integration/integration-plan.md) (Phase 0–3), [flujo-end-to-end-lumacore.md](../flujo-end-to-end-lumacore.md)
 
 ---
 

@@ -5,7 +5,7 @@ import { HelpCircle, Mail, Shield } from "lucide-react";
 
 export const metadata = {
   title: "Soporte",
-  description: "Centro de soporte y contacto de LabCore LIS.",
+  description: "Centro de soporte y contacto de LumaCore LIS.",
 };
 
 const SUPPORT_EMAIL = "marlon.castro@thefndrs.com";
@@ -38,7 +38,7 @@ export default function SupportPage() {
             <p className="text-muted-foreground text-xs">
               O escriba directamente a{" "}
               <a
-                href={`mailto:${SUPPORT_EMAIL}?subject=Consulta%20LabCore%20LIS`}
+                href={`mailto:${SUPPORT_EMAIL}?subject=Consulta%20LumaCore%20LIS`}
                 className="font-medium text-zinc-700 underline hover:no-underline"
               >
                 {SUPPORT_EMAIL}
@@ -54,7 +54,7 @@ export default function SupportPage() {
               Contacto
             </CardTitle>
             <p className="text-muted-foreground text-sm">
-              Para soporte técnico o consultas sobre LabCore LIS.
+              Para soporte técnico o consultas sobre LumaCore LIS.
             </p>
           </CardHeader>
           <CardContent>

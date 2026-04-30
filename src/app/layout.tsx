@@ -14,8 +14,8 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
-    default: "LabCore LIS - Sistema de trazabilidad",
-    template: "%s | LabCore LIS",
+    default: "LumaCore LIS - Sistema de trazabilidad",
+    template: "%s | LumaCore LIS",
   },
   description: "Sistema de trazabilidad para gestión de órdenes de trabajo, muestras y exámenes.",
   keywords: [
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     "gestión muestras",
     "órdenes de trabajo",
     "exámenes clínicos",
-    "LabCore",
+    "LumaCore",
   ],
-  authors: [{ name: "LabCore" }],
-  creator: "LabCore",
-  applicationName: "LabCore LIS",
+  authors: [{ name: "LumaCore" }],
+  creator: "LumaCore",
+  applicationName: "LumaCore LIS",
   icons: {
     icon: [
       { url: "/images/favicon.ico", sizes: "any" },
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     apple: "/images/logo-black.png",
   },
   openGraph: {
-    title: "LabCore LIS Sistema de trazabilidad",
+    title: "LumaCore LIS Sistema de trazabilidad",
     description: "Gestión de órdenes de trabajo, muestras y exámenes de laboratorio.",
     type: "website",
   },

@@ -3,7 +3,7 @@ import { HelpCircle, Mail, Shield, Scale } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const SUPPORT_EMAIL = "marlon.castro@thefndrs.com";
-const CONTACT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=Contacto - LabCore LIS`;
+const CONTACT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=Contacto - LumaCore LIS`;
 
 const footerLinks = {
   soporte: [
@@ -28,7 +28,7 @@ export function AppFooter({ variant = "default" }: AppFooterProps) {
         role="contentinfo"
       >
         <div className="mx-auto flex min-w-0 max-w-6xl flex-col items-center justify-between gap-2 px-4 py-3 text-xs text-zinc-500 sm:flex-row sm:px-6">
-          <p className="min-w-0 shrink-0">© {CURRENT_YEAR} LabCore LIS</p>
+          <p className="min-w-0 shrink-0">© {CURRENT_YEAR} LumaCore LIS</p>
           <p className="flex min-w-0 shrink-0 items-center gap-1.5">
             <Shield className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
             Datos seguros · v1.0
@@ -47,7 +47,7 @@ export function AppFooter({ variant = "default" }: AppFooterProps) {
         <div className="grid min-w-0 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[auto_1fr_1fr]">
           {/* Marca */}
           <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-tight text-zinc-900">LabCore LIS</p>
+            <p className="text-sm font-semibold tracking-tight text-zinc-900">LumaCore LIS</p>
             <p className="mt-1 text-xs text-zinc-500">Sistema de trazabilidad</p>
           </div>
 
@@ -110,11 +110,11 @@ export function AppFooter({ variant = "default" }: AppFooterProps) {
         {/* Línea inferior: copyright + versión */}
         <div className="mt-6 flex min-w-0 flex-col gap-2 border-t border-zinc-200 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <p className="min-w-0 shrink-0 text-xs text-zinc-500">
-            © {CURRENT_YEAR} LabCore LIS. Todos los derechos reservados.
+            © {CURRENT_YEAR} LumaCore LIS. Todos los derechos reservados.
           </p>
           <p className="flex min-w-0 shrink-0 items-center gap-1.5 text-xs text-zinc-500">
             <Shield className="size-3.5 shrink-0 text-zinc-400" aria-hidden />
-            Datos seguros · LabCore LIS v1.0
+            Datos seguros · LumaCore LIS v1.0
           </p>
         </div>
       </div>

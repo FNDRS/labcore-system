@@ -157,7 +157,7 @@ export async function createConsolidatedResultPdf(
   }
 
   // Header
-  drawText("LabCore LIS - Informe de resultados", { size: 14, bold: true });
+  drawText("LumaCore LIS - Informe de resultados", { size: 14, bold: true });
   drawText(
     `Orden: ${result.workOrder.accessionNumber ?? result.workOrder.id} | Prioridad: ${formatPriority(result.workOrder.priority)}`,
     { size: 9, color: gray }
